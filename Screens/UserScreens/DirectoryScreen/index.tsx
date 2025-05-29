@@ -148,10 +148,6 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
     setSections(processContactsForSectionList(filteredContacts));
   }, [searchQuery]);
 
-  const handleProfilePress = () => navigation.navigate("UserProfileScreen");
-  const handleCreateContact = () => navigation.navigate("CreateContactScreen");
-  const handleCreateNote = () => navigation.navigate("CreateNoteScreen");
-
   const handleAlphabetPress = (letter: string) => {
     const sectionIndex = sections.findIndex(
       (section) => section.title === letter
@@ -179,7 +175,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
   const renderContactItem = ({ item }: { item: Contact }) => (
     <TouchableOpacity
       style={styles.contactItem}
-      onPress={() => console.log("View contact:", item.id)}
+      onPress={() => navigation.navigate("ViewContactScreen")}
     >
       <View style={styles.avatarPlaceholder}>
         <Feather name="user" size={20} color={theme.colors.white} />
@@ -218,16 +214,8 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
     <DefaultBackground>
       <StatusBar style="light" />
       <View style={[styles.flexContainer]}>
-        <Header
-          onMenuPress={() => navigation.openDrawer()}
-          onProfilePress={handleProfilePress}
-          // Ensure your Header component has a way to update searchQuery:
-          // onSearchChange={setSearchQuery} (example prop)
-        />
-        <ActionButtons
-          onCreateContactPress={handleCreateContact}
-          onCreateNotePress={handleCreateNote}
-        />
+        <Header />
+        <ActionButtons />
 
         <View style={styles.directoryContentWrapper}>
           <View style={styles.listContainerCard}>

@@ -9,6 +9,7 @@ import DrawerNavigation from "../../navigation/DrawerNavigation";
 import CreateNoteScreen from "./CreateNoteScreen";
 import UserProfileScreen from "./UserProfileScreen";
 import CreateContantScreen from "./CreateContantScreen";
+import ViewContactScreen from "./ViewContactScreen";
 
 const Stack = createStackNavigator<any>();
 
@@ -40,6 +41,7 @@ const UserScreens = () => {
         name="CreateContantScreen"
         component={CreateContantScreen}
       />
+      <Stack.Screen name="ViewContactScreen" component={ViewContactScreen} />
     </Stack.Navigator>
   );
 };

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
 import theme from "../../../../utils/theme";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 export interface ReminderItemData {
   id: string;
@@ -16,11 +16,11 @@ interface ReminderItemProps {
 const ReminderItem: React.FC<ReminderItemProps> = ({ item }) => {
   return (
     <View style={styles.container}>
-      <Feather
-        name="user"
+      <FontAwesome
+        name="user-circle-o"
+        style={styles.userIcon}
         size={22}
         color={theme.colors.white}
-        style={styles.userIcon}
       />
       <View style={styles.textContainer}>
         <Text style={styles.messageText} numberOfLines={1}>
@@ -37,14 +37,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 10,
-    paddingHorizontal: 15, // Match category padding
+    paddingHorizontal: 15,
   },
   userIcon: {
-    marginRight: 10,
     padding: 4,
     borderRadius: 15,
-    borderWidth: 1,
-    borderColor: theme.colors.white,
   },
   textContainer: {
     flex: 1,
