@@ -1,30 +1,25 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import theme from "../../../../utils/theme";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-export interface ReminderItemData {
-  id: string;
-  user: string;
-  message: string;
-}
-
-interface ReminderItemProps {
-  item: ReminderItemData;
-}
-
-const ReminderItem: React.FC<ReminderItemProps> = ({ item }) => {
+const ReminderItem: any = ({ item }: any) => {
   return (
     <View style={styles.container}>
-      <FontAwesome
-        name="user-circle-o"
-        style={styles.userIcon}
-        size={22}
-        color={theme.colors.white}
-      />
+      {item?.contact_photo ? (
+        <Image source={{ uri: item?.contact_photo }} style={styles.userImage} />
+      ) : (
+        <FontAwesome
+          name="user-circle-o"
+          style={styles.userIcon}
+          size={22}
+          color={theme.colors.white}
+        />
+      )}
       <View style={styles.textContainer}>
         <Text style={styles.messageText} numberOfLines={1}>
-          <Text style={styles.userText}>{item.user}:</Text> {item.message}
+          <Text style={styles.userText}>{item.contact_full_name}:</Text>{" "}
+          {item.note}
         </Text>
       </View>
       <View style={styles.dot} />
@@ -38,6 +33,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 15,
+  },
+  userImage: {
+    height: 30,
+    width: 30,
+    borderRadius: 15,
+    padding: 4,
   },
   userIcon: {
     padding: 4,

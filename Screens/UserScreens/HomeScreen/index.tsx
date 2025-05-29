@@ -1,12 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ReminderCategory, { CategoryData } from "./Component/ReminderCategory";
+import ReminderCategory from "./Component/ReminderCategory";
 import ActionButtons from "../../Components/ActionButtons";
 import Header from "../../Components/Header";
 import EventListItem from "./Component/EventListItem";
+import { showReminders } from "../../../store/Services/Others";
 
 // Mock Data
 const eventData: any = [
@@ -60,37 +61,8 @@ const eventData: any = [
     type: "Contact Anniversary",
   },
 ];
-const reminderCategoriesData: CategoryData[] = [
-  {
-    id: "today",
-    name: "Today",
-    count: 3,
-    initiallyOpen: true,
-    items: [
-      {
-        id: "r1",
-        user: "zzzzzz",
-        message: "Its clean syntax makes it beginner-friendly.",
-      },
-      {
-        id: "r2",
-        user: "demo",
-        message: "gdgdfhfdPython is one of ... kes it beginner-friendly.",
-      },
-      { id: "r3", user: "demo", message: "ggggggdgggfdgdgdg" },
-    ],
-  },
-  {
-    id: "tomorrow",
-    name: "Tomorrow",
-    count: 3,
-    items: [{ id: "r4", user: "userA", message: "Meeting at 10 AM." }],
-  },
-  { id: "upcoming", name: "Upcoming", count: 4, items: [] },
-  { id: "missed", name: "Missed", count: 2, items: [] },
-];
 
-const memoryCategoriesData: CategoryData[] = [
+const memoryCategoriesData: any = [
   { id: "oneYear", name: "One Year Ago", count: 0, items: [] },
   { id: "sixMonths", name: "Six Months Ago", count: 0, items: [] },
   {
@@ -103,7 +75,16 @@ const memoryCategoriesData: CategoryData[] = [
 
 const HomeScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
+  const [reminder, setReminer]: any = useState({});
   const handleProfilePress = () => console.log("Profile pressed");
+
+  useEffect(() => {
+    showReminders()
+      .then((res: any) => {
+        setReminer(res?.reminders);
+      })
+      ?.catch((err: any) => console.log("err", err));
+  }, []);
 
   return (
     <DefaultBackground>
@@ -118,17 +99,46 @@ const HomeScreen = ({ navigation }: any) => {
 
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Reminders</Text>
-            {reminderCategoriesData.map((category) => (
-              <ReminderCategory key={category.id} category={category} />
-            ))}
+            <ReminderCategory
+              category={{
+                items: reminder?.today,
+                initiallyOpen: true,
+                name: "Today",
+                count: reminder?.today?.length,
+              }}
+            />
+            <ReminderCategory
+              category={{
+                items: reminder?.tomorrow,
+                initiallyOpen: false,
+                name: "Tomorrow",
+                count: reminder?.tomorrow?.length,
+              }}
+            />
+            <ReminderCategory
+              category={{
+                items: reminder?.upcoming,
+                initiallyOpen: false,
+                name: "Upcoming",
+                count: reminder?.upcoming?.length,
+              }}
+            />
+            <ReminderCategory
+              category={{
+                items: reminder?.missed,
+                initiallyOpen: false,
+                name: "Missed",
+                count: reminder?.missed?.length,
+              }}
+            />
           </View>
 
-          <View style={styles.sectionCard}>
+          {/* <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Memories</Text>
-            {memoryCategoriesData.map((category) => (
+            {memoryCategoriesData.map((category: any) => (
               <ReminderCategory key={category.id} category={category} />
             ))}
-          </View>
+          </View> */}
 
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Events</Text>

@@ -9,7 +9,7 @@ import {
   UIManager,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
-import ReminderItem, { ReminderItemData } from "./ReminderItem";
+import ReminderItem from "./ReminderItem";
 import theme from "../../../../utils/theme";
 
 if (
@@ -19,19 +19,7 @@ if (
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-export interface CategoryData {
-  id: string;
-  name: string;
-  count: number;
-  items: ReminderItemData[];
-  initiallyOpen?: boolean;
-}
-
-interface ReminderCategoryProps {
-  category: CategoryData;
-}
-
-const ReminderCategory: React.FC<ReminderCategoryProps> = ({ category }) => {
+const ReminderCategory: any = ({ category }: any) => {
   const [isExpanded, setIsExpanded] = useState(category.initiallyOpen || false);
 
   const toggleExpansion = () => {
@@ -42,9 +30,9 @@ const ReminderCategory: React.FC<ReminderCategoryProps> = ({ category }) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={toggleExpansion} style={styles.header}>
-        <Text style={styles.categoryName}>{category.name}</Text>
+        <Text style={styles.categoryName}>{category?.name}</Text>
         <View style={styles.countBadge}>
-          <Text style={styles.countText}>{category.count}</Text>
+          <Text style={styles.countText}>{category?.count}</Text>
         </View>
         <Feather
           name={isExpanded ? "chevron-up" : "chevron-down"}
@@ -54,7 +42,7 @@ const ReminderCategory: React.FC<ReminderCategoryProps> = ({ category }) => {
       </TouchableOpacity>
       {isExpanded && (
         <View style={styles.itemsContainer}>
-          {category.items.map((item) => (
+          {category?.items?.map((item: any) => (
             <ReminderItem key={item.id} item={item} />
           ))}
         </View>
