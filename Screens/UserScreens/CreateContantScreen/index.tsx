@@ -262,7 +262,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                             <Feather
                               name="user"
                               size={50}
-                              color={theme.colors.cardBackground}
+                              color={theme.colors.secondary}
                             />
                           </View>
                         )}
@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
   },
   logoImg: { width: "50%", height: 40, objectFit: "contain" },
   iconButton: {
-    backgroundColor: theme.colors.cardBackground,
+    backgroundColor: theme.colors.secondary,
     padding: 8,
     borderRadius: 20,
     width: 40,
@@ -785,7 +785,7 @@ const styles = StyleSheet.create({
   },
   formScrollView: { flex: 1 },
   formCard: {
-    backgroundColor: theme.colors.cardBackground,
+    backgroundColor: theme.colors.secondary,
     paddingVertical: 20,
     paddingHorizontal: 15,
     borderRadius: 12,
@@ -823,7 +823,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: theme.colors.cardBackground,
+    backgroundColor: theme.colors.secondary,
     padding: 6,
     borderRadius: 12,
     borderWidth: 1,

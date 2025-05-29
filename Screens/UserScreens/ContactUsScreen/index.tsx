@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     objectFit: "contain",
   },
   iconButton: {
-    backgroundColor: theme.colors.cardBackground, // Dark grey buttons
+    backgroundColor: theme.colors.secondary, // Dark grey buttons
     padding: 8,
     borderRadius: 20,
     width: 40,
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   formCard: {
-    backgroundColor: theme.colors.cardBackground, // Dark grey card
+    backgroundColor: theme.colors.secondary, // Dark grey card
     paddingVertical: 20,
     paddingHorizontal: 20,
     borderRadius: 12,

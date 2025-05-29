@@ -116,13 +116,8 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   return (
     <DefaultBackground>
       <StatusBar style="light" />
-      <View
-        style={[
-          styles.flexContainer,
-          { paddingTop: Platform.OS === "android" ? insets.top : 0 },
-        ]}
-      >
-        <Header />
+      <View style={[styles.flexContainer]}>
+        <Header menu={false} />
         <ScrollView
           style={styles.scrollableContent}
           contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
@@ -152,7 +147,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
                     <Feather
                       name="user"
                       size={60}
-                      color={theme.colors.cardBackground}
+                      color={theme.colors.secondary}
                     />
                   </View>
                 )}
@@ -324,7 +319,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileCard: {
-    backgroundColor: theme.colors.cardBackground,
+    backgroundColor: theme.colors.secondary,
     borderRadius: 15,
     marginHorizontal: 15,
     marginBottom: 20,

@@ -16,7 +16,6 @@ const theme = {
     searchText: "#333333",
     reminderMessageText: "#E0E0E0",
     categoryCountBadgeBackground: "#404040",
-    cardBackground: "#5A5A5A",
   },
   font: {
     fontBold: {

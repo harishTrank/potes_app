@@ -13,12 +13,17 @@ import theme from "../../utils/theme";
 import ImageModule from "../../ImageModule";
 import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-const Header: any = () => {
+const Header: any = ({ menu = true }: any) => {
   const insets = useSafeAreaInsets();
   const navigation: any = useNavigation();
   const onMenuPress = () => {
     navigation.toggleDrawer();
+  };
+
+  const onBackPress = () => {
+    navigation.goBack();
   };
 
   const onProfilePress = () => navigation.navigate("UserProfileScreen");
@@ -27,9 +32,19 @@ const Header: any = () => {
     <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
       <Image source={ImageModule.logo} style={styles.logoImg} />
       <View style={styles.searchRow}>
-        <TouchableOpacity onPress={onMenuPress} style={styles.iconButton}>
-          <Feather name="menu" size={28} color={theme.colors.black} />
-        </TouchableOpacity>
+        {menu ? (
+          <TouchableOpacity onPress={onMenuPress} style={styles.iconButton}>
+            <Feather name="menu" size={28} color={theme.colors.black} />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={onBackPress} style={styles.iconButton}>
+            <Ionicons
+              name="arrow-back-circle"
+              size={28}
+              color={theme.colors.black}
+            />
+          </TouchableOpacity>
+        )}
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}

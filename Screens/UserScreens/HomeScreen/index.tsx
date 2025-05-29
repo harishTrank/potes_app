@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionCard: {
-    backgroundColor: theme.colors.cardBackground,
+    backgroundColor: theme.colors.secondary,
     borderRadius: 15,
     marginHorizontal: 15,
     marginBottom: 20,

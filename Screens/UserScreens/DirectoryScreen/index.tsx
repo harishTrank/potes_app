@@ -217,12 +217,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
   return (
     <DefaultBackground>
       <StatusBar style="light" />
-      <View
-        style={[
-          styles.flexContainer,
-          { paddingTop: Platform.OS === "android" ? insets.top : 0 },
-        ]}
-      >
+      <View style={[styles.flexContainer]}>
         <Header
           onMenuPress={() => navigation.openDrawer()}
           onProfilePress={handleProfilePress}
