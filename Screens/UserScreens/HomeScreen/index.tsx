@@ -6,8 +6,60 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ReminderCategory, { CategoryData } from "./Component/ReminderCategory";
 import ActionButtons from "../../Components/ActionButtons";
 import Header from "../../Components/Header";
+import EventListItem from "./Component/EventListItem";
 
 // Mock Data
+const eventData: any = [
+  {
+    id: "ev1",
+    icon: "calendar",
+    text: "zzzzzzzzzzzzzzzz (POOJa's Anniversary)",
+    date: "05-29-2025",
+    type: "Anniversary",
+  },
+  {
+    id: "ev2",
+    icon: "gift",
+    text: "fsfsgfedgdg (test's Spouse Birthday)",
+    date: "05-29-2025",
+    type: "Spouse Birthday",
+  },
+  {
+    id: "ev3",
+    icon: "gift",
+    text: "test spouse (Test Test's Spouse Birthday)",
+    date: "05-29-2025",
+    type: "Spouse Birthday",
+  },
+  {
+    id: "ev4",
+    icon: "calendar",
+    text: "DEV spouse (dev's Anniversary)",
+    date: "05-29-2025",
+    type: "Anniversary",
+  },
+  {
+    id: "cb1",
+    icon: "gift",
+    text: "test child (Test Test's Child Birthday)",
+    date: "05-29-2025",
+    type: "Child Birthday",
+  },
+  {
+    id: "cb2",
+    icon: "gift",
+    text: "Another Kiddo (demo's Child Birthday)",
+    date: "06-15-2025",
+    type: "Child Birthday",
+  },
+  {
+    id: "ca1",
+    icon: "calendar",
+    text: "POOJA (Contact Anniversary)",
+    date: "07-01-2025",
+    type: "Contact Anniversary",
+  },
+];
 const reminderCategoriesData: CategoryData[] = [
   {
     id: "today",
@@ -78,6 +130,16 @@ const HomeScreen = ({ navigation }: any) => {
               <ReminderCategory key={category.id} category={category} />
             ))}
           </View>
+
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Events</Text>
+            <View style={styles.eventData}>
+              <Text style={styles.smallHead}>Birthdays</Text>
+              {eventData?.map((item: any) => (
+                <EventListItem item={item} key={item?.id} />
+              ))}
+            </View>
+          </View>
         </ScrollView>
       </View>
     </DefaultBackground>
@@ -105,6 +167,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingTop: 15,
     paddingBottom: 5,
+  },
+  smallHead: {
+    flex: 1,
+    fontSize: 16,
+    ...theme.font.fontSemiBold,
+    color: theme.colors.reminderMessageText,
+  },
+  eventData: {
+    paddingHorizontal: 15,
   },
 });
 

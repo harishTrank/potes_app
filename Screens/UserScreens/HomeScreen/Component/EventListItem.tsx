@@ -25,9 +25,7 @@ const EventListItem: React.FC<EventListItemProps> = ({ item }) => {
         style={styles.icon}
       />
       <View style={styles.textContainer}>
-        <Text style={styles.eventText} numberOfLines={1}>
-          {item.text}
-        </Text>
+        <Text style={styles.eventText}>{item.text}</Text>
       </View>
       <Text style={styles.eventDate}>{item.date}</Text>
     </View>
