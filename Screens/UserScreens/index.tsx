@@ -11,6 +11,7 @@ import UserProfileScreen from "./UserProfileScreen";
 import CreateContantScreen from "./CreateContantScreen";
 import ViewContactScreen from "./ViewContactScreen";
 import AllNotesScreen from "./AllNotesScreen";
+import SearchResultScreen from "./SearchResultScreen";
 
 const Stack = createStackNavigator<any>();
 
@@ -20,7 +21,7 @@ const UserScreens = () => {
       screenOptions={{
         headerShown: false,
       }}
-      initialRouteName={"DrawerNavigation"}
+      initialRouteName={"LoginScreen"}
     >
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
@@ -44,6 +45,7 @@ const UserScreens = () => {
       />
       <Stack.Screen name="ViewContactScreen" component={ViewContactScreen} />
       <Stack.Screen name="AllNotesScreen" component={AllNotesScreen} />
+      <Stack.Screen name="SearchResultScreen" component={SearchResultScreen} />
     </Stack.Navigator>
   );
 };

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 const Header: any = ({ menu = true }: any) => {
   const insets = useSafeAreaInsets();
   const navigation: any = useNavigation();
+  const [searchVal, setSearchVal]: any = useState("");
+  const [searchValOnClick, setSearchValOnClick]: any = useState("");
   const onMenuPress = () => {
     navigation.toggleDrawer();
   };
@@ -27,6 +29,16 @@ const Header: any = ({ menu = true }: any) => {
   };
 
   const onProfilePress = () => navigation.navigate("UserProfileScreen");
+
+  const onPressSearchhandler = () => {
+    setSearchValOnClick(searchVal);
+  };
+
+  useEffect(() => {
+    if (searchValOnClick && searchValOnClick?.length > 0) {
+      navigation.navigate("SearchResultScreen");
+    }
+  }, [searchValOnClick]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
@@ -50,13 +62,17 @@ const Header: any = ({ menu = true }: any) => {
             style={styles.searchInput}
             placeholder="Search..."
             placeholderTextColor={theme.colors.searchPlaceholder}
+            value={searchVal}
+            onChangeText={(val: any) => setSearchVal(val)}
           />
-          <Feather
-            name="search"
-            size={22}
-            color={theme.colors.black}
-            style={styles.searchIcon}
-          />
+          <TouchableOpacity onPress={onPressSearchhandler}>
+            <Feather
+              name="search"
+              size={22}
+              color={theme.colors.black}
+              style={styles.searchIcon}
+            />
+          </TouchableOpacity>
         </View>
         <TouchableOpacity onPress={onProfilePress} style={styles.iconButton}>
           <FontAwesome
