@@ -155,5 +155,6 @@ const styles = StyleSheet.create({
   logoImg: {
     height: 50,
     objectFit: "contain",
+    width: "70%",
   },
 });

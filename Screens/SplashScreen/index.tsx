@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
-import { View } from "react-native";
+import { Image, View } from "react-native";
 import theme from "../../utils/theme";
+import ImageModule from "../../ImageModule";
 
 const SplashScreen = ({ navigation }: any) => {
   useEffect(() => {
@@ -14,17 +15,17 @@ const SplashScreen = ({ navigation }: any) => {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: theme.colors.white,
+        backgroundColor: theme.colors.primary,
       }}
     >
-      {/* <Image
-        source={ImageModule.animatedLogo}
+      <Image
+        source={ImageModule.logo}
         style={{
           height: "100%",
-          width: "100%",
+          width: "70%",
           objectFit: "contain",
         }}
-      /> */}
+      />
     </View>
   );
 };
