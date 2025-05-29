@@ -103,8 +103,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 isSubmitting,
               }: any) => (
                 <View style={styles.formContainer}>
-                  <Text style={styles.title}>Log In</Text>
-
                   <View style={styles.inputGroup}>
                     {renderLabel("Username:")}
                     <TextInput
@@ -228,8 +226,8 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
   },
   title: {
-    fontSize: 36,
-    ...theme.font.fontBold,
+    fontSize: 30,
+    ...theme.font.fontSemiBold,
     color: theme.colors.black,
     marginBottom: height * 0.05,
     textAlign: "left",
