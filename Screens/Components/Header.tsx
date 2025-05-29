@@ -12,17 +12,16 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import theme from "../../utils/theme";
 import ImageModule from "../../ImageModule";
 import { useNavigation } from "@react-navigation/native";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-interface HeaderProps {
-  onProfilePress: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ onProfilePress }) => {
+const Header: any = () => {
   const insets = useSafeAreaInsets();
   const navigation: any = useNavigation();
   const onMenuPress = () => {
     navigation.toggleDrawer();
   };
+
+  const onProfilePress = () => navigation.navigate("UserProfileScreen");
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
@@ -45,7 +44,11 @@ const Header: React.FC<HeaderProps> = ({ onProfilePress }) => {
           />
         </View>
         <TouchableOpacity onPress={onProfilePress} style={styles.iconButton}>
-          <Feather name="user" size={28} color={theme.colors.black} />
+          <FontAwesome
+            name="user-circle-o"
+            size={30}
+            color={theme.colors.black}
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -59,7 +62,7 @@ const styles = StyleSheet.create({
   },
   logoImg: {
     width: "100%",
-    height: 50,
+    height: 40,
     objectFit: "contain",
   },
   searchRow: {

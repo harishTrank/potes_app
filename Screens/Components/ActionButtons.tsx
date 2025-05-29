@@ -7,7 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 const ActionButtons: any = () => {
   const navigation: any = useNavigation();
 
-  const onCreateContactPress = () => console.log("create contact");
+  const onCreateContactPress = () => navigation.navigate("CreateContantScreen");
   const onCreateNotePress = () => navigation.navigate("CreateNoteScreen");
   return (
     <View style={styles.container}>
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: theme.colors.cardBackground,
     paddingVertical: 12,
     borderRadius: 12,
     marginHorizontal: 5,

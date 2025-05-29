@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     objectFit: "contain",
   },
   iconButton: {
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: theme.colors.cardBackground,
     padding: 8,
     borderRadius: 20,
     width: 40,
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   titleBar: {
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: theme.colors.cardBackground,
     paddingVertical: 15,
     paddingHorizontal: 20,
     marginHorizontal: 15,

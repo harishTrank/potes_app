@@ -7,6 +7,8 @@ import OTPScreen from "./OTPScreen";
 import ResetPasswordScreen from "./ResetPasswordScreen";
 import DrawerNavigation from "../../navigation/DrawerNavigation";
 import CreateNoteScreen from "./CreateNoteScreen";
+import UserProfileScreen from "./UserProfileScreen";
+import CreateContantScreen from "./CreateContantScreen";
 
 const Stack = createStackNavigator<any>();
 
@@ -33,6 +35,11 @@ const UserScreens = () => {
       {/* <Stack.Screen name="HomeScreen" component={HomeScreen} /> */}
       <Stack.Screen name="DrawerNavigation" component={DrawerNavigation} />
       <Stack.Screen name="CreateNoteScreen" component={CreateNoteScreen} />
+      <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
+      <Stack.Screen
+        name="CreateContantScreen"
+        component={CreateContantScreen}
+      />
     </Stack.Navigator>
   );
 };
