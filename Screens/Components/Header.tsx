@@ -14,16 +14,25 @@ import ImageModule from "../../ImageModule";
 import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { viewProfileApi } from "../../store/Services/Others";
 import { useAtom } from "jotai";
 import { userProfileGlobal } from "../../jotaiStore";
+import { viewProfileApi } from "../../store/Services/Others";
 
 const Header: any = ({ menu = true }: any) => {
   const insets = useSafeAreaInsets();
   const navigation: any = useNavigation();
   const [searchVal, setSearchVal]: any = useState("");
   const [searchValOnClick, setSearchValOnClick]: any = useState("");
-  const [userProfile]: any = useAtom(userProfileGlobal);
+  const [userProfile, setUserProfile]: any = useAtom(userProfileGlobal);
+
+  useEffect(() => {
+    viewProfileApi()
+      .then((res: any) => {
+        setUserProfile(res);
+      })
+      ?.catch((err: any) => console.log("err", err));
+  }, []);
+
   const onMenuPress = () => {
     navigation.toggleDrawer();
   };
