@@ -60,7 +60,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   const handleForgotPassword = () => {
-    console.log("Forgot Password pressed");
+    navigation.navigate("ForgotPasswordScreen");
   };
 
   const handleRegister = () => {
