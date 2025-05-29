@@ -11,14 +11,18 @@ import Feather from "@expo/vector-icons/Feather";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import theme from "../../utils/theme";
 import ImageModule from "../../ImageModule";
+import { useNavigation } from "@react-navigation/native";
 
 interface HeaderProps {
-  onMenuPress: () => void;
   onProfilePress: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onMenuPress, onProfilePress }) => {
+const Header: React.FC<HeaderProps> = ({ onProfilePress }) => {
   const insets = useSafeAreaInsets();
+  const navigation: any = useNavigation();
+  const onMenuPress = () => {
+    navigation.toggleDrawer();
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 10 }]}>

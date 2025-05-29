@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.2",
+    "@react-navigation/drawer": "^7.3.12",
     "@react-navigation/native": "^7.1.9",
     "@react-navigation/stack": "^7.3.2",
     "axios": "^1.9.0",
@@ -20,10 +21,11 @@
     "querystring": "^0.2.1",
     "react": "19.0.0",
     "react-native": "0.79.2",
-    "react-native-gesture-handler": "^2.25.0",
+    "react-native-gesture-handler": "~2.24.0",
     "react-native-paper": "^5.14.5",
     "react-native-paper-dates": "^0.22.43",
-    "react-native-safe-area-context": "^5.4.1",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-safe-area-context": "5.4.0",
     "react-native-toast-message": "^2.3.0",
     "yup": "^1.6.1"
   },

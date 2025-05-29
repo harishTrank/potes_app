@@ -1,11 +1,11 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
-import HomeScreen from "./HomeScreen";
 import LoginScreen from "./LoginScreen";
 import RegisterScreen from "./RegisterScreen";
 import ForgotPasswordScreen from "./ForgotPasswordScreen";
 import OTPScreen from "./OTPScreen";
 import ResetPasswordScreen from "./ResetPasswordScreen";
+import DrawerNavigation from "../../navigation/DrawerNavigation";
 
 const Stack = createStackNavigator<any>();
 
@@ -15,7 +15,7 @@ const UserScreens = () => {
       screenOptions={{
         headerShown: false,
       }}
-      initialRouteName={"HomeScreen"}
+      initialRouteName={"DrawerNavigation"}
     >
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
@@ -29,7 +29,8 @@ const UserScreens = () => {
         component={ResetPasswordScreen}
       />
 
-      <Stack.Screen name="HomeScreen" component={HomeScreen} />
+      {/* <Stack.Screen name="HomeScreen" component={HomeScreen} /> */}
+      <Stack.Screen name="DrawerNavigation" component={DrawerNavigation} />
     </Stack.Navigator>
   );
 };

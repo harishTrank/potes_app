@@ -49,10 +49,9 @@ const memoryCategoriesData: CategoryData[] = [
   },
 ];
 
-const HomePage = ({ navigation }: any) => {
+const HomeScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
 
-  const handleMenuPress = () => console.log("Menu pressed");
   const handleProfilePress = () => console.log("Profile pressed");
   const handleCreateContact = () => console.log("Create contact");
   const handleCreateNote = () => console.log("Create note");
@@ -60,10 +59,7 @@ const HomePage = ({ navigation }: any) => {
   return (
     <DefaultBackground>
       <View style={styles.flexContainer}>
-        <Header
-          onMenuPress={handleMenuPress}
-          onProfilePress={handleProfilePress}
-        />
+        <Header onProfilePress={handleProfilePress} />
         <ScrollView
           style={styles.scrollableContent}
           contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
@@ -117,4 +113,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomePage;
+export default HomeScreen;
