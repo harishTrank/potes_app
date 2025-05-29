@@ -2,16 +2,13 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import theme from "../../utils/theme";
+import { useNavigation } from "@react-navigation/native";
 
-interface ActionButtonsProps {
-  onCreateContactPress: () => void;
-  onCreateNotePress: () => void;
-}
+const ActionButtons: any = () => {
+  const navigation: any = useNavigation();
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({
-  onCreateContactPress,
-  onCreateNotePress,
-}) => {
+  const onCreateContactPress = () => console.log("create contact");
+  const onCreateNotePress = () => navigation.navigate("CreateNoteScreen");
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.button} onPress={onCreateContactPress}>

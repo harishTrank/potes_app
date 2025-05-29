@@ -6,6 +6,7 @@ import ForgotPasswordScreen from "./ForgotPasswordScreen";
 import OTPScreen from "./OTPScreen";
 import ResetPasswordScreen from "./ResetPasswordScreen";
 import DrawerNavigation from "../../navigation/DrawerNavigation";
+import CreateNoteScreen from "./CreateNoteScreen";
 
 const Stack = createStackNavigator<any>();
 
@@ -31,6 +32,7 @@ const UserScreens = () => {
 
       {/* <Stack.Screen name="HomeScreen" component={HomeScreen} /> */}
       <Stack.Screen name="DrawerNavigation" component={DrawerNavigation} />
+      <Stack.Screen name="CreateNoteScreen" component={CreateNoteScreen} />
     </Stack.Navigator>
   );
 };

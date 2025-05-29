@@ -53,8 +53,6 @@ const HomeScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
 
   const handleProfilePress = () => console.log("Profile pressed");
-  const handleCreateContact = () => console.log("Create contact");
-  const handleCreateNote = () => console.log("Create note");
 
   return (
     <DefaultBackground>
@@ -65,10 +63,7 @@ const HomeScreen = ({ navigation }: any) => {
           contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
           showsVerticalScrollIndicator={false}
         >
-          <ActionButtons
-            onCreateContactPress={handleCreateContact}
-            onCreateNotePress={handleCreateNote}
-          />
+          <ActionButtons />
 
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Reminders</Text>

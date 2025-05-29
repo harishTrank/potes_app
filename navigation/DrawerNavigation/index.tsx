@@ -3,6 +3,8 @@ import { createDrawerNavigator } from "@react-navigation/drawer";
 import theme from "../../utils/theme";
 import { CustomDrawerContent } from "./CustomDrawerContent";
 import HomeScreen from "../../Screens/UserScreens/HomeScreen";
+import AboutUsScreen from "../../Screens/UserScreens/AboutUsScreen";
+import ContactUsScreen from "../../Screens/UserScreens/ContactUsScreen";
 
 const Drawer = createDrawerNavigator();
 
@@ -25,6 +27,8 @@ export default function DrawerNavigator() {
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
       <Drawer.Screen name="HomeScreen" component={HomeScreen} />
+      <Drawer.Screen name="ContactUsScreen" component={ContactUsScreen} />
+      <Drawer.Screen name="AboutUsScreen" component={AboutUsScreen} />
     </Drawer.Navigator>
   );
 }
