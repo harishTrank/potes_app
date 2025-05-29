@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
@@ -7,6 +7,9 @@ import ReminderCategory, { CategoryData } from "./Component/ReminderCategory";
 import ActionButtons from "../../Components/ActionButtons";
 import Header from "../../Components/Header";
 import EventListItem from "./Component/EventListItem";
+import { viewProfileApi } from "../../../store/Services/Others";
+import { useAtom } from "jotai";
+import { userProfileGlobal } from "../../../jotaiStore";
 
 // Mock Data
 const eventData: any = [
@@ -103,6 +106,14 @@ const memoryCategoriesData: CategoryData[] = [
 
 const HomeScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
+  const [, setUserProfile]: any = useAtom(userProfileGlobal);
+  useEffect(() => {
+    viewProfileApi()
+      .then((res: any) => {
+        setUserProfile(res);
+      })
+      ?.catch((err: any) => console.log("err", err));
+  }, []);
 
   const handleProfilePress = () => console.log("Profile pressed");
 

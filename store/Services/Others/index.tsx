@@ -28,7 +28,6 @@ export const createNotesApi = ({ body }: any) =>
   callApi({
     uriEndPoint: allApi.creteNotes.v1,
     body,
-    withCredentials: "include",
   });
 export const getNotesApi = ({ query }: any) =>
   callApi({
@@ -58,9 +57,9 @@ export const yearsAgo = () =>
   callApi({
     uriEndPoint: allApi.yearsAgo.v1,
   });
-export const editProfile = () =>
+export const viewProfileApi = () =>
   callApi({
-    uriEndPoint: allApi.editProfile.v1,
+    uriEndPoint: allApi.viewProfile.v1,
   });
 export const changePass = ({ body }: any) =>
   callApi({

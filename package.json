@@ -19,6 +19,7 @@
     "expo-splash-screen": "^0.30.8",
     "expo-status-bar": "~2.2.3",
     "formik": "^2.4.6",
+    "jotai": "^2.12.5",
     "querystring": "^0.2.1",
     "react": "19.0.0",
     "react-native": "0.79.2",

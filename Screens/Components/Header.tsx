@@ -14,12 +14,16 @@ import ImageModule from "../../ImageModule";
 import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { viewProfileApi } from "../../store/Services/Others";
+import { useAtom } from "jotai";
+import { userProfileGlobal } from "../../jotaiStore";
 
 const Header: any = ({ menu = true }: any) => {
   const insets = useSafeAreaInsets();
   const navigation: any = useNavigation();
   const [searchVal, setSearchVal]: any = useState("");
   const [searchValOnClick, setSearchValOnClick]: any = useState("");
+  const [userProfile]: any = useAtom(userProfileGlobal);
   const onMenuPress = () => {
     navigation.toggleDrawer();
   };
@@ -75,11 +79,18 @@ const Header: any = ({ menu = true }: any) => {
           </TouchableOpacity>
         </View>
         <TouchableOpacity onPress={onProfilePress} style={styles.iconButton}>
-          <FontAwesome
-            name="user-circle-o"
-            size={30}
-            color={theme.colors.black}
-          />
+          {userProfile?.profile_pic ? (
+            <Image
+              source={{ uri: userProfile?.profile_pic }}
+              style={styles.profilePic}
+            />
+          ) : (
+            <FontAwesome
+              name="user-circle-o"
+              size={30}
+              color={theme.colors.black}
+            />
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -90,6 +101,12 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 15,
     paddingBottom: 10,
+  },
+  profilePic: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+    objectFit: "cover",
   },
   logoImg: {
     width: "100%",

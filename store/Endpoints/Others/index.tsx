@@ -78,7 +78,7 @@ export const allApi = {
       uri: "/event/",
     },
   },
-  editProfile: {
+  viewProfile: {
     v1: {
       ...defaults.methods.GET,
       ...defaults.versions.v1,
