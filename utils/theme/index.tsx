@@ -3,13 +3,7 @@ import { Platform } from "react-native";
 const theme = {
   colors: {
     primary: "#5dd7d1",
-    primaryDark: "#0B641E",
-    primaryLight: "#75C99E",
-    primaryExtraLight: "#F78CA2",
     secondary: "#38423f",
-    secondaryLight: "#22092C",
-    extraHard: "#EEEDED",
-    blue: "#0766AD",
     red: "#C70039",
     text: "#10181E",
     greyText: "#888C94",
@@ -17,13 +11,11 @@ const theme = {
     lightBackground: "#272F35",
     black: "#000",
     grey: "#bdbdbd",
-    lightGrey: "#F3F3F3",
-    violet: "#30336B",
-    warning: "#F4C724",
-    orange: "#F4C724",
-    skyBlue: "#01CBC6",
-    pink: "#E74292",
-    border: "#D0D4CA",
+    searchPlaceholder: "#A0A0A0",
+    searchText: "#333333",
+    reminderMessageText: "#E0E0E0",
+    categoryCountBadgeBackground: "#404040",
+    cardBackground: "#5A5A5A",
   },
   font: {
     fontBold: {
