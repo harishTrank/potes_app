@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 const theme = {
   colors: {
     primary: "#5dd7d1",
+    primaryLight: "#aeebe8",
     secondary: "#38423f",
     secondaryLight: "#727272",
     red: "#C70039",

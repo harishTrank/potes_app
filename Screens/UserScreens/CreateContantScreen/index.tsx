@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -20,8 +20,15 @@ import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule";
-import { Formik, FormikHelpers, FieldArray } from "formik";
-import DropDownComponent from "../../Components/DropDownComponent";
+import {
+  Formik,
+  FormikHelpers,
+  FieldArray,
+  FieldArrayRenderProps,
+} from "formik"; // Added FieldArrayRenderProps
+import { DatePickerModal } from "react-native-paper-dates";
+import { en, registerTranslation } from "react-native-paper-dates";
+registerTranslation("en", en);
 
 if (
   Platform.OS === "android" &&
@@ -40,7 +47,7 @@ interface CreateContactScreenProps {
 interface ChildDetail {
   id: string;
   name: string;
-  birthday: string | null;
+  birthday: Date | undefined;
   details: string;
 }
 interface EmploymentDetail {
@@ -56,7 +63,7 @@ interface EducationDetail {
 interface InterestDetail {
   id: string;
   value: string;
-} // New interface for Interest
+}
 interface CustomField {
   id: string;
   title: string;
@@ -66,17 +73,17 @@ interface CustomField {
 interface CreateContactFormValues {
   avatarUri: string | null;
   nameOrDescription: string;
-  birthday: string | null;
-  anniversary: string | null;
+  birthday: Date | undefined;
+  anniversary: Date | undefined;
   email: string;
   number: string;
   spouseName: string;
-  spouseBirthday: string | null;
+  spouseBirthday: Date | undefined;
   spouseDetails: string;
   children: ChildDetail[];
   employmentHistory: EmploymentDetail[];
   educationHistory: EducationDetail[];
-  interests: InterestDetail[]; // Changed from string to InterestDetail[]
+  interests: InterestDetail[];
   customFields: CustomField[];
 }
 
@@ -84,34 +91,21 @@ interface CreateContactFormValues {
 const initialContactValues: CreateContactFormValues = {
   avatarUri: null,
   nameOrDescription: "",
-  birthday: null,
-  anniversary: null,
+  birthday: undefined,
+  anniversary: undefined,
   email: "",
   number: "",
   spouseName: "",
-  spouseBirthday: null,
+  spouseBirthday: undefined,
   spouseDetails: "",
   children: [],
   employmentHistory: [
-    {
-      id: `emp-${Date.now()}`,
-      employerName: "",
-      employerDetails: "",
-    },
+    { id: `emp-${Date.now()}`, employerName: "", employerDetails: "" },
   ],
   educationHistory: [
-    {
-      id: `edu-${Date.now()}`,
-      universityName: "",
-      universityDetails: "",
-    },
+    { id: `edu-${Date.now()}`, universityName: "", universityDetails: "" },
   ],
-  interests: [
-    {
-      id: `interest-${Date.now()}`,
-      value: "",
-    },
-  ], // Changed from "" to []
+  interests: [{ id: `interest-${Date.now()}`, value: "" }],
   customFields: [],
 };
 
@@ -152,6 +146,14 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [currentDateField, setCurrentDateField] = useState<{
+    path: string;
+    index?: number;
+  } | null>(null);
+  const [currentDateValue, setCurrentDateValue] = useState<Date | undefined>(
+    undefined
+  );
 
   const handleSearchPress = () => console.log("Search pressed");
   const handlePickImage = () =>
@@ -171,7 +173,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
   };
 
   const renderTextInput = (
-    formikProps: any,
+    formikBag: any,
     name: string,
     label: string,
     placeholder: string,
@@ -185,9 +187,9 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
         style={[styles.input, multiline && styles.textArea]}
         placeholder={placeholder}
         placeholderTextColor={theme.colors.grey}
-        value={formikProps.values[name]}
-        onChangeText={formikProps.handleChange(name)}
-        onBlur={formikProps.handleBlur(name)}
+        value={formikBag.values[name]}
+        onChangeText={formikBag.handleChange(name)}
+        onBlur={formikBag.handleBlur(name)}
         keyboardType={keyboardType}
         multiline={multiline}
         numberOfLines={numberOfLines}
@@ -195,7 +197,72 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
     </View>
   );
 
-  const monthOptions = [{ label: "January", value: "Jan" }];
+  const openDatePicker = useCallback(
+    (path: string, currentValue: Date | undefined, index?: number) => {
+      setCurrentDateField({ path, index });
+      setCurrentDateValue(currentValue || new Date());
+      setDatePickerVisible(true);
+    },
+    []
+  );
+  const onDismissDatePicker = useCallback(() => {
+    setDatePickerVisible(false);
+    setCurrentDateField(null);
+  }, []);
+  const onConfirmDatePicker = useCallback(
+    (params: { date: Date | undefined }, setFieldValue: Function) => {
+      setDatePickerVisible(false);
+      if (currentDateField && params.date) {
+        if (currentDateField.index !== undefined) {
+          const arrayName = currentDateField.path.split("[index]")[0];
+          const fieldName = currentDateField.path.split(".")[1];
+          setFieldValue(
+            `${arrayName}[${currentDateField.index}].${fieldName}`,
+            params.date
+          );
+        } else {
+          setFieldValue(currentDateField.path, params.date);
+        }
+      }
+      setCurrentDateField(null);
+    },
+    [currentDateField]
+  );
+  const renderPaperDateInput = (
+    formikValues: any,
+    setFieldValue: Function,
+    fieldPath: string,
+    label: string,
+    placeholder: string,
+    arrayIndex?: number
+  ) => {
+    let displayValue: Date | undefined;
+    if (arrayIndex !== undefined) {
+      const arrayName = fieldPath.split("[index]")[0];
+      const actualFieldName = fieldPath.split(".")[1];
+      displayValue = formikValues[arrayName]?.[arrayIndex]?.[actualFieldName];
+    } else {
+      displayValue = formikValues[fieldPath];
+    }
+    return (
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>{label}</Text>
+        <TouchableOpacity
+          style={styles.dateInputDisplay}
+          onPress={() => openDatePicker(fieldPath, displayValue, arrayIndex)}
+        >
+          <Text
+            style={
+              displayValue ? styles.dateInputText : styles.dateInputPlaceholder
+            }
+          >
+            {displayValue ? displayValue.toLocaleDateString() : placeholder}
+          </Text>
+          <Feather name="calendar" size={20} color={theme.colors.grey} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <DefaultBackground>
@@ -286,32 +353,20 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                         "Name or Description",
                         "Enter name or description"
                       )}
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Birthday</Text>
-                        <DropDownComponent
-                          data={monthOptions}
-                          value={values.birthday}
-                          setValue={(val: any) =>
-                            setFieldValue("birthday", val)
-                          }
-                          placeholder="Select Birthday"
-                          fieldKey="label"
-                          style={styles.dropdownStyle}
-                        />
-                      </View>
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Anniversary</Text>
-                        <DropDownComponent
-                          data={monthOptions}
-                          value={values.anniversary}
-                          setValue={(val: any) =>
-                            setFieldValue("anniversary", val)
-                          }
-                          placeholder="Select Anniversary"
-                          fieldKey="label"
-                          style={styles.dropdownStyle}
-                        />
-                      </View>
+                      {renderPaperDateInput(
+                        values,
+                        setFieldValue,
+                        "birthday",
+                        "Birthday",
+                        "Select Birthday"
+                      )}
+                      {renderPaperDateInput(
+                        values,
+                        setFieldValue,
+                        "anniversary",
+                        "Anniversary",
+                        "Select Anniversary"
+                      )}
                       {renderTextInput(
                         { values, handleChange, handleBlur },
                         "email",
@@ -335,19 +390,13 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                         "Spouse Name",
                         "Enter spouse name"
                       )}
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Spouse Birthday</Text>
-                        <DropDownComponent
-                          data={monthOptions}
-                          value={values.spouseBirthday}
-                          setValue={(val: any) =>
-                            setFieldValue("spouseBirthday", val)
-                          }
-                          placeholder="Select Spouse Birthday"
-                          fieldKey="label"
-                          style={styles.dropdownStyle}
-                        />
-                      </View>
+                      {renderPaperDateInput(
+                        values,
+                        setFieldValue,
+                        "spouseBirthday",
+                        "Spouse Birthday",
+                        "Select Spouse Birthday"
+                      )}
                       {renderTextInput(
                         { values, handleChange, handleBlur },
                         "spouseDetails",
@@ -358,7 +407,9 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                         3
                       )}
                       <FieldArray name="children">
-                        {({ push: pushChild, remove: removeChild }) => (
+                        {(
+                          arrayHelpers: FieldArrayRenderProps // CORRECTED
+                        ) => (
                           <View>
                             {values.children.map((child, index) => (
                               <View
@@ -370,7 +421,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                     Child {index + 1}
                                   </Text>
                                   <TouchableOpacity
-                                    onPress={() => removeChild(index)}
+                                    onPress={() => arrayHelpers.remove(index)}
                                   >
                                     <Feather
                                       name="trash-2"
@@ -394,24 +445,14 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                   "Child Name",
                                   "Enter child name"
                                 )}
-                                <View style={styles.inputGroup}>
-                                  <Text style={styles.label}>
-                                    Child Birthday
-                                  </Text>
-                                  <DropDownComponent
-                                    data={monthOptions}
-                                    value={child.birthday}
-                                    setValue={(val: any) =>
-                                      setFieldValue(
-                                        `children[${index}].birthday`,
-                                        val
-                                      )
-                                    }
-                                    placeholder="Select Child Birthday"
-                                    fieldKey="label"
-                                    style={styles.dropdownStyle}
-                                  />
-                                </View>
+                                {renderPaperDateInput(
+                                  values,
+                                  setFieldValue,
+                                  `children[index].birthday`,
+                                  "Child Birthday",
+                                  "Select Child Birthday",
+                                  index
+                                )}
                                 {renderTextInput(
                                   {
                                     values: child,
@@ -435,10 +476,10 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                             <TouchableOpacity
                               style={styles.addArrayEntryButton}
                               onPress={() =>
-                                pushChild({
+                                arrayHelpers.push({
                                   id: `child-${Date.now()}`,
                                   name: "",
-                                  birthday: null,
+                                  birthday: undefined,
                                   details: "",
                                 })
                               }
@@ -454,7 +495,9 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
 
                     <CollapsibleSection title="Employment">
                       <FieldArray name="employmentHistory">
-                        {({ push, remove }) => (
+                        {(
+                          arrayHelpers: FieldArrayRenderProps // CORRECTED
+                        ) => (
                           <View>
                             {values.employmentHistory.map((job, index) => (
                               <View key={job.id} style={styles.arrayEntryCard}>
@@ -463,7 +506,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                     Employment {index + 1}
                                   </Text>
                                   <TouchableOpacity
-                                    onPress={() => remove(index)}
+                                    onPress={() => arrayHelpers.remove(index)}
                                   >
                                     <Feather
                                       name="trash-2"
@@ -510,7 +553,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                             <TouchableOpacity
                               style={styles.addArrayEntryButton}
                               onPress={() =>
-                                push({
+                                arrayHelpers.push({
                                   id: `emp-${Date.now()}`,
                                   employerName: "",
                                   employerDetails: "",
@@ -528,7 +571,9 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
 
                     <CollapsibleSection title="Education">
                       <FieldArray name="educationHistory">
-                        {({ push, remove }) => (
+                        {(
+                          arrayHelpers: FieldArrayRenderProps // CORRECTED
+                        ) => (
                           <View>
                             {values.educationHistory.map((edu, index) => (
                               <View key={edu.id} style={styles.arrayEntryCard}>
@@ -537,7 +582,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                     Education {index + 1}
                                   </Text>
                                   <TouchableOpacity
-                                    onPress={() => remove(index)}
+                                    onPress={() => arrayHelpers.remove(index)}
                                   >
                                     <Feather
                                       name="trash-2"
@@ -584,7 +629,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                             <TouchableOpacity
                               style={styles.addArrayEntryButton}
                               onPress={() =>
-                                push({
+                                arrayHelpers.push({
                                   id: `edu-${Date.now()}`,
                                   universityName: "",
                                   universityDetails: "",
@@ -600,20 +645,19 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                       </FieldArray>
                     </CollapsibleSection>
 
-                    {/* --- MODIFIED INTERESTS SECTION --- */}
                     <CollapsibleSection title="Interests">
                       <FieldArray name="interests">
-                        {({ push: pushInterest, remove: removeInterest }) => (
+                        {(
+                          arrayHelpers: FieldArrayRenderProps // CORRECTED
+                        ) => (
                           <View>
                             {values.interests.map((interest, index) => (
                               <View
                                 key={interest.id}
                                 style={styles.arrayEntryRow}
                               >
-                                {" "}
-                                {/* Using a simpler row style for interests */}
                                 <TextInput
-                                  style={[styles.input, styles.interestInput]} // Specific style for interest input
+                                  style={[styles.input, styles.interestInput]}
                                   placeholder="Enter an interest"
                                   placeholderTextColor={theme.colors.grey}
                                   value={interest.value}
@@ -625,7 +669,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                   )}
                                 />
                                 <TouchableOpacity
-                                  onPress={() => removeInterest(index)}
+                                  onPress={() => arrayHelpers.remove(index)}
                                   style={styles.removeArrayEntryIcon}
                                 >
                                   <Feather
@@ -639,7 +683,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                             <TouchableOpacity
                               style={styles.addArrayEntryButton}
                               onPress={() =>
-                                pushInterest({
+                                arrayHelpers.push({
                                   id: `interest-${Date.now()}`,
                                   value: "",
                                 })
@@ -653,10 +697,11 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                         )}
                       </FieldArray>
                     </CollapsibleSection>
-                    {/* --- END MODIFIED INTERESTS SECTION --- */}
 
                     <FieldArray name="customFields">
-                      {({ push, remove }) => (
+                      {(
+                        arrayHelpers: FieldArrayRenderProps // CORRECTED
+                      ) => (
                         <View>
                           {values.customFields.map((field, index) => (
                             <View key={field.id} style={styles.customFieldRow}>
@@ -691,7 +736,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                 placeholderTextColor={theme.colors.grey}
                               />
                               <TouchableOpacity
-                                onPress={() => remove(index)}
+                                onPress={() => arrayHelpers.remove(index)}
                                 style={styles.removeCustomFieldIcon}
                               >
                                 <Feather
@@ -705,7 +750,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                           <TouchableOpacity
                             style={styles.addCustomButton}
                             onPress={() =>
-                              push({
+                              arrayHelpers.push({
                                 id: `custom-${Date.now()}`,
                                 title: "",
                                 value: "",
@@ -723,7 +768,9 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                 styles.removeLastCustomButton,
                               ]}
                               onPress={() =>
-                                remove(values.customFields.length - 1)
+                                arrayHelpers.remove(
+                                  values.customFields.length - 1
+                                )
                               }
                             >
                               <Text
@@ -752,6 +799,17 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                         </Text>
                       )}
                     </TouchableOpacity>
+
+                    <DatePickerModal
+                      locale="en"
+                      mode="single"
+                      visible={datePickerVisible}
+                      onDismiss={onDismissDatePicker}
+                      date={currentDateValue}
+                      onConfirm={(params) =>
+                        onConfirmDatePicker(params, setFieldValue)
+                      }
+                    />
                   </>
                 )}
               </Formik>
@@ -764,7 +822,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  // ... (Other styles remain largely the same)
+  // ... (Styles remain the same as the previous correct version)
   container: { flex: 1 },
   headerRow: {
     flexDirection: "row",
@@ -864,12 +922,24 @@ const styles = StyleSheet.create({
     height: 48,
   },
   textArea: { height: 100, textAlignVertical: "top", paddingTop: 12 },
-  dropdownStyle: {
-    height: 48,
+  dateInputDisplay: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: theme.colors.white,
     borderRadius: 8,
-    borderWidth: 0,
-    marginVertical: 0,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  dateInputText: {
+    fontSize: 15,
+    ...theme.font.fontRegular,
+    color: theme.colors.black,
+  },
+  dateInputPlaceholder: {
+    fontSize: 15,
+    ...theme.font.fontRegular,
+    color: theme.colors.grey,
   },
   arrayEntryCard: {
     backgroundColor: theme.colors.grey,
@@ -899,24 +969,13 @@ const styles = StyleSheet.create({
     ...theme.font.fontMedium,
     color: theme.colors.primary,
   },
-
-  // Styles for multiple interests
   arrayEntryRow: {
-    // Simpler row for single input fields like interest
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
   },
-  interestInput: {
-    // Style for the interest text input
-    flex: 1, // Takes up most space
-    marginRight: 10, // Space before remove icon
-  },
-  removeArrayEntryIcon: {
-    // Consistent remove icon style
-    padding: 5,
-  },
-
+  interestInput: { flex: 1, marginRight: 10 },
+  removeArrayEntryIcon: { padding: 5 },
   customFieldRow: {
     flexDirection: "row",
     alignItems: "center",

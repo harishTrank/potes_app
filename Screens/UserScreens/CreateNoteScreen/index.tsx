@@ -62,10 +62,6 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
     console.log("Search icon pressed on Create Note screen");
   };
 
-  const handleVoiceInput = () => {
-    console.log("Voice input pressed");
-  };
-
   const handleFormSubmit = (values: any, { setSubmitting, resetForm }: any) => {
     console.log("Create Note form submitted (labels stored):", values);
     setTimeout(() => {
@@ -184,16 +180,6 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
                           multiline
                           numberOfLines={5}
                         />
-                        <TouchableOpacity
-                          onPress={handleVoiceInput}
-                          style={styles.voiceIcon}
-                        >
-                          <Feather
-                            name="mic"
-                            size={22}
-                            color={theme.colors.grey}
-                          />
-                        </TouchableOpacity>
                       </View>
                       {touched.noteText && errors.noteText && (
                         <Text style={styles.errorText}>{errors.noteText}</Text>
