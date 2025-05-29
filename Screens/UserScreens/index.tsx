@@ -12,6 +12,8 @@ import CreateContantScreen from "./CreateContantScreen";
 import ViewContactScreen from "./ViewContactScreen";
 import AllNotesScreen from "./AllNotesScreen";
 import SearchResultScreen from "./SearchResultScreen";
+import SplashScreen from "../SplashScreen";
+import OTPScreenResgister from "./OTPScreenResgister";
 
 const Stack = createStackNavigator<any>();
 
@@ -21,8 +23,9 @@ const UserScreens = () => {
       screenOptions={{
         headerShown: false,
       }}
-      initialRouteName={"LoginScreen"}
+      initialRouteName={"SplashScreen"}
     >
+      <Stack.Screen name="SplashScreen" component={SplashScreen} />
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
       <Stack.Screen
@@ -30,6 +33,7 @@ const UserScreens = () => {
         component={ForgotPasswordScreen}
       />
       <Stack.Screen name="OTPScreen" component={OTPScreen} />
+      <Stack.Screen name="OTPScreenResgister" component={OTPScreenResgister} />
       <Stack.Screen
         name="ResetPasswordScreen"
         component={ResetPasswordScreen}

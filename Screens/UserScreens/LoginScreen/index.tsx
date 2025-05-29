@@ -19,6 +19,9 @@ import * as Yup from "yup";
 
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
+import { loginApiCall } from "../../../store/Services/Auth";
+import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { height, width } = Dimensions.get("window");
 
@@ -53,7 +56,25 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     values: LoginFormValues,
     { setSubmitting }: FormikHelpers<LoginFormValues>
   ) => {
-    console.log("Login attempt with Formik values:", values);
+    loginApiCall({
+      body: values,
+    })
+      ?.then(async (res: any) => {
+        Toast.show({
+          type: "success",
+          text1: res?.msg,
+        });
+        await AsyncStorage.setItem("accessToken", res?.token?.access);
+        navigation.navigate("DrawerNavigation");
+        setSubmitting(false);
+      })
+      ?.catch((err: any) => {
+        setSubmitting(false);
+        Toast.show({
+          type: "error",
+          text1: "Invalid Credentials",
+        });
+      });
     setTimeout(() => {
       setSubmitting(false);
     }, 2000);
@@ -216,9 +237,9 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: width * 0.08,
+    paddingHorizontal: width * 0.06,
+    marginTop: 50,
   },
   formContainer: {
     width: "100%",

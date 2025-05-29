@@ -19,6 +19,8 @@ import * as Yup from "yup";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
+import { registerApi } from "../../../store/Services/Auth";
+import Toast from "react-native-toast-message";
 
 const { height, width } = Dimensions.get("window");
 
@@ -72,12 +74,31 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: any) => {
     values: RegisterFormValues,
     { setSubmitting }: FormikHelpers<RegisterFormValues>
   ) => {
-    console.log("Register attempt with Formik values:", values);
-    // Simulate API call
-    setTimeout(() => {
-      // Example: navigation.navigate('LoginScreen');
-      setSubmitting(false);
-    }, 2000);
+    registerApi({
+      body: {
+        first_name: values.firstName,
+        last_name: values.lastName,
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        password2: values.confirmPassword,
+      },
+    })
+      ?.then((res: any) => {
+        setSubmitting(false);
+        Toast.show({
+          type: "success",
+          text1: res.msg,
+        });
+        navigation.navigate("OTPScreenResgister", { values });
+      })
+      ?.catch((err: any) => {
+        setSubmitting(false);
+        Toast.show({
+          type: "error",
+          text1: err?.data?.error,
+        });
+      });
   };
 
   const renderLabel = (label: string) => (
@@ -331,8 +352,8 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: width * 0.08,
-    paddingVertical: height * 0.03, // Added vertical padding for scrollable content
+    paddingHorizontal: width * 0.05,
+    paddingVertical: height * 0.03,
   },
   formContainer: {
     width: "100%",

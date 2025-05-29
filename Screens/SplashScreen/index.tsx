@@ -2,11 +2,20 @@ import React, { useEffect } from "react";
 import { Image, View } from "react-native";
 import theme from "../../utils/theme";
 import ImageModule from "../../ImageModule";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SplashScreen = ({ navigation }: any) => {
+  const loginChecker = async () => {
+    const token: any = await AsyncStorage.getItem("accessToken");
+    if (token) {
+      navigation.navigate("DrawerNavigation");
+    } else {
+      navigation.navigate("LoginScreen");
+    }
+  };
   useEffect(() => {
     setTimeout(() => {
-      navigation.navigate("UserScreens");
+      loginChecker();
     }, 500);
   }, []);
   return (

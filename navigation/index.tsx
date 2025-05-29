@@ -28,12 +28,6 @@ function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={navigationComponents.cardStyle}>
       <Stack.Screen
-        name="SplashScreen"
-        component={SplashScreen}
-        options={{ headerShown: false }}
-      />
-
-      <Stack.Screen
         name="UserScreens"
         component={UserScreens}
         options={{ headerShown: false }}
