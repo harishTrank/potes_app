@@ -10,6 +10,7 @@ import CreateNoteScreen from "./CreateNoteScreen";
 import UserProfileScreen from "./UserProfileScreen";
 import CreateContantScreen from "./CreateContantScreen";
 import ViewContactScreen from "./ViewContactScreen";
+import AllNotesScreen from "./AllNotesScreen";
 
 const Stack = createStackNavigator<any>();
 
@@ -42,6 +43,7 @@ const UserScreens = () => {
         component={CreateContantScreen}
       />
       <Stack.Screen name="ViewContactScreen" component={ViewContactScreen} />
+      <Stack.Screen name="AllNotesScreen" component={AllNotesScreen} />
     </Stack.Navigator>
   );
 };

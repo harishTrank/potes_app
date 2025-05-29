@@ -274,7 +274,7 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
       contactName: contactDetails?.nameOrDescription,
     });
   const handleViewAllNotes = () =>
-    navigation.navigate("ContactNotesScreen", {
+    navigation.navigate("AllNotesScreen", {
       contactId: contactDetails?.id,
     });
 
