@@ -70,12 +70,6 @@ interface InterestDetail {
   id: string;
   name: string;
 } // name
-interface CustomFieldInternal {
-  id: string;
-  title: string;
-  value: string;
-} // title, value (single string)
-
 interface CreateContactFormValues {
   avatarUri: string | null; // This will be the file URI from image picker
   nameOrDescription: string;
@@ -90,7 +84,7 @@ interface CreateContactFormValues {
   employmentHistory: EmploymentDetail[];
   educationHistory: EducationDetail[];
   interests: InterestDetail[];
-  customFields: CustomFieldInternal[];
+  customFields: any;
 }
 
 // --- Initial Form State (Updated field names) ---
@@ -216,11 +210,16 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
       name: interest.name,
     }));
     formData.append("interests", JSON.stringify(formattedInterests));
-    const formattedCustomFields = values.customFields.map((cf) => ({
-      title: cf.title,
-      values: [cf.value],
-    }));
-    formData.append("custom_fields", JSON.stringify(formattedCustomFields));
+
+    const filteredCustomFields = values.customFields
+      .map((cf: any) => ({
+        title: cf.title.trim(),
+        values: cf.values
+          .map((v: any) => v.trim())
+          .filter((v: any) => v !== ""),
+      }))
+      .filter((cf: any) => cf.title !== "" && cf.values.length > 0);
+    formData.append("custom_fields", JSON.stringify(filteredCustomFields));
 
     if (selectedAvatarFileUri) {
       formData.append("photo", getfileobj(selectedAvatarFileUri));
@@ -783,64 +782,122 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                     </CollapsibleSection>
 
                     <FieldArray name="customFields">
-                      {(arrayHelpers: FieldArrayRenderProps) => (
+                      {(customFieldArrayHelpers: FieldArrayRenderProps) => (
                         <View>
-                          {values.customFields.map((field, index) => (
-                            <View key={field.id} style={styles.customFieldRow}>
-                              <TextInput
-                                style={[
-                                  styles.input,
-                                  styles.customFieldTitleInput,
-                                ]}
-                                placeholder="Field Title"
-                                value={field.title}
-                                onChangeText={handleChange(
-                                  `customFields[${index}].title`
-                                )}
-                                onBlur={handleBlur(
-                                  `customFields[${index}].title`
-                                )}
-                                placeholderTextColor={theme.colors.grey}
-                              />
-                              <TextInput
-                                style={[
-                                  styles.input,
-                                  styles.customFieldValueInput,
-                                ]}
-                                placeholder="Field Value"
-                                value={field.value}
-                                onChangeText={handleChange(
-                                  `customFields[${index}].value`
-                                )}
-                                onBlur={handleBlur(
-                                  `customFields[${index}].value`
-                                )}
-                                placeholderTextColor={theme.colors.grey}
-                              />
-                              <TouchableOpacity
-                                onPress={() => arrayHelpers.remove(index)}
-                                style={styles.removeCustomFieldIcon}
+                          {values.customFields.map(
+                            (customField: any, cfIndex: any) => (
+                              <View
+                                key={customField.id}
+                                style={styles.customFieldEntry}
                               >
-                                <Feather
-                                  name="x-circle"
-                                  size={22}
-                                  color={theme.colors.red}
-                                />
-                              </TouchableOpacity>
-                            </View>
-                          ))}
+                                <View style={styles.customFieldHeader}>
+                                  <TextInput
+                                    style={[
+                                      styles.input,
+                                      styles.customFieldTitleInput,
+                                    ]}
+                                    placeholder="Custom Field Title"
+                                    value={customField.title}
+                                    onChangeText={handleChange(
+                                      `customFields[${cfIndex}].title`
+                                    )}
+                                    onBlur={handleBlur(
+                                      `customFields[${cfIndex}].title`
+                                    )}
+                                    placeholderTextColor={theme.colors.grey}
+                                  />
+                                  <TouchableOpacity
+                                    onPress={() =>
+                                      customFieldArrayHelpers.remove(cfIndex)
+                                    }
+                                    style={styles.removeCustomFieldIconHeader}
+                                  >
+                                    <Feather
+                                      name="x-square"
+                                      size={24}
+                                      color={theme.colors.red}
+                                    />
+                                  </TouchableOpacity>
+                                </View>
+
+                                <FieldArray
+                                  name={`customFields[${cfIndex}].values`}
+                                >
+                                  {(valueArrayHelpers: any) => (
+                                    <View style={styles.customFieldValueList}>
+                                      {customField.values.map(
+                                        (valueItem: any, valIndex: any) => (
+                                          <View
+                                            key={`${customField.id}-val-${valIndex}`}
+                                            style={styles.customFieldValueRow}
+                                          >
+                                            <TextInput
+                                              style={[
+                                                styles.input,
+                                                styles.customFieldValueInput,
+                                              ]}
+                                              placeholder="Enter value"
+                                              value={valueItem} // Direct string value
+                                              onChangeText={handleChange(
+                                                `customFields[${cfIndex}].values[${valIndex}]`
+                                              )}
+                                              onBlur={handleBlur(
+                                                `customFields[${cfIndex}].values[${valIndex}]`
+                                              )}
+                                              placeholderTextColor={
+                                                theme.colors.grey
+                                              }
+                                            />
+                                            <TouchableOpacity
+                                              onPress={() =>
+                                                valueArrayHelpers.remove(
+                                                  valIndex
+                                                )
+                                              }
+                                              style={
+                                                styles.removeCustomFieldValueIcon
+                                              }
+                                            >
+                                              <Feather
+                                                name="minus-circle"
+                                                size={20}
+                                                color={theme.colors.red}
+                                              />
+                                            </TouchableOpacity>
+                                          </View>
+                                        )
+                                      )}
+                                      <TouchableOpacity
+                                        style={styles.addValueButton}
+                                        onPress={() =>
+                                          valueArrayHelpers.push("")
+                                        }
+                                      >
+                                        <Text style={styles.addValueButtonText}>
+                                          + Add Value for "
+                                          {customField.title ||
+                                            `Field ${cfIndex + 1}`}
+                                          "
+                                        </Text>
+                                      </TouchableOpacity>
+                                    </View>
+                                  )}
+                                </FieldArray>
+                              </View>
+                            )
+                          )}
                           <TouchableOpacity
                             style={styles.addCustomButton}
                             onPress={() =>
-                              arrayHelpers.push({
+                              customFieldArrayHelpers.push({
                                 id: `custom-${Date.now()}`,
                                 title: "",
-                                value: "",
+                                values: [""],
                               })
                             }
                           >
                             <Text style={styles.addCustomButtonText}>
-                              Add Custom Field
+                              Add Custom Field Title
                             </Text>
                           </TouchableOpacity>
                           {values.customFields.length > 0 && (
@@ -850,7 +907,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                 styles.removeLastCustomButton,
                               ]}
                               onPress={() =>
-                                arrayHelpers.remove(
+                                customFieldArrayHelpers.remove(
                                   values.customFields.length - 1
                                 )
                               }
@@ -1024,7 +1081,7 @@ const styles = StyleSheet.create({
     color: theme.colors.grey,
   },
   arrayEntryCard: {
-    backgroundColor: theme.colors.secondaryLight || theme.colors.grey,
+    backgroundColor: theme.colors.secondaryLight,
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
@@ -1063,8 +1120,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-  customFieldTitleInput: { flex: 0.4, marginRight: 10, height: 44 },
-  customFieldValueInput: { flex: 0.6, height: 44 },
   removeCustomFieldIcon: { paddingLeft: 10 },
   addCustomButton: {
     backgroundColor: theme.colors.primary,
@@ -1093,6 +1148,63 @@ const styles = StyleSheet.create({
     ...theme.font.fontBold,
     color: theme.colors.black,
   },
+  customFieldValueList: {
+    marginLeft: 10,
+    borderLeftWidth: 2,
+    borderLeftColor: theme.colors.primary,
+    paddingLeft: 10,
+    marginTop: 5,
+  }, // Added fallback
+  customFieldValueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  customFieldValueInput: {
+    flex: 1,
+    height: 44,
+    backgroundColor: theme.colors.white,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    color: theme.colors.black,
+    marginRight: 8,
+  }, // Adjusted style
+  removeCustomFieldValueIcon: { padding: 5 },
+  addValueButton: {
+    backgroundColor: "transparent",
+    paddingVertical: 8,
+    alignItems: "flex-start",
+    marginTop: 0,
+  },
+  addValueButtonText: {
+    fontSize: 14,
+    ...theme.font.fontMedium,
+    color: theme.colors.primary,
+  },
+  customFieldEntry: {
+    backgroundColor: theme.colors.secondaryLight,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 15,
+  }, // Added fallback
+  customFieldHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  customFieldTitleInput: {
+    flex: 1,
+    height: 44,
+    backgroundColor: theme.colors.white,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    color: theme.colors.black,
+    marginRight: 10,
+  },
+  removeCustomFieldIconHeader: { padding: 5 },
 });
 
 export default CreateContactScreen;
