@@ -1,27 +1,13 @@
 import React from "react";
-import {
-  ImageBackground,
-  StyleSheet,
-  ImageSourcePropType,
-  ImageResizeMode,
-  StyleProp,
-  ViewStyle,
-} from "react-native";
+import { ImageBackground, StyleSheet } from "react-native";
 import ImageModule from "../../ImageModule";
 
-interface DefaultBackgroundProps {
-  children: React.ReactNode;
-  imageSource?: ImageSourcePropType;
-  resizeMode?: ImageResizeMode;
-  style?: StyleProp<ViewStyle>;
-}
-
-const DefaultBackground: React.FC<DefaultBackgroundProps> = ({
+const DefaultBackground: any = ({
   children,
   imageSource = ImageModule.backGroundImg,
   resizeMode = "cover",
   style,
-}) => {
+}: any) => {
   return (
     <ImageBackground
       source={imageSource}
