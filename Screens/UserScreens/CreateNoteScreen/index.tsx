@@ -17,12 +17,13 @@ import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule";
-import { Formik, FormikHelpers } from "formik";
+import { Formik } from "formik";
 import * as Yup from "yup";
 import DropDownComponent from "../../Components/DropDownComponent";
 import {
   allContactOptionApi,
   createNotesApi,
+  editNote,
 } from "../../../store/Services/Others";
 import { DatePickerModal } from "react-native-paper-dates"; // Import DatePickerModal
 import { en, registerTranslation } from "react-native-paper-dates"; // For localization
@@ -44,19 +45,35 @@ const createNoteValidationSchema = Yup.object().shape({
   }),
 });
 
-// --- Reminder Options (ensure "Custom" has a distinct value) ---
 const reminderOptions = [
-  { label: "None", value: "" }, // Value for "None"
+  { label: "None", value: "" },
   { label: "Monthly", value: "Monthly" },
   { label: "Quarterly", value: "Quarterly" },
   { label: "Yearly", value: "Yearly" },
-  { label: "Custom", value: "Custom" }, // Value to trigger custom date field
+  { label: "Custom", value: "Custom" },
 ];
 
-const CreateNoteScreen: any = ({ navigation }: any) => {
+const CreateNoteScreen: any = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
   const [contacts, setContacts] = useState<any>([]);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [initialValues, setInitialValues]: any = useState({
+    contactId: null,
+    noteText: "",
+    reminderOption: "",
+    customReminderDate: undefined,
+  });
+
+  useEffect(() => {
+    if (route?.params?.note?.id) {
+      setInitialValues({
+        contactId: route?.params?.note?.contact,
+        noteText: route?.params?.note?.note,
+        reminderOption: route?.params?.note?.reminder_type,
+        customReminderDate: new Date(route?.params?.note?.reminder),
+      });
+    }
+  }, [route?.params?.note?.id]);
 
   useEffect(() => {
     allContactOptionApi()
@@ -73,7 +90,7 @@ const CreateNoteScreen: any = ({ navigation }: any) => {
     console.log("Search icon pressed on Create Note screen");
   };
 
-  const handleFormSubmit = (values: any, { setSubmitting, resetForm }: any) => {
+  const handleFormSubmit = (values: any) => {
     const payload = {
       contact: values.contactId,
       note: values.noteText,
@@ -83,22 +100,44 @@ const CreateNoteScreen: any = ({ navigation }: any) => {
           ? dayjs(values.customReminderDate).format("YYYY-MM-DD")
           : null,
     };
-    createNotesApi({
-      body: payload,
-    })
-      ?.then((res: any) => {
-        Toast.show({
-          type: "success",
-          text1: res.msg,
-        });
-        navigation.goBack();
+    if (route?.params?.type === "edit") {
+      editNote({
+        query: {
+          id: route?.params?.note?.id,
+        },
+        body: payload,
       })
-      ?.catch((err: any) => {
-        Toast.show({
-          type: "error",
-          text1: err.data.error,
+        ?.then((res: any) => {
+          Toast.show({
+            type: "success",
+            text1: "Note edit successfully.",
+          });
+          navigation.goBack();
+        })
+        ?.catch((err: any) => {
+          Toast.show({
+            type: "error",
+            text1: "All fields are required.",
+          });
         });
-      });
+    } else {
+      createNotesApi({
+        body: payload,
+      })
+        ?.then((res: any) => {
+          Toast.show({
+            type: "success",
+            text1: res.msg,
+          });
+          navigation.goBack();
+        })
+        ?.catch((err: any) => {
+          Toast.show({
+            type: "error",
+            text1: err.data.error,
+          });
+        });
+    }
   };
 
   const onDismissDatePicker = useCallback(() => {
@@ -113,6 +152,17 @@ const CreateNoteScreen: any = ({ navigation }: any) => {
     },
     []
   );
+
+  useEffect(() => {
+    if (route?.params?.type === "AddNote") {
+      setInitialValues({
+        contactId: route?.params?.contactId,
+        noteText: "",
+        reminderOption: "",
+        customReminderDate: undefined,
+      });
+    }
+  }, [route?.params?.type]);
 
   return (
     <DefaultBackground>
@@ -155,12 +205,7 @@ const CreateNoteScreen: any = ({ navigation }: any) => {
               <Text style={styles.formTitle}>Create a Note</Text>
 
               <Formik
-                initialValues={{
-                  contactId: null,
-                  noteText: "",
-                  reminderOption: "", // Default to empty, user must select
-                  customReminderDate: undefined,
-                }}
+                initialValues={initialValues}
                 validationSchema={createNoteValidationSchema}
                 onSubmit={handleFormSubmit}
                 enableReinitialize
@@ -180,6 +225,7 @@ const CreateNoteScreen: any = ({ navigation }: any) => {
                       <Text style={styles.label}>Contact Name</Text>
                       <DropDownComponent
                         data={contacts}
+                        disable={route?.params?.type === "AddNote"}
                         value={
                           values.contactId
                             ? contacts.find(
@@ -341,7 +387,6 @@ const CreateNoteScreen: any = ({ navigation }: any) => {
                       onConfirm={(params) =>
                         onConfirmCustomDate(params, setFieldValue)
                       }
-                      validRange={{ startDate: new Date() }} // Example: only future dates
                     />
                   </>
                 )}

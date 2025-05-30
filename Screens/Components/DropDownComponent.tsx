@@ -15,9 +15,11 @@ const DropDownComponent = ({
   placeholderStyle,
   fieldKey,
   objectSave,
+  disable = false,
 }: any) => {
   return (
     <Dropdown
+      disable={disable}
       style={[styles.mainDroper, style]}
       placeholderStyle={[styles.placeholderText, placeholderStyle]} // Use a slightly different style for placeholder if needed
       placeholder={placeholder}

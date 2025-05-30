@@ -110,25 +110,27 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
   };
 
   useEffect(() => {
-    if (contactId) {
-      setLoading(true);
-      profileContactApi({ query: { id: contactId } })
-        .then((res: any) => {
-          setContactDetails(res);
-        })
-        .catch((err: any) => {
-          console.error("Error fetching contact profile:", err);
-          Alert.alert("Error", "Could not load contact details.");
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
-      Alert.alert("Error", "No contact ID provided.");
-      navigation.goBack();
-      setLoading(false);
-    }
-  }, [contactId]);
+    return navigation.addListener("focus", () => {
+      if (contactId) {
+        setLoading(true);
+        profileContactApi({ query: { id: contactId } })
+          .then((res: any) => {
+            setContactDetails(res);
+          })
+          .catch((err: any) => {
+            console.error("Error fetching contact profile:", err);
+            Alert.alert("Error", "Could not load contact details.");
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        Alert.alert("Error", "No contact ID provided.");
+        navigation.goBack();
+        setLoading(false);
+      }
+    });
+  }, [contactId, navigation]);
 
   const handleSearchPress = () => console.log("Search pressed on View Contact");
   const handleDelete = () =>
@@ -153,18 +155,17 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
     navigation.navigate("CreateNoteScreen", {
       contactId: contactDetails?.id,
       contactName: contactDetails?.full_name,
+      type: "AddNote",
     });
   const handleViewAllNotes = () =>
     navigation.navigate("AllNotesScreen", {
       contactId: contactDetails?.id,
-      contactName: contactDetails?.full_name,
     });
 
   if (loading) {
-    return <FullScreenLoader />; // Use your FullScreenLoader
+    return <FullScreenLoader />;
   }
   if (!contactDetails) {
-    // If not loading and still no details (e.g., API error handled by setting to null)
     return (
       <DefaultBackground>
         <View style={styles.loadingContainer}>

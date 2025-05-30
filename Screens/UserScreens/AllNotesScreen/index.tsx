@@ -10,107 +10,89 @@ import {
   Alert,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
-import DefaultBackground from "../../Components/DefaultBackground"; // Adjust path
-import theme from "../../../utils/theme"; // Adjust path
+import DefaultBackground from "../../Components/DefaultBackground";
+import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import ImageModule from "../../../ImageModule"; // Adjust path, assuming ImageModule.logo exists
+import ImageModule from "../../../ImageModule";
+import { deleteNotes, getNotesApi } from "../../../store/Services/Others";
+import FullScreenLoader from "../../Components/FullScreenLoader";
+import dayjs from "dayjs";
+import Toast from "react-native-toast-message";
 
-// --- Navigation & Props ---
-type AllNotesScreenNavigationProp = {
-  goBack: () => void;
-  navigate: (screen: string, params?: object) => void; // For edit note
-};
-
-interface AllNotesScreenProps {
-  navigation: AllNotesScreenNavigationProp;
-  route?: any; // Could receive contactId to filter notes, or filter criteria
-}
-
-// --- Data Structure for a Note ---
-interface NoteItemData {
-  id: string;
-  contactName: string; // Name of the contact the note is associated with
-  noteDate: string; // Date the note itself refers to or was logged for
-  content: string;
-  reminderDate?: string; // Optional reminder date for this note
-  // avatarUri?: string; // Optional contact avatar for display next to name
-}
-
-// --- Mock Data ---
-const mockNotes: NoteItemData[] = [
-  {
-    id: "note1",
-    contactName: "demo",
-    noteDate: "05-29-2025",
-    content:
-      "gdgdfhfdPython is one of the most popular programming languages. It's simple to use, packed with features and supported by a wide range of libraries and frameworks. Its clean syntax makes it beginner-friendly.",
-    reminderDate: "05-29-2025",
-  },
-  {
-    id: "note2",
-    contactName: "demo", // Assuming same contact for example
-    noteDate: "05-31-2025",
-    content: "and frameworks. Its clean syntax makes it beginner-friendly.",
-    reminderDate: "05-29-2025", // Dates can be different
-  },
-  {
-    id: "note3",
-    contactName: "POOJA",
-    noteDate: "05-29-2025",
-    content: "ggggggdgggfdgdgdg",
-    reminderDate: "05-29-2025",
-  },
-  {
-    id: "note4",
-    contactName: "Test Test",
-    noteDate: "06-15-2025",
-    content: "Another note about something important for Test Test.",
-    // No reminderDate for this one
-  },
-];
-
-// --- Main Screen Component ---
-const AllNotesScreen: React.FC<AllNotesScreenProps> = ({
-  navigation,
-  route,
-}) => {
+const AllNotesScreen: any = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
-  const [notes, setNotes] = useState<NoteItemData[]>(mockNotes); // Load with mock or fetch
+  const [notes, setNotes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // const contactIdFilter = route.params?.contactId; // Example if filtering by contact
-  // useEffect(() => {
-  //   // Fetch notes based on contactIdFilter or other criteria
-  //   // setNotes(fetchedNotes);
-  // }, [contactIdFilter]);
+  const contactIdFilter = route.params?.contactId;
+
+  useEffect(() => {
+    return navigation.addListener("focus", () => {
+      if (contactIdFilter) {
+        setLoading(true);
+        getNotesApi({
+          query: {
+            id: contactIdFilter,
+          },
+        })
+          ?.then((res: any) => {
+            setNotes(res);
+          })
+          ?.catch((err: any) => {
+            console.log("Error fetching notes:", err);
+            setNotes([]);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        console.log("No contactIdFilter provided to AllNotesScreen.");
+        setNotes([]);
+      }
+    });
+  }, [contactIdFilter, navigation]);
 
   const handleSearchPress = () =>
     console.log("Search pressed on All Notes screen");
-  const handleEditNote = (noteId: string) => {
-    console.log("Edit note:", noteId);
-    // navigation.navigate("EditNoteScreen", { noteId });
-    Alert.alert("Edit Note", `Editing note ID: ${noteId}`);
+
+  const handleEditNote = (note: any) => {
+    navigation.navigate("CreateNoteScreen", {
+      note,
+      type: "edit",
+    });
   };
-  const handleDeleteNote = (noteId: string) => {
-    Alert.alert(
-      "Delete Note",
-      `Are you sure you want to delete note ID: ${noteId}?`,
-      [
-        { text: "Cancel" },
-        {
-          text: "Delete",
-          onPress: () => {
-            console.log("Deleting note:", noteId);
-            setNotes((prevNotes) =>
-              prevNotes.filter((note) => note.id !== noteId)
-            ); // Optimistic delete
-            // Call API to delete note from backend
-          },
-          style: "destructive",
+
+  const handleDeleteNote = (noteId: any) => {
+    Alert.alert("Delete Note", `Are you sure you want to delete this note?`, [
+      { text: "Cancel" },
+      {
+        text: "Delete",
+        onPress: () => {
+          deleteNotes({
+            query: {
+              id: noteId,
+            },
+          })
+            ?.then((res: any) => {
+              setNotes((prevNotes: any[]) =>
+                prevNotes.filter((note: any) => note.id !== noteId)
+              );
+              Toast.show({
+                type: "success",
+                text1: "Note deleted successfully.",
+              });
+            })
+            ?.catch((err: any) => console.log("err", err));
         },
-      ]
-    );
+        style: "destructive",
+      },
+    ]);
   };
+
+  if (loading) {
+    return <FullScreenLoader />;
+  }
 
   return (
     <DefaultBackground>
@@ -121,7 +103,6 @@ const AllNotesScreen: React.FC<AllNotesScreenProps> = ({
           { paddingTop: Platform.OS === "android" ? insets.top : insets.top },
         ]}
       >
-        {/* Header */}
         <View style={styles.headerRow}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -144,12 +125,16 @@ const AllNotesScreen: React.FC<AllNotesScreenProps> = ({
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.notesCard}>
-            <Text style={styles.cardTitle}>Notes</Text>
+            <Text style={styles.cardTitle}>
+              {route.params?.contactName
+                ? `Notes for ${route.params.contactName}`
+                : "All Notes"}
+            </Text>
 
             {notes.length === 0 ? (
               <Text style={styles.noNotesText}>No notes found.</Text>
             ) : (
-              notes.map((note, index) => (
+              notes.map((note: any, index: number) => (
                 <View
                   key={note.id}
                   style={[
@@ -160,13 +145,22 @@ const AllNotesScreen: React.FC<AllNotesScreenProps> = ({
                   <View style={styles.noteHeader}>
                     <View style={styles.contactInfo}>
                       <View style={styles.noteAvatarPlaceholder}>
-                        <Feather
-                          name="user"
-                          size={16}
-                          color={theme.colors.secondary}
-                        />
+                        {note.contact_photo ? (
+                          <Image
+                            source={{ uri: note.contact_photo }}
+                            style={styles.avatarImageInList}
+                          />
+                        ) : (
+                          <Feather
+                            name="user"
+                            size={16}
+                            color={theme.colors.secondary}
+                          />
+                        )}
                       </View>
-                      <Text style={styles.contactName}>{note.contactName}</Text>
+                      <Text style={styles.contactName}>
+                        {note.contact_full_name}
+                      </Text>
                     </View>
                     <View style={styles.noteActions}>
                       <TouchableOpacity
@@ -180,7 +174,7 @@ const AllNotesScreen: React.FC<AllNotesScreenProps> = ({
                         />
                       </TouchableOpacity>
                       <TouchableOpacity
-                        onPress={() => handleEditNote(note.id)}
+                        onPress={() => handleEditNote(note)}
                         style={styles.actionIcon}
                       >
                         <Feather
@@ -192,18 +186,21 @@ const AllNotesScreen: React.FC<AllNotesScreenProps> = ({
                     </View>
                   </View>
 
-                  <Text style={styles.noteDate}>{note.noteDate}</Text>
-                  <Text style={styles.noteContent}>{note.content}</Text>
+                  <Text style={styles.noteDate}>
+                    {dayjs(note.created_at).format("MM-DD-YYYY")}
+                  </Text>
+                  <Text style={styles.noteContent}>{note.note}</Text>
 
-                  {note.reminderDate && (
+                  {note.reminder && (
                     <View style={styles.reminderInfo}>
                       <Feather
-                        name="calendar"
+                        name="bell"
                         size={14}
                         color={theme.colors.secondary}
                       />
                       <Text style={styles.reminderDateText}>
-                        {note.reminderDate}
+                        Reminder: {dayjs(note.reminder).format("MM-DD-YYYY")} (
+                        {note.reminder_type})
                       </Text>
                     </View>
                   )}
@@ -236,42 +233,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  contentScrollView: { flex: 1, marginTop: 10 }, // Added marginTop
+  contentScrollView: { flex: 1, marginTop: 10 },
   notesCard: {
-    backgroundColor: theme.colors.white, // White card background
+    backgroundColor: theme.colors.white,
     borderRadius: 15,
     marginHorizontal: 15,
-    marginBottom: 20, // Space at the bottom
+    marginBottom: 20,
     paddingVertical: 15,
     paddingHorizontal: 15,
   },
   cardTitle: {
     fontSize: 20,
     ...theme.font.fontBold,
-    color: theme.colors.black, // Dark title text on white card
+    color: theme.colors.black,
     marginBottom: 15,
   },
   noteItemContainer: {
     paddingBottom: 15,
     marginBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.grey, // Dotted line appearance
-    // For actual dotted line: borderStyle: 'dotted', (might not work on all platforms perfectly)
-  },
-  lastNoteItemContainer: {
-    borderBottomWidth: 0, // No border for the last item
-    marginBottom: 0,
-  },
+    borderBottomColor: theme.colors.grey,
+  }, // Using grey for separator
+  lastNoteItemContainer: { borderBottomWidth: 0, marginBottom: 0 },
   noteHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
   },
-  contactInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  contactInfo: { flexDirection: "row", alignItems: "center" },
   noteAvatarPlaceholder: {
     width: 28,
     height: 28,
@@ -280,41 +270,38 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
+    overflow: "hidden",
   },
+  avatarImageInList: { width: "100%", height: "100%" },
   contactName: {
     fontSize: 15,
     ...theme.font.fontSemiBold,
     color: theme.colors.black,
   },
-  noteActions: {
-    flexDirection: "row",
-  },
-  actionIcon: {
-    padding: 5, // For easier touch
-    marginLeft: 10,
-  },
+  noteActions: { flexDirection: "row" },
+  actionIcon: { padding: 5, marginLeft: 10 },
   noteDate: {
-    fontSize: 14,
-    ...theme.font.fontSemiBold, // Bold date
-    color: theme.colors.black,
-    marginBottom: 8,
+    fontSize: 12,
+    ...theme.font.fontRegular,
+    color: theme.colors.grey,
+    marginBottom: 5,
   },
   noteContent: {
     fontSize: 15,
     ...theme.font.fontRegular,
-    color: theme.colors.text, // Standard text color
+    color: theme.colors.text,
     lineHeight: 22,
     marginBottom: 10,
   },
   reminderInfo: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-end", // Position to the bottom right
+    alignSelf: "flex-end",
   },
   reminderDateText: {
-    fontSize: 13,
+    fontSize: 12,
     ...theme.font.fontMedium,
-    color: theme.colors.secondary, // Darker text for reminder date
+    color: theme.colors.secondary,
     marginLeft: 5,
   },
   noNotesText: {
