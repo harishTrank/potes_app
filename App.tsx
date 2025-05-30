@@ -6,9 +6,12 @@ import { PaperProvider, DefaultTheme } from "react-native-paper";
 import { en, registerTranslation } from "react-native-paper-dates";
 import theme from "./utils/theme";
 import { Toast } from "react-native-toast-message/lib/src/Toast";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 registerTranslation("en", en);
 LogBox.ignoreAllLogs();
+
+export const queryClient = new QueryClient();
 
 const customTheme = {
   ...DefaultTheme,
@@ -27,10 +30,12 @@ export default function App() {
     return null;
   } else {
     return (
-      <PaperProvider theme={customTheme}>
-        <Navigation />
-        <Toast position="top" />
-      </PaperProvider>
+      <QueryClientProvider client={queryClient}>
+        <PaperProvider theme={customTheme}>
+          <Navigation />
+          <Toast position="top" />
+        </PaperProvider>
+      </QueryClientProvider>
     );
   }
 }

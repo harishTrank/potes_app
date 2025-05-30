@@ -18,9 +18,13 @@ import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule";
-import { profileContactApi } from "../../../store/Services/Others";
+import {
+  deleteContactApi,
+  profileContactApi,
+} from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader"; // Assuming you have this
 import dayjs from "dayjs";
+import Toast from "react-native-toast-message";
 
 if (
   Platform.OS === "android" &&
@@ -143,8 +147,23 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
         { text: "Cancel" },
         {
           text: "Delete",
-          onPress: () =>
-            console.log("Deleting contact ID:", contactDetails?.id),
+          onPress: () => {
+            setLoading(true);
+            deleteContactApi({
+              query: {
+                id: contactDetails?.id,
+              },
+            })
+              ?.then((res: any) => {
+                Toast.show({
+                  type: "success",
+                  text1: res?.msg,
+                });
+                setLoading(false);
+                navigation.goBack();
+              })
+              ?.catch(() => setLoading(false));
+          },
           style: "destructive",
         },
       ]

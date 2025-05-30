@@ -14,10 +14,10 @@ import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import Header from "../../Components/Header";
-import ActionButtons from "../../Components/ActionButtons";
-import { allContactApi } from "../../../store/Services/Others";
-import FullScreenLoader from "../../Components/FullScreenLoader";
+import Header from "../../Components/Header"; // Ensure this path is correct
+import ActionButtons from "../../Components/ActionButtons"; // Ensure this path is correct
+import FullScreenLoader from "../../Components/FullScreenLoader"; // Ensure this path is correct
+import { allContactApiHook } from "../../../hooks/Others/query"; // Ensure this path is correct
 
 // --- Navigation & Props ---
 type DirectoryScreenNavigationProp = {
@@ -30,20 +30,17 @@ interface DirectoryScreenProps {
 
 // --- Data Structures (Updated to match API response) ---
 interface ApiContact {
-  // Renamed to avoid confusion with internal Contact if any
   id: number; // API returns number
   full_name: string;
-  phone?: string | null;
   email?: string | null;
-  birthday?: string | null; // Dates from API are strings
-  anniversary?: string | null;
-  photo?: string | null; // URL string for the photo
-  // Add other fields if needed, e.g., for navigation params
+  phone?: string | null;
+  birthday?: string | null;
+  photo?: string | null;
 }
 
 interface SectionData {
   title: string;
-  data: ApiContact[]; // Now uses ApiContact
+  data: ApiContact[];
 }
 
 // --- processContactsForSectionList (Updated to use full_name) ---
@@ -51,7 +48,6 @@ const processContactsForSectionList = (
   contacts: ApiContact[]
 ): SectionData[] => {
   if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
-    // More robust check
     return [];
   }
 
@@ -81,27 +77,51 @@ const processContactsForSectionList = (
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
 
-const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
+// --- Main Screen Component ---
+const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
+  navigation,
+}: any) => {
   const insets = useSafeAreaInsets();
   const [sections, setSections] = useState<SectionData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const sectionListRef = useRef<SectionList<ApiContact, SectionData>>(null);
+  const {
+    data: apiResponse,
+    isLoading: apiIsLoading,
+    refetch: apiRefetch,
+  }: any = allContactApiHook();
 
   useEffect(() => {
-    setLoading(true);
-    allContactApi({})
-      ?.then((res: any) => {
-        const contactsFromApi: ApiContact[] = res?.results || [];
-        const processed = processContactsForSectionList(contactsFromApi);
-        setSections(processed);
-      })
-      ?.catch((err: any) => {
-        console.error("Error fetching contacts:", err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+    if (apiResponse?.results) {
+      const contactsFromApi: ApiContact[] = apiResponse.results || [];
+      let filteredContacts = contactsFromApi;
+      if (searchQuery) {
+        const lowerQuery = searchQuery.toLowerCase();
+        filteredContacts = contactsFromApi.filter(
+          (contact) =>
+            contact.full_name.toLowerCase().includes(lowerQuery) ||
+            contact.email?.toLowerCase().includes(lowerQuery) ||
+            contact.phone?.includes(searchQuery)
+        );
+      }
+      const processed = processContactsForSectionList(filteredContacts);
+      setSections(processed);
+    } else if (!apiIsLoading) {
+      // If not loading and no data, or error
+      setSections([]);
+    }
+  }, [apiResponse, apiIsLoading, searchQuery]); // Depend on API data, loading state, and search query
+
+  // Effect to refetch data on screen focus
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      if (apiRefetch) {
+        // Check if refetch function exists
+        apiRefetch();
+      }
+    });
+    return unsubscribe;
+  }, [navigation, apiRefetch]);
 
   const handleAlphabetPress = (letter: string) => {
     const sectionIndex = sections.findIndex(
@@ -127,11 +147,13 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
   };
 
   const handleMenuPress = () => navigation.openDrawer();
-  const handleProfilePress = () => navigation.navigate("UserProfileScreen"); // Example
+  const handleProfilePress = () => navigation.navigate("UserProfileScreen");
   const handleCreateContact = () => navigation.navigate("CreateContactScreen");
   const handleCreateNote = () => navigation.navigate("CreateNoteScreen");
-  const handleHeaderSearch = (query: string) => {
-    console.log("Search query from Header:", query);
+
+  // This function will be called by your Header component when search text changes
+  const handleHeaderSearchChange = (query: string) => {
+    setSearchQuery(query);
   };
 
   const renderContactItem = ({ item }: { item: ApiContact }) => (
@@ -140,6 +162,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
       onPress={() =>
         navigation.navigate("ViewContactScreen", {
           contactId: item.id,
+          contactName: item.full_name,
         })
       }
     >
@@ -152,24 +175,22 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
       </View>
       <View style={styles.contactInfo}>
         <Text style={styles.contactName}>{item.full_name}</Text>
-        {/* The problematic space {" "} was here. It's now removed or can be included within a Text component if needed for spacing. */}
         {item.email && item.email !== "-" && (
           <Text style={styles.contactDetail} numberOfLines={1}>
             <Feather name="mail" size={13} color={theme.colors.white} />
-            <Text> {item.email}</Text> {/* Ensure space is inside a Text tag */}
+            <Text> {item.email}</Text>
           </Text>
         )}
         {item.phone && item.phone !== "-" && (
           <Text style={styles.contactDetail} numberOfLines={1}>
             <Feather name="phone" size={13} color={theme.colors.white} />
-            <Text> {item.phone}</Text> {/* Ensure space is inside a Text tag */}
+            <Text> {item.phone}</Text>
           </Text>
         )}
         {item.birthday && (
           <Text style={styles.contactDetail} numberOfLines={1}>
             <Feather name="gift" size={13} color={theme.colors.white} />
-            <Text> {item.birthday}</Text>{" "}
-            {/* Ensure space is inside a Text tag */}
+            <Text> {item.birthday}</Text>
           </Text>
         )}
       </View>
@@ -185,7 +206,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
   return (
     <DefaultBackground>
       <StatusBar style="light" />
-      {loading && <FullScreenLoader />}
+      {apiIsLoading && <FullScreenLoader />}
       <View
         style={[
           styles.flexContainer,
@@ -195,7 +216,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
         <Header
           onMenuPress={handleMenuPress}
           onProfilePress={handleProfilePress}
-          onSearchChange={handleHeaderSearch} // Connect search handler
+          onSearchChange={handleHeaderSearchChange} // Pass search handler to Header
         />
         <ActionButtons
           onCreateContactPress={handleCreateContact}
@@ -204,24 +225,26 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
 
         <View style={styles.directoryContentWrapper}>
           <View style={styles.listContainerCard}>
-            {sections.length > 0 ? (
+            {!apiIsLoading && sections.length === 0 ? (
+              <Text style={styles.noResultsText}>
+                {searchQuery
+                  ? `No contacts found for "${searchQuery}"`
+                  : "No contacts available."}
+              </Text>
+            ) : (
               <SectionList
                 ref={sectionListRef}
                 sections={sections}
-                keyExtractor={(item) => String(item.id)} // API ID is number, key must be string
+                keyExtractor={(item: ApiContact) => String(item.id)}
                 renderItem={renderContactItem}
                 renderSectionHeader={renderSectionHeader}
                 contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
                 showsVerticalScrollIndicator={false}
                 stickySectionHeadersEnabled={false}
               />
-            ) : (
-              !loading && (
-                <Text style={styles.noResultsText}>No contacts found.</Text>
-              ) // Show if no sections after loading
             )}
           </View>
-          {sections.length > 0 && ( // Only show scroller if there are sections
+          {!apiIsLoading && sections.length > 0 && (
             <View style={styles.alphabetScrollerContainer}>
               {ALPHABET.map((letter) => (
                 <TouchableOpacity

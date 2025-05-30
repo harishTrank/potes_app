@@ -8,10 +8,9 @@ export const createContactApi = ({ body }: any) =>
     multipart: true,
   });
 
-export const allContactApi = ({ query }: any) =>
+export const allContactApi = () =>
   callApi({
     uriEndPoint: allApi.allContact.v1,
-    query,
   });
 
 export const allContactOptionApi = () =>
