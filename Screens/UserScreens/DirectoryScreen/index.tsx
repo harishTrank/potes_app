@@ -81,26 +81,22 @@ const processContactsForSectionList = (
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
 
-// --- Main Screen Component ---
 const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const [sections, setSections] = useState<SectionData[]>([]);
-  const [loading, setLoading] = useState(false); // Default to false, set true on fetch
-  const sectionListRef = useRef<SectionList<ApiContact, SectionData>>(null); // Use ApiContact
+  const [loading, setLoading] = useState(false);
+  const sectionListRef = useRef<SectionList<ApiContact, SectionData>>(null);
 
   useEffect(() => {
     setLoading(true);
-    allContactApi({}) // Assuming your API call structure
+    allContactApi({})
       ?.then((res: any) => {
-        // Keep 'any' if response structure is complex or varies
-        // console.log("API Response results:", JSON.stringify(res?.results));
-        const contactsFromApi: ApiContact[] = res?.results || []; // Ensure it's an array
+        const contactsFromApi: ApiContact[] = res?.results || [];
         const processed = processContactsForSectionList(contactsFromApi);
         setSections(processed);
       })
       ?.catch((err: any) => {
         console.error("Error fetching contacts:", err);
-        // Optionally, set an error state to display a message to the user
       })
       .finally(() => {
         setLoading(false);
@@ -130,7 +126,6 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
     }
   };
 
-  // Placeholder handlers for Header and ActionButtons, connect them as needed
   const handleMenuPress = () => navigation.openDrawer();
   const handleProfilePress = () => navigation.navigate("UserProfileScreen"); // Example
   const handleCreateContact = () => navigation.navigate("CreateContactScreen");
@@ -145,7 +140,6 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({ navigation }) => {
       onPress={() =>
         navigation.navigate("ViewContactScreen", {
           contactId: item.id,
-          contactName: item.full_name,
         })
       }
     >

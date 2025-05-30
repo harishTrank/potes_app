@@ -17,7 +17,10 @@ import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import ImageModule from "../../../ImageModule"; // Assuming ImageModule.logo exists
+import ImageModule from "../../../ImageModule";
+import { profileContactApi } from "../../../store/Services/Others";
+import FullScreenLoader from "../../Components/FullScreenLoader"; // Assuming you have this
+import dayjs from "dayjs";
 
 if (
   Platform.OS === "android" &&
@@ -26,151 +29,7 @@ if (
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-// --- Navigation & Props ---
-type ViewContactScreenNavigationProp = {
-  goBack: () => void;
-  navigate: (screen: string, params?: object) => void;
-};
-interface ViewContactScreenProps {
-  navigation: ViewContactScreenNavigationProp;
-  route: any; // Assuming contactId or contact object is passed via route params
-}
-
-// --- Data Structures (can be imported from CreateContactScreen if shared) ---
-interface ChildDetail {
-  id: string;
-  name: string;
-  birthday: string | null;
-  details: string;
-}
-interface EmploymentDetail {
-  id: string;
-  employerName: string;
-  employerDetails: string;
-}
-interface EducationDetail {
-  id: string;
-  universityName: string;
-  universityDetails: string;
-}
-interface InterestDetail {
-  id: string;
-  value: string;
-}
-interface CustomField {
-  id: string;
-  title: string;
-  value: string;
-}
-interface Note {
-  id: string;
-  date: string;
-  content: string;
-  createdAt: string;
-}
-
-interface ContactFullDetails {
-  id: string;
-  avatarUri: string | null;
-  nameOrDescription: string;
-  birthday: string | null;
-  anniversary: string | null;
-  email: string;
-  number: string;
-  spouseName?: string;
-  spouseBirthday?: string | null;
-  spouseDetails?: string;
-  children?: ChildDetail[];
-  employmentHistory?: EmploymentDetail[];
-  educationHistory?: EducationDetail[];
-  interests?: InterestDetail[];
-  customFields?: CustomField[];
-  notes?: Note[];
-}
-
-// --- Mock Data ---
-const mockContact: ContactFullDetails = {
-  id: "contact123",
-  avatarUri: null, // Replace with an actual URI or keep null for placeholder
-  nameOrDescription: "POOJA",
-  birthday: "05-29-2025",
-  anniversary: "06-19-2025",
-  email: "pooja@gmail.com",
-  number: "756.757.5665",
-  spouseName: "Spouse Name Example",
-  spouseBirthday: "08-15-2025",
-  spouseDetails: "Details about spouse here.",
-  children: [
-    {
-      id: "c1",
-      name: "Child One",
-      birthday: "10-10-2028",
-      details: "Loves to draw.",
-    },
-    {
-      id: "c2",
-      name: "Child Two",
-      birthday: "12-01-2030",
-      details: "Plays the piano.",
-    },
-  ],
-  employmentHistory: [
-    {
-      id: "e1",
-      employerName: "Tech Solutions Inc.",
-      employerDetails: "Software Engineer, 2020-Present",
-    },
-  ],
-  educationHistory: [
-    {
-      id: "edu1",
-      universityName: "State University",
-      universityDetails: "B.Sc. Computer Science, 2016-2020",
-    },
-  ],
-  interests: [
-    { id: "i1", value: "hfghf" },
-    { id: "i2", value: "fhrfthrtf" },
-  ],
-  customFields: [
-    { id: "cf1", title: "Favorite Color", value: "Blue" },
-    { id: "cf2", title: "Blood Group", value: "O+" },
-  ],
-  notes: [
-    {
-      id: "n1",
-      date: "05-30-2025",
-      content: "helloooooooooooooooooo",
-      createdAt: "05-29-2025",
-    },
-    {
-      id: "n2",
-      date: "06-02-2025",
-      content: "Python is one of the most popular programming languages.",
-      createdAt: "05-29-2025",
-    },
-    {
-      id: "n3",
-      date: "05-27-2025",
-      content: "Python is one of the most akes It beginner-friendly.",
-      createdAt: "05-29-2025",
-    },
-  ],
-};
-
-// --- Collapsible Section Component (can be a shared component) ---
-interface CollapsibleSectionProps {
-  title: string;
-  children: React.ReactNode;
-  isOpen: boolean;
-  onPress: () => void;
-}
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
-  title,
-  children,
-  isOpen,
-  onPress,
-}) => {
+const CollapsibleSection: any = ({ title, children, isOpen, onPress }: any) => {
   return (
     <View style={styles.collapsibleSection}>
       <TouchableOpacity onPress={onPress} style={styles.sectionHeader}>
@@ -197,28 +56,25 @@ const InfoDisplayField: React.FC<InfoDisplayFieldProps> = ({
   value,
   children,
 }) => {
-  if (!value && !children) return null; // Don't render if no value or children
+  const hasValue = value !== null && value !== undefined && value.trim() !== "";
+  if (!hasValue && !children) return null;
   return (
     <View style={styles.infoField}>
       <Text style={styles.infoLabel}>{label}:</Text>
-      {value && <Text style={styles.infoValue}>{value}</Text>}
+      {hasValue && <Text style={styles.infoValue}>{value}</Text>}
       {children}
     </View>
   );
 };
 
 // --- Main Screen Component ---
-const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
-  navigation,
-  route,
-}) => {
+const ViewContactScreen: any = ({ navigation, route }: any) => {
+  const { contactId, contactName: nameFromRoute } = route?.params || {}; // Destructure contactId and optional name
   const insets = useSafeAreaInsets();
-  // const contactId = route.params?.contactId; // Get contactId from navigation
-  const [contactDetails, setContactDetails] =
-    useState<ContactFullDetails | null>(mockContact); // Load with mock or fetch
+  const [contactDetails, setContactDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(true); // Start with loading true
   const [areAllSectionsOpen, setAreAllSectionsOpen] = useState(false);
 
-  // State for individual section visibility
   const initialSectionStates = {
     personal: true,
     spouse: false,
@@ -238,7 +94,6 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
       [sectionName]: !prev[sectionName],
     }));
   };
-
   const toggleAllSections = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     const newState = !areAllSectionsOpen;
@@ -254,43 +109,83 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
     setAreAllSectionsOpen(newState);
   };
 
-  // useEffect(() => {
-  //   // Fetch contact details based on contactId and setContactDetails
-  //   // For now, using mockContact
-  //   if (contactId) setContactDetails(mockContact);
-  // }, [contactId]);
+  useEffect(() => {
+    if (contactId) {
+      setLoading(true);
+      profileContactApi({ query: { id: contactId } })
+        .then((res: any) => {
+          setContactDetails(res);
+        })
+        .catch((err: any) => {
+          console.error("Error fetching contact profile:", err);
+          Alert.alert("Error", "Could not load contact details.");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      Alert.alert("Error", "No contact ID provided.");
+      navigation.goBack();
+      setLoading(false);
+    }
+  }, [contactId]);
 
   const handleSearchPress = () => console.log("Search pressed on View Contact");
   const handleDelete = () =>
-    Alert.alert("Delete Contact", "Are you sure you want to delete POOJA?", [
-      { text: "Cancel" },
-      { text: "Delete", onPress: () => console.log("Deleted") },
-    ]);
+    Alert.alert(
+      "Delete Contact",
+      `Are you sure you want to delete ${
+        contactDetails?.full_name || "this contact"
+      }?`,
+      [
+        { text: "Cancel" },
+        {
+          text: "Delete",
+          onPress: () =>
+            console.log("Deleting contact ID:", contactDetails?.id),
+          style: "destructive",
+        },
+      ]
+    );
   const handleEdit = () =>
-    navigation.navigate("EditContactScreen", { contactData: contactDetails });
+    navigation.navigate("EditContactScreen", { contactData: contactDetails }); // Pass full contactDetails
   const handleAddNote = () =>
     navigation.navigate("CreateNoteScreen", {
       contactId: contactDetails?.id,
-      contactName: contactDetails?.nameOrDescription,
+      contactName: contactDetails?.full_name,
     });
   const handleViewAllNotes = () =>
     navigation.navigate("AllNotesScreen", {
       contactId: contactDetails?.id,
+      contactName: contactDetails?.full_name,
     });
 
+  if (loading) {
+    return <FullScreenLoader />; // Use your FullScreenLoader
+  }
   if (!contactDetails) {
+    // If not loading and still no details (e.g., API error handled by setting to null)
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      <DefaultBackground>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>Contact not found.</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.allNotesLink}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </DefaultBackground>
     );
   }
 
   return (
     <DefaultBackground>
       <StatusBar style="light" />
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Header */}
+      <View
+        style={[
+          styles.container,
+          { paddingTop: Platform.OS === "android" ? insets.top : insets.top },
+        ]}
+      >
         <View style={styles.headerRow}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -309,7 +204,6 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
           </TouchableOpacity>
         </View>
 
-        {/* Action Bar */}
         <View style={styles.actionBar}>
           <TouchableOpacity style={styles.actionItem} onPress={handleDelete}>
             <Feather name="trash-2" size={18} color={theme.colors.white} />
@@ -344,11 +238,10 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.mainInfoCard}>
-            {/* Avatar */}
             <View style={styles.avatarDisplaySection}>
-              {contactDetails.avatarUri ? (
+              {contactDetails.photo ? (
                 <Image
-                  source={{ uri: contactDetails.avatarUri }}
+                  source={{ uri: contactDetails.photo }}
                   style={styles.avatarImage}
                 />
               ) : (
@@ -360,30 +253,28 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
                   />
                 </View>
               )}
-              <Text style={styles.userName}>
-                {contactDetails.nameOrDescription}
-              </Text>
+              <Text style={styles.userName}>{contactDetails.full_name}</Text>
             </View>
 
-            {/* Collapsible Sections */}
             <CollapsibleSection
               title="Personal Information"
               isOpen={sectionOpenState.personal}
               onPress={() => toggleSection("personal")}
             >
+              <InfoDisplayField label="Name" value={contactDetails.full_name} />
               <InfoDisplayField
-                label="Name or Description"
-                value={contactDetails.nameOrDescription}
+                label="Description"
+                value={contactDetails.description}
               />
               <InfoDisplayField
                 label="Birthday"
-                value={contactDetails.birthday}
+                value={dayjs(contactDetails.birthday).format("MM-DD-YYYY")}
               />
               <InfoDisplayField label="Email" value={contactDetails.email} />
-              <InfoDisplayField label="Number" value={contactDetails.number} />
+              <InfoDisplayField label="Number" value={contactDetails.phone} />
               <InfoDisplayField
                 label="Anniversary"
-                value={contactDetails.anniversary}
+                value={dayjs(contactDetails.anniversary).format("MM-DD-YYYY")}
               />
             </CollapsibleSection>
 
@@ -394,15 +285,17 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
             >
               <InfoDisplayField
                 label="Spouse Name"
-                value={contactDetails.spouseName}
+                value={contactDetails.spouse_name}
               />
               <InfoDisplayField
                 label="Spouse Birthday"
-                value={contactDetails.spouseBirthday}
+                value={dayjs(contactDetails.spouse_birthday).format(
+                  "MM-DD-YYYY"
+                )}
               />
               <InfoDisplayField
                 label="Spouse Details"
-                value={contactDetails.spouseDetails}
+                value={contactDetails.spouse_details}
               />
             </CollapsibleSection>
 
@@ -411,14 +304,23 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
               isOpen={sectionOpenState.children}
               onPress={() => toggleSection("children")}
             >
-              {contactDetails.children?.map((child, index) => (
+              {contactDetails.children?.map((child: any, index: any) => (
                 <View key={child.id} style={styles.arrayItemCard}>
                   <Text style={styles.arrayItemTitle}>Child {index + 1}</Text>
                   <InfoDisplayField label="Name" value={child.name} />
-                  <InfoDisplayField label="Birthday" value={child.birthday} />
+                  <InfoDisplayField
+                    label="Birthday"
+                    value={dayjs(child.birthday).format("MM-DD-YYYY")}
+                  />
                   <InfoDisplayField label="Details" value={child.details} />
                 </View>
               ))}
+              {(!contactDetails.children ||
+                contactDetails.children.length === 0) && (
+                <Text style={styles.noArrayItemsText}>
+                  No children details added.
+                </Text>
+              )}
             </CollapsibleSection>
 
             <CollapsibleSection
@@ -426,40 +328,45 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
               isOpen={sectionOpenState.employment}
               onPress={() => toggleSection("employment")}
             >
-              {contactDetails.employmentHistory?.map((job, index) => (
-                <View key={job.id} style={styles.arrayItemCard}>
-                  <Text style={styles.arrayItemTitle}>
-                    Employment {index + 1}
-                  </Text>
-                  <InfoDisplayField label="Employer" value={job.employerName} />
-                  <InfoDisplayField
-                    label="Details"
-                    value={job.employerDetails}
-                  />
-                </View>
-              ))}
+              {contactDetails.previous_employers?.map(
+                (job: any, index: any) => (
+                  <View key={job.id} style={styles.arrayItemCard}>
+                    <Text style={styles.arrayItemTitle}>
+                      Employment {index + 1}
+                    </Text>
+                    <InfoDisplayField label="Employer" value={job.name} />
+                    <InfoDisplayField label="Details" value={job.details} />
+                  </View>
+                )
+              )}
+              {(!contactDetails.previous_employers ||
+                contactDetails.previous_employers.length === 0) && (
+                <Text style={styles.noArrayItemsText}>
+                  No employment details added.
+                </Text>
+              )}
             </CollapsibleSection>
 
             <CollapsibleSection
-              title="University Details"
+              title="Education Details"
               isOpen={sectionOpenState.education}
               onPress={() => toggleSection("education")}
             >
-              {contactDetails.educationHistory?.map((edu, index) => (
+              {contactDetails.universities?.map((edu: any, index: any) => (
                 <View key={edu.id} style={styles.arrayItemCard}>
                   <Text style={styles.arrayItemTitle}>
                     Education {index + 1}
                   </Text>
-                  <InfoDisplayField
-                    label="Institution"
-                    value={edu.universityName}
-                  />
-                  <InfoDisplayField
-                    label="Details"
-                    value={edu.universityDetails}
-                  />
+                  <InfoDisplayField label="Institution" value={edu.name} />
+                  <InfoDisplayField label="Details" value={edu.details} />
                 </View>
               ))}
+              {(!contactDetails.universities ||
+                contactDetails.universities.length === 0) && (
+                <Text style={styles.noArrayItemsText}>
+                  No education details added.
+                </Text>
+              )}
             </CollapsibleSection>
 
             <CollapsibleSection
@@ -467,29 +374,43 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
               isOpen={sectionOpenState.interests}
               onPress={() => toggleSection("interests")}
             >
-              {contactDetails.interests?.map((interest) => (
+              {contactDetails.interests?.map((interest: any) => (
                 <Text key={interest.id} style={styles.interestItemValue}>
-                  • {interest.value}
+                  • {interest.name}
                 </Text>
               ))}
+              {(!contactDetails.interests ||
+                contactDetails.interests.length === 0) && (
+                <Text style={styles.noArrayItemsText}>No interests added.</Text>
+              )}
             </CollapsibleSection>
 
             <CollapsibleSection
-              title="Others"
+              title="Others (Custom Fields)"
               isOpen={sectionOpenState.others}
               onPress={() => toggleSection("others")}
             >
-              {contactDetails.customFields?.map((field) => (
+              {contactDetails.custom_fields?.map((field: any) => (
                 <InfoDisplayField
-                  key={field.id}
+                  key={field.id || field.title}
                   label={field.title}
-                  value={field.value}
-                />
+                >
+                  {field.values.map((val: any, idx: any) => (
+                    <Text key={idx} style={styles.infoValue}>
+                      • {val}
+                    </Text>
+                  ))}
+                </InfoDisplayField>
               ))}
+              {(!contactDetails.custom_fields ||
+                contactDetails.custom_fields.length === 0) && (
+                <Text style={styles.noArrayItemsText}>
+                  No custom fields added.
+                </Text>
+              )}
             </CollapsibleSection>
           </View>
 
-          {/* Notes Section */}
           <View style={styles.notesCard}>
             <View style={styles.notesHeader}>
               <Text style={styles.notesTitle}>Notes</Text>
@@ -504,25 +425,25 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
                 </Text>
               </TouchableOpacity>
             </View>
-            {contactDetails.notes?.slice(0, 3).map(
-              (
-                note // Display first 3 notes
-              ) => (
-                <View key={note.id} style={styles.noteItem}>
-                  <Text style={styles.noteDate}>
-                    <Feather name="calendar" size={13} /> {note.date}
-                  </Text>
-                  <Text style={styles.noteContent} numberOfLines={2}>
-                    {note.content}
-                  </Text>
-                  <Text style={styles.noteCreationDate}>
-                    Noted created at <Feather name="clock" size={13} />{" "}
-                    {note.createdAt}
-                  </Text>
-                </View>
-              )
-            )}
-            {(!contactDetails.notes || contactDetails.notes.length === 0) && (
+            {contactDetails.contact_notes?.map((note: any) => (
+              <View key={note.id} style={styles.noteItem}>
+                <Text style={styles.noteDate}>
+                  <Feather name="calendar" size={13} />{" "}
+                  {note.reminder
+                    ? dayjs(note.reminder).format("MM-DD-YYYY")
+                    : ""}
+                </Text>
+                <Text style={styles.noteContent} numberOfLines={2}>
+                  {note.note}
+                </Text>
+                <Text style={styles.noteCreationDate}>
+                  Noted created at <Feather name="clock" size={13} />{" "}
+                  {dayjs(note.created_at).format("MM-DD-YYYY")}
+                </Text>
+              </View>
+            ))}
+            {(!contactDetails.contact_notes ||
+              contactDetails.contact_notes.length === 0) && (
               <Text style={styles.noNotesText}>
                 No notes yet for this contact.
               </Text>
@@ -535,6 +456,7 @@ const ViewContactScreen: React.FC<ViewContactScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
+  // ... (Most styles remain the same, check for consistency with new data)
   container: { flex: 1 },
   headerRow: {
     flexDirection: "row",
@@ -560,9 +482,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   logoImgSmall: {
-    width: "100%",
-    height: 40,
-    objectFit: "contain",
+    width: "50%",
+    height: 35,
+    resizeMode: "contain",
+    opacity: 0.8,
+    marginTop: 2,
   },
   actionBar: {
     flexDirection: "row",
@@ -600,6 +524,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  // userName under avatar was removed as name is in header
   collapsibleSection: { borderTopWidth: 1, borderTopColor: theme.colors.grey },
   sectionHeader: {
     flexDirection: "row",
@@ -618,7 +543,7 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 13,
     ...theme.font.fontMedium,
-    color: theme.colors.grey,
+    color: theme.colors.grey /* Changed to grey */,
     marginBottom: 3,
   },
   infoValue: {
@@ -676,10 +601,10 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.grey,
-  },
+  }, // Changed separator to grey
   noteDate: {
-    fontSize: 14,
-    ...theme.font.fontBold,
+    fontSize: 12,
+    /* API provides reminder or created_at */ ...theme.font.fontSemiBold,
     color: theme.colors.secondary,
     marginBottom: 3,
   },
@@ -699,17 +624,30 @@ const styles = StyleSheet.create({
     color: theme.colors.grey,
     paddingVertical: 10,
   },
+  noArrayItemsText: {
+    color: theme.colors.grey,
+    fontStyle: "italic",
+    textAlign: "center",
+    paddingVertical: 5,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: theme.colors.primary,
+  }, // Ensure primary is defined
+  errorText: {
+    color: theme.colors.white,
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 10,
   },
   userName: {
     ...theme.font.fontBold,
     fontSize: 15,
     color: theme.colors.white,
     paddingHorizontal: 5,
+    marginTop: 5,
   },
 });
 
