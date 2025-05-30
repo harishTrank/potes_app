@@ -15,41 +15,24 @@ import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule";
-import { deleteNotes, getNotesApi } from "../../../store/Services/Others";
+import { deleteNotes } from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
 import dayjs from "dayjs";
 import Toast from "react-native-toast-message";
+import { useGetNotesApi } from "../../../hooks/Others/query";
 
 const AllNotesScreen: any = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
-  const [notes, setNotes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
   const contactIdFilter = route.params?.contactId;
+  const allNotesApiHandler: any = useGetNotesApi({
+    query: {
+      id: contactIdFilter,
+    },
+  });
 
   useEffect(() => {
     return navigation.addListener("focus", () => {
-      if (contactIdFilter) {
-        setLoading(true);
-        getNotesApi({
-          query: {
-            id: contactIdFilter,
-          },
-        })
-          ?.then((res: any) => {
-            setNotes(res);
-          })
-          ?.catch((err: any) => {
-            console.log("Error fetching notes:", err);
-            setNotes([]);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      } else {
-        console.log("No contactIdFilter provided to AllNotesScreen.");
-        setNotes([]);
-      }
+      allNotesApiHandler.refetch();
     });
   }, [contactIdFilter, navigation]);
 
@@ -75,7 +58,7 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
             },
           })
             ?.then((res: any) => {
-              setNotes((prevNotes: any[]) =>
+              allNotesApiHandler?.data((prevNotes: any[]) =>
                 prevNotes.filter((note: any) => note.id !== noteId)
               );
               Toast.show({
@@ -90,7 +73,7 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
     ]);
   };
 
-  if (loading) {
+  if (allNotesApiHandler?.isLoading) {
     return <FullScreenLoader />;
   }
 
@@ -131,15 +114,16 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
                 : "All Notes"}
             </Text>
 
-            {notes.length === 0 ? (
+            {allNotesApiHandler?.data.length === 0 ? (
               <Text style={styles.noNotesText}>No notes found.</Text>
             ) : (
-              notes.map((note: any, index: number) => (
+              allNotesApiHandler?.data.map((note: any, index: number) => (
                 <View
                   key={note.id}
                   style={[
                     styles.noteItemContainer,
-                    index === notes.length - 1 && styles.lastNoteItemContainer,
+                    index === allNotesApiHandler?.data.length - 1 &&
+                      styles.lastNoteItemContainer,
                   ]}
                 >
                   <View style={styles.noteHeader}>
