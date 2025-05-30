@@ -207,12 +207,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
     <DefaultBackground>
       <StatusBar style="light" />
       {apiIsLoading && <FullScreenLoader />}
-      <View
-        style={[
-          styles.flexContainer,
-          { paddingTop: Platform.OS === "android" ? insets.top : 0 },
-        ]}
-      >
+      <View style={[styles.flexContainer]}>
         <Header
           onMenuPress={handleMenuPress}
           onProfilePress={handleProfilePress}
