@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react"; // Added useCallback
 import {
   View,
   Text,
@@ -17,60 +17,102 @@ import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule";
-import { Formik } from "formik";
+import { Formik, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import DropDownComponent from "../../Components/DropDownComponent";
-
-type CreateNoteScreenNavigationProp = {
-  goBack: () => void;
-};
-
-interface CreateNoteScreenProps {
-  navigation: CreateNoteScreenNavigationProp;
-}
-
-interface CreateNoteFormValues {
-  contactId: string | null;
-  noteText: string;
-  reminderOption: string;
-}
+import {
+  allContactOptionApi,
+  createNotesApi,
+} from "../../../store/Services/Others";
+import { DatePickerModal } from "react-native-paper-dates"; // Import DatePickerModal
+import { en, registerTranslation } from "react-native-paper-dates"; // For localization
+import Toast from "react-native-toast-message";
+import dayjs from "dayjs";
+registerTranslation("en", en); // Register English locale
 
 const createNoteValidationSchema = Yup.object().shape({
-  contactId: Yup.string().nullable().required("Contact name is required"),
+  contactId: Yup.mixed().nullable().required("Contact name is required"),
   noteText: Yup.string()
     .required("Note text is required")
     .min(5, "Note must be at least 5 characters"),
-  reminderOption: Yup.string().required("Reminder option is required"), // No longer nullable if "None" is a default
+  reminderOption: Yup.string().required("Reminder option is required"),
+  customReminderDate: Yup.date().when("reminderOption", {
+    is: "Custom", // Condition: if reminderOption is "Custom"
+    then: (schema) =>
+      schema.required("Custom reminder date is required").nullable(), // Then customReminderDate is required
+    otherwise: (schema) => schema.nullable(), // Otherwise, it's optional
+  }),
 });
 
-const contactOptions = [
-  { label: "Alice Smith", value: "alice_smith_id" },
-  { label: "Bob Johnson", value: "bob_johnson_id" },
-];
-
+// --- Reminder Options (ensure "Custom" has a distinct value) ---
 const reminderOptions = [
-  { label: "None", value: "none" },
-  { label: "1 hour before", value: "1_hour_before" },
-  { label: "1 day before", value: "1_day_before" },
-  { label: "Custom", value: "custom" },
+  { label: "None", value: "" }, // Value for "None"
+  { label: "Monthly", value: "Monthly" },
+  { label: "Quarterly", value: "Quarterly" },
+  { label: "Yearly", value: "Yearly" },
+  { label: "Custom", value: "Custom" }, // Value to trigger custom date field
 ];
 
-const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
+const CreateNoteScreen: any = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
+  const [contacts, setContacts] = useState<any>([]);
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+
+  useEffect(() => {
+    allContactOptionApi()
+      ?.then((res: any) => {
+        setContacts(res?.contacts || []);
+      })
+      ?.catch((err: any) => {
+        console.log("Error fetching contacts:", err);
+        setContacts([]);
+      });
+  }, []);
 
   const handleSearchPress = () => {
     console.log("Search icon pressed on Create Note screen");
   };
 
   const handleFormSubmit = (values: any, { setSubmitting, resetForm }: any) => {
-    console.log("Create Note form submitted (labels stored):", values);
-    setTimeout(() => {
-      resetForm({
-        values: { contactId: null, noteText: "", reminderOption: "None" },
+    const payload = {
+      contact: values.contactId,
+      note: values.noteText,
+      reminder_type: values.reminderOption,
+      reminder:
+        values.reminderOption === "Custom"
+          ? dayjs(values.customReminderDate).format("YYYY-MM-DD")
+          : null,
+    };
+    createNotesApi({
+      body: payload,
+    })
+      ?.then((res: any) => {
+        Toast.show({
+          type: "success",
+          text1: res.msg,
+        });
+        navigation.goBack();
+      })
+      ?.catch((err: any) => {
+        Toast.show({
+          type: "error",
+          text1: err.data.error,
+        });
       });
-      setSubmitting(false);
-    }, 2000);
   };
+
+  const onDismissDatePicker = useCallback(() => {
+    setDatePickerVisible(false);
+  }, []);
+  const onConfirmCustomDate = useCallback(
+    (params: { date: Date | undefined }, setFieldValue: Function) => {
+      setDatePickerVisible(false);
+      if (params.date) {
+        setFieldValue("customReminderDate", params.date);
+      }
+    },
+    []
+  );
 
   return (
     <DefaultBackground>
@@ -114,12 +156,14 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
 
               <Formik
                 initialValues={{
-                  contactId: null, // Null for placeholder to show
+                  contactId: null,
                   noteText: "",
-                  reminderOption: "None", // Default selected value as per image
+                  reminderOption: "", // Default to empty, user must select
+                  customReminderDate: undefined,
                 }}
                 validationSchema={createNoteValidationSchema}
                 onSubmit={handleFormSubmit}
+                enableReinitialize
               >
                 {({
                   handleChange,
@@ -135,15 +179,31 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>Contact Name</Text>
                       <DropDownComponent
-                        data={contactOptions}
-                        value={values.contactId} // Expects the label string or null
-                        setValue={(
-                          selectedLabel: string | null // Will receive the label
-                        ) => setFieldValue("contactId", selectedLabel)}
+                        data={contacts}
+                        value={
+                          values.contactId
+                            ? contacts.find(
+                                (c: any) => c.id === values.contactId
+                              )?.full_name || null
+                            : null
+                        }
+                        setValue={(selectedFullName: string | null) => {
+                          if (selectedFullName) {
+                            const selectedContact = contacts.find(
+                              (c: any) => c.full_name === selectedFullName
+                            );
+                            setFieldValue(
+                              "contactId",
+                              selectedContact ? selectedContact.id : null
+                            );
+                          } else {
+                            setFieldValue("contactId", null);
+                          }
+                        }}
                         placeholder="Select any contact"
-                        fieldKey="label" // Used for display and as valueField for Dropdown
-                        objectSave={false} // To get item[fieldKey] directly
-                        search={false} // As per image
+                        fieldKey="full_name"
+                        objectSave={false}
+                        search={true}
                         style={[
                           styles.dropdownStyle,
                           touched.contactId &&
@@ -152,7 +212,9 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
                         ]}
                       />
                       {touched.contactId && errors.contactId && (
-                        <Text style={styles.errorText}>{errors.contactId}</Text>
+                        <Text style={styles.errorText}>
+                          {errors.contactId as string}
+                        </Text>
                       )}
                     </View>
 
@@ -167,11 +229,7 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
                         ]}
                       >
                         <TextInput
-                          style={[
-                            styles.input, // General input style (for padding, font)
-                            styles.textArea,
-                            // Error border is on textAreaContainer now
-                          ]}
+                          style={[styles.input, styles.textArea]}
                           placeholder="Enter your note"
                           placeholderTextColor={theme.colors.grey}
                           value={values.noteText}
@@ -182,7 +240,9 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
                         />
                       </View>
                       {touched.noteText && errors.noteText && (
-                        <Text style={styles.errorText}>{errors.noteText}</Text>
+                        <Text style={styles.errorText}>
+                          {errors.noteText as string}
+                        </Text>
                       )}
                     </View>
 
@@ -190,11 +250,15 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
                       <Text style={styles.label}>Note reminder</Text>
                       <DropDownComponent
                         data={reminderOptions}
-                        value={values.reminderOption} // Expects the label string like "None"
-                        setValue={(selectedLabel: string) =>
-                          setFieldValue("reminderOption", selectedLabel)
-                        }
-                        placeholder="Select reminder" // Will be overridden by initialValue "None"
+                        value={values.reminderOption} // Stores the 'value'
+                        setValue={(selectedValue: string) => {
+                          setFieldValue("reminderOption", selectedValue);
+                          if (selectedValue !== "Custom") {
+                            // Reset custom date if not "Custom"
+                            setFieldValue("customReminderDate", undefined);
+                          }
+                        }}
+                        placeholder="Select reminder type" // Changed placeholder
                         fieldKey="label"
                         objectSave={false}
                         search={false}
@@ -207,10 +271,51 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
                       />
                       {touched.reminderOption && errors.reminderOption && (
                         <Text style={styles.errorText}>
-                          {errors.reminderOption}
+                          {errors.reminderOption as string}
                         </Text>
                       )}
                     </View>
+
+                    {/* Conditionally Render Custom Date Picker */}
+                    {values.reminderOption === "Custom" && (
+                      <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Set a Reminder</Text>
+                        <TouchableOpacity
+                          style={[
+                            styles.dateInputDisplay,
+                            touched.customReminderDate &&
+                              errors.customReminderDate &&
+                              styles.inputError,
+                          ]}
+                          onPress={() => setDatePickerVisible(true)}
+                        >
+                          <Text
+                            style={
+                              values.customReminderDate
+                                ? styles.dateInputText
+                                : styles.dateInputPlaceholder
+                            }
+                          >
+                            {values.customReminderDate
+                              ? dayjs(values.customReminderDate).format(
+                                  "YYYY-MM-DD"
+                                )
+                              : "yyyy-mm-dd"}
+                          </Text>
+                          <Feather
+                            name="calendar"
+                            size={20}
+                            color={theme.colors.grey}
+                          />
+                        </TouchableOpacity>
+                        {touched.customReminderDate &&
+                          errors.customReminderDate && (
+                            <Text style={styles.errorText}>
+                              {errors.customReminderDate as string}
+                            </Text>
+                          )}
+                      </View>
+                    )}
 
                     <TouchableOpacity
                       style={[
@@ -226,6 +331,18 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
                         <Text style={styles.submitButtonText}>Submit</Text>
                       )}
                     </TouchableOpacity>
+
+                    <DatePickerModal
+                      locale="en"
+                      mode="single"
+                      visible={datePickerVisible}
+                      onDismiss={onDismissDatePicker}
+                      date={values.customReminderDate || new Date()} // Use current value or default to today
+                      onConfirm={(params) =>
+                        onConfirmCustomDate(params, setFieldValue)
+                      }
+                      validRange={{ startDate: new Date() }} // Example: only future dates
+                    />
                   </>
                 )}
               </Formik>
@@ -238,9 +355,8 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  // ... (Your existing styles)
+  container: { flex: 1 },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -248,11 +364,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
   },
-  logoImg: {
-    width: "50%",
-    height: 40,
-    objectFit: "contain",
-  },
+  logoImg: { width: "50%", height: 40, objectFit: "contain" },
   iconButton: {
     backgroundColor: theme.colors.secondary,
     padding: 8,
@@ -262,13 +374,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  formScrollView: {
-    flex: 1,
-  },
-  formScrollContentContainer: {
-    paddingHorizontal: 15,
-    paddingTop: 10,
-  },
+  formScrollView: { flex: 1 },
+  formScrollContentContainer: { paddingHorizontal: 15, paddingTop: 10 },
   formCard: {
     backgroundColor: theme.colors.secondary,
     paddingVertical: 20,
@@ -282,9 +389,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     marginBottom: 20,
   },
-  inputGroup: {
-    marginBottom: 20,
-  },
+  inputGroup: { marginBottom: 20 },
   label: {
     fontSize: 15,
     ...theme.font.fontMedium,
@@ -292,57 +397,42 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    // Base style for text inputs, for consistent padding/font if needed
-    paddingHorizontal: 15, // Applied to TextInput within textAreaContainer
+    paddingHorizontal: 15,
     fontSize: 16,
     ...theme.font.fontRegular,
     color: theme.colors.black,
   },
   dropdownStyle: {
-    // Style for the DropDownComponent itself
     height: 50,
     backgroundColor: theme.colors.white,
     borderRadius: 8,
-    borderWidth: 0, // Assuming DropDownComponent handles its own border or no border initially
-    // DropDownComponent internal styles handle padding and text
+    borderWidth: 0,
   },
   textAreaContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
     backgroundColor: theme.colors.white,
     borderRadius: 8,
-    // Border for error state will be applied here
+    position: "relative" /* For voice icon */,
   },
   textArea: {
     flex: 1,
     height: 140,
     textAlignVertical: "top",
     paddingTop: 12,
-    paddingRight: 40, // Space for mic
-    backgroundColor: "transparent", // TextInput itself is transparent, container has bg
-    // Removed specific paddingHorizontal here, will inherit from styles.input
+    paddingHorizontal: 15 /* Added paddingHorizontal */,
+    backgroundColor: "transparent",
   },
   voiceIcon: {
     position: "absolute",
-    right: 10,
+    right: 12,
     top: 12,
     padding: 5,
+    zIndex: 1,
   },
-  inputError: {
-    // For DropDownComponent and other direct inputs if needed
-    borderColor: theme.colors.red,
-    borderWidth: 1.5, // Make error border visible
-  },
-  inputErrorContainer: {
-    // For containers like textAreaContainer
-    borderColor: theme.colors.red,
-    borderWidth: 1.5,
-  },
-  errorText: {
-    fontSize: 13,
-    color: theme.colors.red,
-    marginTop: 5,
-  },
+  inputError: { borderColor: theme.colors.red, borderWidth: 1.5 },
+  inputErrorContainer: { borderColor: theme.colors.red, borderWidth: 1.5 },
+  errorText: { fontSize: 13, color: theme.colors.red, marginTop: 5 },
   submitButton: {
     backgroundColor: theme.colors.white,
     borderRadius: 8,
@@ -355,9 +445,25 @@ const styles = StyleSheet.create({
     ...theme.font.fontBold,
     color: theme.colors.black,
   },
-  buttonDisabled: {
-    backgroundColor: theme.colors.grey, // Using theme.colors.grey instead of lightGrey
-    opacity: 0.7,
+  buttonDisabled: { backgroundColor: theme.colors.grey, opacity: 0.7 },
+  dateInputDisplay: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: theme.colors.white,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    height: 50,
+  },
+  dateInputText: {
+    fontSize: 16,
+    ...theme.font.fontRegular,
+    color: theme.colors.black,
+  },
+  dateInputPlaceholder: {
+    fontSize: 16,
+    ...theme.font.fontRegular,
+    color: theme.colors.grey,
   },
 });
 

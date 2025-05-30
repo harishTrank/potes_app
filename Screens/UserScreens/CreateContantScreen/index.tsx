@@ -238,6 +238,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
         });
         setSubmitting(false);
         setLoading(false);
+        navigation.goBack();
       })
       .catch(() => {
         Toast.show({ type: "error", text1: "Failed to create contact." });
