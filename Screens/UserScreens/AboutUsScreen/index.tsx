@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule";
+import { staticDataApi } from "../../../store/Services/Others";
 
 type AboutUsScreenNavigationProp = {
   goBack: () => void;
@@ -25,6 +26,19 @@ interface AboutUsScreenProps {
 
 const AboutUsScreen: React.FC<AboutUsScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const [apiResponse, setApiResponse]: any = useState({});
+
+  useEffect(() => {
+    staticDataApi({
+      query: {
+        topic: "about",
+      },
+    })
+      ?.then((res: any) => {
+        setApiResponse(res?.data);
+      })
+      ?.catch((err: any) => console.log("err", err));
+  }, []);
 
   const handleSearchPress = () => {
     console.log("Search icon pressed on About Us screen");
@@ -69,34 +83,7 @@ const AboutUsScreen: React.FC<AboutUsScreenProps> = ({ navigation }) => {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.contentText}>
-            Welcome to POTES! We are dedicated to helping you organize your
-            thoughts and connections with people in your life. Our mission is to
-            provide a simple, intuitive platform for managing personal notes and
-            reminders related to your contacts.
-            {"\n\n"}
-            At POTES, we believe that meaningful relationships are built on
-            remembering the little things. Whether it's a birthday, an important
-            detail from a conversation, or a follow-up task, our app is designed
-            to be your personal assistant for nurturing connections.
-            {"\n\n"}
-            Key Features:
-            {"\n"}- Create and manage contacts with detailed personal
-            information.
-            {"\n"}- Add notes and reminders linked directly to your contacts.
-            {"\n"}- Keep track of important dates like birthdays and
-            anniversaries.
-            {"\n"}- Customize fields to store information that matters most to
-            you.
-            {"\n\n"}
-            Our team is passionate about creating tools that enhance everyday
-            life. We are constantly working to improve POTES and add new
-            features based on user feedback. Thank you for choosing POTES to
-            help you stay connected.
-            {"\n\n"}
-            If you have any questions, suggestions, or feedback, please don't
-            hesitate to reach out to us through the "Contact Us" section.
-          </Text>
+          <Text style={styles.contentText}>{apiResponse?.content}</Text>
         </ScrollView>
       </View>
     </DefaultBackground>

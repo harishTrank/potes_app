@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,9 @@ import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule"; // Path from AboutUsScreen
 import { Formik, FormikHelpers } from "formik"; // For form handling
 import * as Yup from "yup"; // For validation
+import { contactUsApi } from "../../../store/Services/Others";
+import FullScreenLoader from "../../Components/FullScreenLoader";
+import Toast from "react-native-toast-message";
 
 type ContactUsScreenNavigationProp = {
   goBack: () => void;
@@ -46,25 +49,42 @@ const contactValidationSchema = Yup.object().shape({
 
 const ContactUsScreen: React.FC<ContactUsScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const [loading, setLoading]: any = useState(false);
 
   const handleSearchPress = () => {
     console.log("Search icon pressed on Contact Us screen");
   };
 
-  const handleFormSubmit = (
-    values: ContactFormValues,
-    { setSubmitting, resetForm }: FormikHelpers<ContactFormValues>
-  ) => {
-    console.log("Contact form submitted:", values);
-    setTimeout(() => {
-      resetForm();
-      setSubmitting(false);
-    }, 2000);
+  const handleFormSubmit = (values: ContactFormValues) => {
+    setLoading(true);
+    contactUsApi({
+      body: {
+        full_name: values?.fullName,
+        email: values?.email,
+        message: values?.message,
+      },
+    })
+      ?.then((res: any) => {
+        setLoading(false);
+        Toast.show({
+          type: "success",
+          text1: res?.msg,
+        });
+        navigation?.goBack();
+      })
+      ?.catch(() => {
+        Toast.show({
+          type: "error",
+          text1: "Something went wrong.",
+        });
+        setLoading(false);
+      });
   };
 
   return (
     <DefaultBackground>
       <StatusBar style="light" />
+      {loading && <FullScreenLoader />}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
