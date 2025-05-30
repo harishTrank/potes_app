@@ -20,6 +20,8 @@ import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 // import Toast from "react-native-toast-message"; // Uncomment if using Toast
 import DefaultBackground from "../../Components/DefaultBackground";
+import { forgotPasswordChange } from "../../../store/Services/Others";
+import Toast from "react-native-toast-message";
 
 const { height, width } = Dimensions.get("window");
 
@@ -39,23 +41,20 @@ const resetPasswordSchema = Yup.object().shape({
 });
 
 type ResetPasswordScreenNavigationProp = {
-  // Specific navigation prop type
   navigate: (screen: string, params?: object) => void;
   goBack: () => void;
 };
 
 interface ResetPasswordScreenProps {
-  // Specific props interface
   navigation: ResetPasswordScreenNavigationProp;
-  route: { params?: { email?: string } }; // Typed route params
+  route: { params?: { email?: string } };
 }
 
 const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
   navigation,
   route,
-}) => {
-  // Typed props
-  const insets = useSafeAreaInsets(); // Call hook at the top level
+}: any) => {
+  const insets = useSafeAreaInsets();
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
     useState(false);
@@ -67,24 +66,30 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
     setIsConfirmPasswordVisible(!isConfirmPasswordVisible);
   };
 
-  const handleResetSubmit = (
-    values: ResetPasswordFormValues, // Typed values
-    { setSubmitting, setErrors }: FormikHelpers<ResetPasswordFormValues> // Typed FormikHelpers
-  ) => {
-    console.log(
-      "Reset Password attempt for:",
-      route?.params?.email,
-      "with new password."
-    );
-    // Placeholder for API call logic
-    setTimeout(() => {
-      // Example success:
-      // navigation.navigate("LoginScreen");
-      // Toast.show({ type: "success", text1: "Password reset successfully!" });
-      // Example error:
-      // setErrors({ submit: "Failed to reset password. Please try again." });
-      setSubmitting(false);
-    }, 2000);
+  const handleResetSubmit = (values: ResetPasswordFormValues) => {
+    forgotPasswordChange({
+      email: route?.params?.email,
+      otp: route?.params?.otp,
+      new_password: values?.newPassword,
+      confirm_password: values?.confirmPassword,
+    })
+      ?.then((res: any) => {
+        console.log("res", res);
+        Toast.show({
+          type: "success",
+          text1: res?.msg,
+        });
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "LoginScreen" }],
+        });
+      })
+      ?.catch((err: any) => {
+        Toast.show({
+          type: "error",
+          text1: err?.data?.error,
+        });
+      });
   };
 
   return (

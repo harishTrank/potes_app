@@ -17,8 +17,13 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import theme from "../../../utils/theme";
-import Toast from "react-native-toast-message";
 import DefaultBackground from "../../Components/DefaultBackground";
+import {
+  forgotPasswordEmail,
+  forgotPasswordOtpEmail,
+} from "../../../store/Services/Others";
+import Toast from "react-native-toast-message";
+import FullScreenLoader from "../../Components/FullScreenLoader";
 const { height, width } = Dimensions.get("window");
 const OTP_LENGTH = 4;
 
@@ -30,32 +35,30 @@ const OTPScreen = ({ navigation, route }: any) => {
   const [resendDisabled, setResendDisabled] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [loading, setLoading]: any = useState(false);
 
   const handleResendCode = () => {
     setResendDisabled(true);
-    // resendPasswordApiCall
-    //   ?.mutateAsync({
-    //     body: {
-    //       email: emailFromPreviousScreen,
-    //     },
-    //   })
-    //   ?.then((res: any) => {
-    //     setResendDisabled(false);
-    //     if (res?.code == "0") {
-    //       return Toast.show({
-    //         type: "error",
-    //         text1: res.message,
-    //       });
-    //     } else {
-    //       return Toast.show({
-    //         type: "success",
-    //         text1: res.message,
-    //       });
-    //     }
-    //   })
-    //   ?.catch((err: any) => {
-    //     setResendDisabled(false);
-    //   });
+    setLoading(true);
+    forgotPasswordEmail({
+      body: {
+        email: emailFromPreviousScreen,
+      },
+    })
+      .then((res: any) => {
+        setLoading(false);
+        return Toast.show({
+          type: "success",
+          text1: res.msg,
+        });
+      })
+      ?.catch((err: any) => {
+        setLoading(false);
+        return Toast.show({
+          type: "error",
+          text1: err.data.error,
+        });
+      });
   };
 
   const inputRef = useRef<TextInput>(null);
@@ -82,44 +85,30 @@ const OTPScreen = ({ navigation, route }: any) => {
   };
 
   const handleContinue = () => {
-    if (otpCode.length !== OTP_LENGTH) {
-      Alert.alert("Incomplete OTP", `Please enter all ${OTP_LENGTH} digits.`);
-      return;
-    }
-
-    Keyboard.dismiss();
-    setIsSubmitting(true);
-    navigation.navigate("ResetPasswordScreen", {
-      email: emailFromPreviousScreen,
-    });
-
-    // otpVerifyApiCaller
-    //   ?.mutateAsync({
-    //     body: {
-    //       email: emailFromPreviousScreen,
-    //       otp: otpCode,
-    //     },
-    //   })
-    //   ?.then((res: any) => {
-    //     setIsSubmitting(false);
-    //     if (res?.code == "0") {
-    //       return Toast.show({
-    //         type: "error",
-    //         text1: res.message,
-    //       });
-    //     } else {
-    //       navigation.navigate("ResetPasswordScreen", {
-    //         email: emailFromPreviousScreen,
-    //       });
-    //       return Toast.show({
-    //         type: "success",
-    //         text1: res.message,
-    //       });
-    //     }
-    //   })
-    //   ?.catch((err: any) => {
-    //     setIsSubmitting(false);
-    //   });
+    forgotPasswordOtpEmail({
+      body: {
+        email: emailFromPreviousScreen,
+        otp: otpCode,
+      },
+    })
+      ?.then((res: any) => {
+        setIsSubmitting(false);
+        navigation.navigate("ResetPasswordScreen", {
+          email: emailFromPreviousScreen,
+          otp: otpCode,
+        });
+        return Toast.show({
+          type: "success",
+          text1: res.msg,
+        });
+      })
+      ?.catch((err: any) => {
+        setIsSubmitting(false);
+        return Toast.show({
+          type: "error",
+          text1: err.data.error,
+        });
+      });
   };
 
   const renderOtpBoxes = () => {
@@ -148,6 +137,7 @@ const OTPScreen = ({ navigation, route }: any) => {
 
   return (
     <DefaultBackground>
+      {loading && <FullScreenLoader />}
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="dark" />
         <KeyboardAvoidingView

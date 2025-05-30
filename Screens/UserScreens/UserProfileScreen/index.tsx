@@ -65,7 +65,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const [userData, setUserData] = useState<UserData>(mockUser);
-  const [isEditingName, setIsEditingName] = useState(false); // State for edit mode
+  const [isEditingName, setIsEditingName] = useState(false);
 
   const handlePickImage = async () => {
     console.log("Pick image pressed");

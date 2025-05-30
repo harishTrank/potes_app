@@ -19,6 +19,8 @@ import * as Yup from "yup";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DefaultBackground from "../../Components/DefaultBackground";
+import { forgotPasswordEmail } from "../../../store/Services/Others";
+import Toast from "react-native-toast-message";
 
 const { height, width } = Dimensions.get("window");
 
@@ -33,31 +35,26 @@ const ForgotPasswordScreen = ({ navigation }: any) => {
     values: any,
     { setSubmitting, setErrors }: any
   ) => {
-    navigation.navigate("OTPScreen", { email: values?.email });
-    // sendOTPAPICall
-    //   ?.mutateAsync({
-    //     body: {
-    //       email: values?.email,
-    //     },
-    //   })
-    //   ?.then((res: any) => {
-    //     setSubmitting(false);
-    //     if (res?.code == "0") {
-    //       return Toast.show({
-    //         type: "error",
-    //         text1: res.message,
-    //       });
-    //     } else {
-    //       navigation.navigate("OTPScreen", { email: values?.email });
-    //       return Toast.show({
-    //         type: "success",
-    //         text1: res.message,
-    //       });
-    //     }
-    //   })
-    //   ?.catch((err: any) => {
-    //     setSubmitting(false);
-    //   });
+    forgotPasswordEmail({
+      body: {
+        email: values?.email,
+      },
+    })
+      .then((res: any) => {
+        setSubmitting(false);
+        navigation.navigate("OTPScreen", { email: values?.email });
+        return Toast.show({
+          type: "success",
+          text1: res.msg,
+        });
+      })
+      ?.catch((err: any) => {
+        setSubmitting(false);
+        return Toast.show({
+          type: "error",
+          text1: err.data.error,
+        });
+      });
   };
 
   return (
