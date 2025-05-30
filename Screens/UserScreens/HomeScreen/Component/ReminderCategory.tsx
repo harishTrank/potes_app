@@ -19,7 +19,7 @@ if (
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const ReminderCategory: any = ({ category }: any) => {
+const ReminderCategory: any = ({ category, setReminer }: any) => {
   const [isExpanded, setIsExpanded] = useState(category.initiallyOpen || false);
 
   const toggleExpansion = () => {
@@ -43,7 +43,12 @@ const ReminderCategory: any = ({ category }: any) => {
       {isExpanded && (
         <View style={styles.itemsContainer}>
           {category?.items?.map((item: any) => (
-            <ReminderItem key={item.id} item={item} />
+            <ReminderItem
+              key={item.id}
+              item={item}
+              name={category?.name}
+              setReminer={setReminer}
+            />
           ))}
         </View>
       )}

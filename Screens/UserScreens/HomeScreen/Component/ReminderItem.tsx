@@ -1,9 +1,37 @@
-import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import theme from "../../../../utils/theme";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { completeTaskApi } from "../../../../store/Services/Others";
+import Toast from "react-native-toast-message";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-const ReminderItem: any = ({ item }: any) => {
+const ReminderItem: any = ({ item, name, setReminer }: any) => {
+  const [flagManager, setFlagManager]: any = useState(item?.completed);
+  const reminderClickHandler = (note_id: any) => {
+    completeTaskApi({
+      query: {
+        note_id,
+      },
+    })
+      ?.then(() => {
+        if (name === "Today") {
+          setFlagManager(true);
+        } else if (name === "Missed") {
+          setReminer((oldVal: any) => {
+            return {
+              ...oldVal,
+              missed: oldVal.missed.filter((item: any) => item.id !== note_id),
+            };
+          });
+        }
+        Toast.show({
+          type: "success",
+          text1: "Done",
+        });
+      })
+      ?.catch((err: any) => console.log("err", err));
+  };
   return (
     <View style={styles.container}>
       {item?.contact_photo ? (
@@ -22,7 +50,14 @@ const ReminderItem: any = ({ item }: any) => {
           {item.note}
         </Text>
       </View>
-      <View style={styles.dot} />
+      {(name === "Today" || name === "Missed") &&
+        (flagManager ? (
+          <Ionicons name="checkmark-circle" size={20} color={"#73f440"} />
+        ) : (
+          <TouchableOpacity onPress={() => reminderClickHandler(item?.id)}>
+            <View style={styles.dot} />
+          </TouchableOpacity>
+        ))}
     </View>
   );
 };
@@ -35,10 +70,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   userImage: {
-    height: 30,
-    width: 30,
-    borderRadius: 15,
-    padding: 4,
+    height: 24,
+    width: 24,
+    borderRadius: 12,
+    margin: 4,
   },
   userIcon: {
     padding: 4,
@@ -58,10 +93,11 @@ const styles = StyleSheet.create({
     color: theme.colors.reminderMessageText,
   },
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: theme.colors.white,
+    marginRight: 3,
   },
 });
 

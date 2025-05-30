@@ -1,33 +1,34 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
+import { View, Text, StyleSheet, Image } from "react-native";
 import theme from "../../../../utils/theme"; // Adjust this path to your global theme file
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-export interface EventListItemData {
-  id: string;
-  icon: keyof typeof Feather.glyphMap; // Name of the Feather icon
-  text: string; // Main descriptive text of the event
-  date: string; // Date of the event (e.g., "05-29-2025")
-  type?: string; // Optional: To differentiate event types further if needed
-}
-
-interface EventListItemProps {
-  item: EventListItemData;
-}
-
-const EventListItem: React.FC<EventListItemProps> = ({ item }) => {
+const EventListItem: any = ({ item, type }: any) => {
   return (
     <View style={styles.container}>
-      <Feather
-        name={item.icon}
-        size={18}
-        color={theme.colors.white}
-        style={styles.icon}
-      />
+      {item?.photo ? (
+        <Image source={{ uri: item?.photo }} style={styles.profilePic} />
+      ) : (
+        <FontAwesome name="user-circle" size={24} color={theme.colors.white} />
+      )}
       <View style={styles.textContainer}>
-        <Text style={styles.eventText}>{item.text}</Text>
+        <Text style={styles.eventText}>
+          {type === "Birthdays" || type === "Anniversary"
+            ? item?.full_name
+            : type === "spouse"
+            ? `${item?.spouse_name}\n(${item?.full_name}'s Spouse)`
+            : `${item?.name}\n(${item?.contact__full_name}'s Child)`}
+        </Text>
       </View>
-      <Text style={styles.eventDate}>{item.date}</Text>
+      <Text style={styles.eventDate}>
+        {type === "Birthdays"
+          ? item.birthday
+          : type === "Anniversary"
+          ? item?.anniversary
+          : type === "spouse"
+          ? item?.spouse_birthday
+          : item?.birthday}
+      </Text>
     </View>
   );
 };
@@ -41,9 +42,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: theme.colors.grey, // Assuming 'grey' is a subtle separator in your theme
   },
-  icon: {
-    marginRight: 12,
-    opacity: 0.9,
+  profilePic: {
+    height: 30,
+    width: 30,
+    borderRadius: 15,
   },
   textContainer: {
     flex: 1, // Allow primary text to take available space and truncate if needed
@@ -53,6 +55,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     ...theme.font.fontMedium, // Assuming you have fontMedium in your theme
     color: theme.colors.white, // Assuming white text on dark card
+    marginLeft: 5,
   },
   eventDate: {
     fontSize: 14,
