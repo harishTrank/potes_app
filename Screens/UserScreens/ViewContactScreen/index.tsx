@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
   LayoutAnimation,
   UIManager,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import DefaultBackground from "../../Components/DefaultBackground";
@@ -25,6 +24,7 @@ import {
 import FullScreenLoader from "../../Components/FullScreenLoader"; // Assuming you have this
 import dayjs from "dayjs";
 import Toast from "react-native-toast-message";
+import { useProfileContactApi } from "../../../hooks/Others/query";
 
 if (
   Platform.OS === "android" &&
@@ -75,9 +75,9 @@ const InfoDisplayField: React.FC<InfoDisplayFieldProps> = ({
 const ViewContactScreen: any = ({ navigation, route }: any) => {
   const { contactId, contactName: nameFromRoute } = route?.params || {}; // Destructure contactId and optional name
   const insets = useSafeAreaInsets();
-  const [contactDetails, setContactDetails] = useState<any>(null);
-  const [loading, setLoading] = useState(true); // Start with loading true
+  const [loading, setLoading] = useState(false);
   const [areAllSectionsOpen, setAreAllSectionsOpen] = useState(false);
+  const apiResponse: any = useProfileContactApi({ query: { id: contactId } });
 
   const initialSectionStates = {
     personal: true,
@@ -115,24 +115,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
 
   useEffect(() => {
     return navigation.addListener("focus", () => {
-      if (contactId) {
-        setLoading(true);
-        profileContactApi({ query: { id: contactId } })
-          .then((res: any) => {
-            setContactDetails(res);
-          })
-          .catch((err: any) => {
-            console.error("Error fetching contact profile:", err);
-            Alert.alert("Error", "Could not load contact details.");
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      } else {
-        Alert.alert("Error", "No contact ID provided.");
-        navigation.goBack();
-        setLoading(false);
-      }
+      apiResponse?.refetch();
     });
   }, [contactId, navigation]);
 
@@ -141,7 +124,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
     Alert.alert(
       "Delete Contact",
       `Are you sure you want to delete ${
-        contactDetails?.full_name || "this contact"
+        apiResponse?.data?.full_name || "this contact"
       }?`,
       [
         { text: "Cancel" },
@@ -151,7 +134,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             setLoading(true);
             deleteContactApi({
               query: {
-                id: contactDetails?.id,
+                id: apiResponse?.data?.id,
               },
             })
               ?.then((res: any) => {
@@ -169,22 +152,24 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
       ]
     );
   const handleEdit = () =>
-    navigation.navigate("EditContactScreen", { contactData: contactDetails }); // Pass full contactDetails
+    navigation.navigate("EditContactScreen", {
+      contactData: apiResponse?.data,
+    }); // Pass full apiResponse?.data
   const handleAddNote = () =>
     navigation.navigate("CreateNoteScreen", {
-      contactId: contactDetails?.id,
-      contactName: contactDetails?.full_name,
+      contactId: apiResponse?.data?.id,
+      contactName: apiResponse?.data?.full_name,
       type: "AddNote",
     });
   const handleViewAllNotes = () =>
     navigation.navigate("AllNotesScreen", {
-      contactId: contactDetails?.id,
+      contactId: apiResponse?.data?.id,
     });
 
-  if (loading) {
+  if (loading || apiResponse?.isLoading) {
     return <FullScreenLoader />;
   }
-  if (!contactDetails) {
+  if (!apiResponse?.data) {
     return (
       <DefaultBackground>
         <View style={styles.loadingContainer}>
@@ -259,9 +244,9 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
         >
           <View style={styles.mainInfoCard}>
             <View style={styles.avatarDisplaySection}>
-              {contactDetails.photo ? (
+              {apiResponse?.data.photo ? (
                 <Image
-                  source={{ uri: contactDetails.photo }}
+                  source={{ uri: apiResponse?.data.photo }}
                   style={styles.avatarImage}
                 />
               ) : (
@@ -273,7 +258,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                   />
                 </View>
               )}
-              <Text style={styles.userName}>{contactDetails.full_name}</Text>
+              <Text style={styles.userName}>{apiResponse?.data.full_name}</Text>
             </View>
 
             <CollapsibleSection
@@ -281,20 +266,28 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               isOpen={sectionOpenState.personal}
               onPress={() => toggleSection("personal")}
             >
-              <InfoDisplayField label="Name" value={contactDetails.full_name} />
+              <InfoDisplayField
+                label="Name"
+                value={apiResponse?.data.full_name}
+              />
               <InfoDisplayField
                 label="Description"
-                value={contactDetails.description}
+                value={apiResponse?.data.description}
               />
               <InfoDisplayField
                 label="Birthday"
-                value={dayjs(contactDetails.birthday).format("MM-DD-YYYY")}
+                value={dayjs(apiResponse?.data.birthday).format("MM-DD-YYYY")}
               />
-              <InfoDisplayField label="Email" value={contactDetails.email} />
-              <InfoDisplayField label="Number" value={contactDetails.phone} />
+              <InfoDisplayField label="Email" value={apiResponse?.data.email} />
+              <InfoDisplayField
+                label="Number"
+                value={apiResponse?.data.phone}
+              />
               <InfoDisplayField
                 label="Anniversary"
-                value={dayjs(contactDetails.anniversary).format("MM-DD-YYYY")}
+                value={dayjs(apiResponse?.data.anniversary).format(
+                  "MM-DD-YYYY"
+                )}
               />
             </CollapsibleSection>
 
@@ -305,17 +298,17 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             >
               <InfoDisplayField
                 label="Spouse Name"
-                value={contactDetails.spouse_name}
+                value={apiResponse?.data.spouse_name}
               />
               <InfoDisplayField
                 label="Spouse Birthday"
-                value={dayjs(contactDetails.spouse_birthday).format(
+                value={dayjs(apiResponse?.data.spouse_birthday).format(
                   "MM-DD-YYYY"
                 )}
               />
               <InfoDisplayField
                 label="Spouse Details"
-                value={contactDetails.spouse_details}
+                value={apiResponse?.data.spouse_details}
               />
             </CollapsibleSection>
 
@@ -324,7 +317,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               isOpen={sectionOpenState.children}
               onPress={() => toggleSection("children")}
             >
-              {contactDetails.children?.map((child: any, index: any) => (
+              {apiResponse?.data.children?.map((child: any, index: any) => (
                 <View key={child.id} style={styles.arrayItemCard}>
                   <Text style={styles.arrayItemTitle}>Child {index + 1}</Text>
                   <InfoDisplayField label="Name" value={child.name} />
@@ -335,8 +328,8 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                   <InfoDisplayField label="Details" value={child.details} />
                 </View>
               ))}
-              {(!contactDetails.children ||
-                contactDetails.children.length === 0) && (
+              {(!apiResponse?.data.children ||
+                apiResponse?.data.children.length === 0) && (
                 <Text style={styles.noArrayItemsText}>
                   No children details added.
                 </Text>
@@ -348,7 +341,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               isOpen={sectionOpenState.employment}
               onPress={() => toggleSection("employment")}
             >
-              {contactDetails.previous_employers?.map(
+              {apiResponse?.data.previous_employers?.map(
                 (job: any, index: any) => (
                   <View key={job.id} style={styles.arrayItemCard}>
                     <Text style={styles.arrayItemTitle}>
@@ -359,8 +352,8 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                   </View>
                 )
               )}
-              {(!contactDetails.previous_employers ||
-                contactDetails.previous_employers.length === 0) && (
+              {(!apiResponse?.data.previous_employers ||
+                apiResponse?.data.previous_employers.length === 0) && (
                 <Text style={styles.noArrayItemsText}>
                   No employment details added.
                 </Text>
@@ -372,7 +365,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               isOpen={sectionOpenState.education}
               onPress={() => toggleSection("education")}
             >
-              {contactDetails.universities?.map((edu: any, index: any) => (
+              {apiResponse?.data.universities?.map((edu: any, index: any) => (
                 <View key={edu.id} style={styles.arrayItemCard}>
                   <Text style={styles.arrayItemTitle}>
                     Education {index + 1}
@@ -381,8 +374,8 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                   <InfoDisplayField label="Details" value={edu.details} />
                 </View>
               ))}
-              {(!contactDetails.universities ||
-                contactDetails.universities.length === 0) && (
+              {(!apiResponse?.data.universities ||
+                apiResponse?.data.universities.length === 0) && (
                 <Text style={styles.noArrayItemsText}>
                   No education details added.
                 </Text>
@@ -394,13 +387,13 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               isOpen={sectionOpenState.interests}
               onPress={() => toggleSection("interests")}
             >
-              {contactDetails.interests?.map((interest: any) => (
+              {apiResponse?.data.interests?.map((interest: any) => (
                 <Text key={interest.id} style={styles.interestItemValue}>
                   • {interest.name}
                 </Text>
               ))}
-              {(!contactDetails.interests ||
-                contactDetails.interests.length === 0) && (
+              {(!apiResponse?.data.interests ||
+                apiResponse?.data.interests.length === 0) && (
                 <Text style={styles.noArrayItemsText}>No interests added.</Text>
               )}
             </CollapsibleSection>
@@ -410,7 +403,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               isOpen={sectionOpenState.others}
               onPress={() => toggleSection("others")}
             >
-              {contactDetails.custom_fields?.map((field: any) => (
+              {apiResponse?.data.custom_fields?.map((field: any) => (
                 <InfoDisplayField
                   key={field.id || field.title}
                   label={field.title}
@@ -422,8 +415,8 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                   ))}
                 </InfoDisplayField>
               ))}
-              {(!contactDetails.custom_fields ||
-                contactDetails.custom_fields.length === 0) && (
+              {(!apiResponse?.data.custom_fields ||
+                apiResponse?.data.custom_fields.length === 0) && (
                 <Text style={styles.noArrayItemsText}>
                   No custom fields added.
                 </Text>
@@ -445,7 +438,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                 </Text>
               </TouchableOpacity>
             </View>
-            {contactDetails.contact_notes?.map((note: any) => (
+            {apiResponse?.data.contact_notes?.map((note: any) => (
               <View key={note.id} style={styles.noteItem}>
                 <Text style={styles.noteDate}>
                   <Feather name="calendar" size={13} />{" "}
@@ -462,8 +455,8 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                 </Text>
               </View>
             ))}
-            {(!contactDetails.contact_notes ||
-              contactDetails.contact_notes.length === 0) && (
+            {(!apiResponse?.data.contact_notes ||
+              apiResponse?.data.contact_notes.length === 0) && (
               <Text style={styles.noNotesText}>
                 No notes yet for this contact.
               </Text>

@@ -46,7 +46,7 @@ const createNoteValidationSchema = Yup.object().shape({
 });
 
 const reminderOptions = [
-  { label: "None", value: "" },
+  { label: "None", value: "none" },
   { label: "Monthly", value: "Monthly" },
   { label: "Quarterly", value: "Quarterly" },
   { label: "Yearly", value: "Yearly" },
@@ -94,12 +94,14 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
     const payload = {
       contact: values.contactId,
       note: values.noteText,
-      reminder_type: values.reminderOption,
+      reminder_type:
+        values.reminderOption === "None" ? null : values.reminderOption,
       reminder:
         values.reminderOption === "Custom"
           ? dayjs(values.customReminderDate).format("YYYY-MM-DD")
           : null,
     };
+    console.log("payload", payload);
     if (route?.params?.type === "edit") {
       editNote({
         query: {
