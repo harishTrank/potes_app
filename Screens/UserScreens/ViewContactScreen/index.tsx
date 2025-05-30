@@ -277,18 +277,27 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               />
               <InfoDisplayField
                 label="Birthday"
-                value={dayjs(apiResponse?.data.birthday).format("MM-DD-YYYY")}
+                value={
+                  apiResponse?.data.birthday
+                    ? dayjs(apiResponse?.data.birthday).format("MM-DD-YYYY")
+                    : "-"
+                }
               />
-              <InfoDisplayField label="Email" value={apiResponse?.data.email} />
+              <InfoDisplayField
+                label="Email"
+                value={apiResponse?.data.email || "-"}
+              />
               <InfoDisplayField
                 label="Number"
                 value={apiResponse?.data.phone}
               />
               <InfoDisplayField
                 label="Anniversary"
-                value={dayjs(apiResponse?.data.anniversary).format(
-                  "MM-DD-YYYY"
-                )}
+                value={
+                  apiResponse?.data.anniversary
+                    ? dayjs(apiResponse?.data.anniversary).format("MM-DD-YYYY")
+                    : "-"
+                }
               />
             </CollapsibleSection>
 
@@ -299,17 +308,21 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             >
               <InfoDisplayField
                 label="Spouse Name"
-                value={apiResponse?.data.spouse_name}
+                value={apiResponse?.data.spouse_name || "-"}
               />
               <InfoDisplayField
                 label="Spouse Birthday"
-                value={dayjs(apiResponse?.data.spouse_birthday).format(
-                  "MM-DD-YYYY"
-                )}
+                value={
+                  apiResponse?.data.spouse_birthday
+                    ? dayjs(apiResponse?.data.spouse_birthday).format(
+                        "MM-DD-YYYY"
+                      )
+                    : "-"
+                }
               />
               <InfoDisplayField
                 label="Spouse Details"
-                value={apiResponse?.data.spouse_details}
+                value={apiResponse?.data.spouse_details || "-"}
               />
             </CollapsibleSection>
 

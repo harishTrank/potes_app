@@ -182,15 +182,17 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     setLoading(true);
     formData.append("full_name", values.nameOrDescription);
     formData.append("phone", values.number);
-    if (values.birthday)
+    if (values.birthday) {
       formData.append("birthday", formatDateToYYYYMMDD(values.birthday)!);
+    }
     formData.append("email", values.email);
     formData.append("spouse_name", values.spouseName);
-    if (values.spouseBirthday)
+    if (values.spouseBirthday) {
       formData.append(
         "spouse_birthday",
         formatDateToYYYYMMDD(values.spouseBirthday)!
       );
+    }
     if (values.anniversary)
       formData.append("anniversary", formatDateToYYYYMMDD(values.anniversary)!);
     formData.append("spouse_details", values.spouseDetails);
