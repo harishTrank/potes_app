@@ -25,9 +25,15 @@ import {
   FormikHelpers,
   FieldArray,
   FieldArrayRenderProps,
-} from "formik"; // Added FieldArrayRenderProps
+} from "formik";
 import { DatePickerModal } from "react-native-paper-dates";
 import { en, registerTranslation } from "react-native-paper-dates";
+import { getImage, getfileobj, takePicture } from "../../../utils/ImagePicker"; // Assuming these are correct
+import Toast from "react-native-toast-message";
+import { createContactApi } from "../../../store/Services/Others";
+import FullScreenLoader from "../../Components/FullScreenLoader";
+// import { createContactApi } from "../../../store/Services/Others"; // Assuming this is correct
+
 registerTranslation("en", en);
 
 if (
@@ -43,7 +49,7 @@ interface CreateContactScreenProps {
   navigation: CreateContactScreenNavigationProp;
 }
 
-// --- Form Value Interfaces ---
+// --- Form Value Interfaces (Updated to better match payload needs internally) ---
 interface ChildDetail {
   id: string;
   name: string;
@@ -52,26 +58,26 @@ interface ChildDetail {
 }
 interface EmploymentDetail {
   id: string;
-  employerName: string;
-  employerDetails: string;
-}
+  name: string;
+  details: string;
+} // name, details
 interface EducationDetail {
   id: string;
-  universityName: string;
-  universityDetails: string;
-}
+  name: string;
+  details: string;
+} // name, details
 interface InterestDetail {
   id: string;
-  value: string;
-}
-interface CustomField {
+  name: string;
+} // name
+interface CustomFieldInternal {
   id: string;
   title: string;
   value: string;
-}
+} // title, value (single string)
 
 interface CreateContactFormValues {
-  avatarUri: string | null;
+  avatarUri: string | null; // This will be the file URI from image picker
   nameOrDescription: string;
   birthday: Date | undefined;
   anniversary: Date | undefined;
@@ -84,10 +90,10 @@ interface CreateContactFormValues {
   employmentHistory: EmploymentDetail[];
   educationHistory: EducationDetail[];
   interests: InterestDetail[];
-  customFields: CustomField[];
+  customFields: CustomFieldInternal[];
 }
 
-// --- Initial Form State ---
+// --- Initial Form State (Updated field names) ---
 const initialContactValues: CreateContactFormValues = {
   avatarUri: null,
   nameOrDescription: "",
@@ -99,13 +105,9 @@ const initialContactValues: CreateContactFormValues = {
   spouseBirthday: undefined,
   spouseDetails: "",
   children: [],
-  employmentHistory: [
-    { id: `emp-${Date.now()}`, employerName: "", employerDetails: "" },
-  ],
-  educationHistory: [
-    { id: `edu-${Date.now()}`, universityName: "", universityDetails: "" },
-  ],
-  interests: [{ id: `interest-${Date.now()}`, value: "" }],
+  employmentHistory: [{ id: `emp-${Date.now()}`, name: "", details: "" }], // name, details
+  educationHistory: [{ id: `edu-${Date.now()}`, name: "", details: "" }], // name, details
+  interests: [{ id: `interest-${Date.now()}`, name: "" }], // name
   customFields: [],
 };
 
@@ -145,7 +147,9 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
   navigation,
 }) => {
   const insets = useSafeAreaInsets();
-  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
+  const [selectedAvatarFileUri, setSelectedAvatarFileUri] = useState<
+    string | null
+  >(null); // Store file URI
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [currentDateField, setCurrentDateField] = useState<{
     path: string;
@@ -154,22 +158,109 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
   const [currentDateValue, setCurrentDateValue] = useState<Date | undefined>(
     undefined
   );
+  const [loading, setLoading]: any = useState(false);
 
   const handleSearchPress = () => console.log("Search pressed");
-  const handlePickImage = () =>
-    Alert.alert("Image Picker", "Implement image picking functionality.");
 
-  const handleFormSubmit = (
-    values: CreateContactFormValues,
-    { setSubmitting, resetForm }: FormikHelpers<CreateContactFormValues>
+  const formatDateToYYYYMMDD = (
+    date: Date | undefined | null
+  ): string | undefined => {
+    if (!date) return undefined;
+    // Ensure it's a Date object
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = `0${d.getMonth() + 1}`.slice(-2);
+    const day = `0${d.getDate()}`.slice(-2);
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleFormSubmit = async (
+    values: CreateContactFormValues, // Now correctly typed
+    { setSubmitting, resetForm }: FormikHelpers<CreateContactFormValues> // Correctly typed
   ) => {
-    const submissionValues = { ...values, avatarUri: selectedAvatar };
-    console.log("Create Contact form submitted:", submissionValues);
-    setTimeout(() => {
-      resetForm({ values: initialContactValues });
-      setSelectedAvatar(null);
-      setSubmitting(false);
-    }, 2000);
+    const formData = new FormData();
+    setLoading(true);
+
+    formData.append("full_name", values.nameOrDescription);
+    formData.append("phone", values.number);
+    if (values.birthday)
+      formData.append("birthday", formatDateToYYYYMMDD(values.birthday)!);
+    formData.append("email", values.email);
+    formData.append("spouse_name", values.spouseName);
+    if (values.spouseBirthday)
+      formData.append(
+        "spouse_birthday",
+        formatDateToYYYYMMDD(values.spouseBirthday)!
+      );
+    if (values.anniversary)
+      formData.append("anniversary", formatDateToYYYYMMDD(values.anniversary)!);
+    formData.append("spouse_details", values.spouseDetails);
+    const formattedChildren = values.children.map((child) => ({
+      ...child,
+      id: undefined,
+      birthday: formatDateToYYYYMMDD(child.birthday),
+    }));
+    formData.append("children", JSON.stringify(formattedChildren));
+    const formattedEmployment = values.employmentHistory.map((emp) => ({
+      name: emp.name,
+      details: emp.details,
+    }));
+    formData.append("previous_employers", JSON.stringify(formattedEmployment));
+    const formattedEducation = values.educationHistory.map((edu) => ({
+      name: edu.name,
+      details: edu.details,
+    }));
+    formData.append("universities", JSON.stringify(formattedEducation));
+
+    const formattedInterests = values.interests.map((interest) => ({
+      name: interest.name,
+    }));
+    formData.append("interests", JSON.stringify(formattedInterests));
+    const formattedCustomFields = values.customFields.map((cf) => ({
+      title: cf.title,
+      values: [cf.value],
+    }));
+    formData.append("custom_fields", JSON.stringify(formattedCustomFields));
+
+    if (selectedAvatarFileUri) {
+      formData.append("photo", getfileobj(selectedAvatarFileUri));
+    }
+
+    console.log("Formatted FormData to be sent:");
+    createContactApi({
+      body: formData,
+    })
+      .then(() => {
+        resetForm({ values: initialContactValues });
+        setSelectedAvatarFileUri(null);
+        Toast.show({
+          type: "success",
+          text1: "Contact create successfully.",
+        });
+        setSubmitting(false);
+        setLoading(false);
+      })
+      .catch(() => {
+        Toast.show({ type: "error", text1: "Failed to create contact." });
+        setSubmitting(false);
+        setLoading(false);
+      });
+  };
+
+  const handleChangeProfileImage = () => {
+    Alert.alert("Pick Image", "Choose from camera or gallery", [
+      {
+        text: "Gallery",
+        onPress: () => getImage(setSelectedAvatarFileUri),
+        style: "default",
+      },
+      {
+        text: "Camera",
+        onPress: async () => await takePicture(setSelectedAvatarFileUri),
+        style: "default",
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
   const renderTextInput = (
@@ -196,7 +287,6 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
       />
     </View>
   );
-
   const openDatePicker = useCallback(
     (path: string, currentValue: Date | undefined, index?: number) => {
       setCurrentDateField({ path, index });
@@ -267,6 +357,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
   return (
     <DefaultBackground>
       <StatusBar style="light" />
+      {loading && <FullScreenLoader />}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -304,6 +395,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
               <Formik
                 initialValues={initialContactValues}
                 onSubmit={handleFormSubmit}
+                enableReinitialize
               >
                 {({
                   handleChange,
@@ -316,12 +408,12 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                   <>
                     <View style={styles.avatarSection}>
                       <TouchableOpacity
-                        onPress={handlePickImage}
+                        onPress={handleChangeProfileImage}
                         style={styles.avatarContainer}
                       >
-                        {selectedAvatar ? (
+                        {selectedAvatarFileUri ? (
                           <Image
-                            source={{ uri: selectedAvatar }}
+                            source={{ uri: selectedAvatarFileUri }}
                             style={styles.avatarImage}
                           />
                         ) : (
@@ -407,9 +499,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                         3
                       )}
                       <FieldArray name="children">
-                        {(
-                          arrayHelpers: FieldArrayRenderProps // CORRECTED
-                        ) => (
+                        {(arrayHelpers: FieldArrayRenderProps) => (
                           <View>
                             {values.children.map((child, index) => (
                               <View
@@ -495,9 +585,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
 
                     <CollapsibleSection title="Employment">
                       <FieldArray name="employmentHistory">
-                        {(
-                          arrayHelpers: FieldArrayRenderProps // CORRECTED
-                        ) => (
+                        {(arrayHelpers: FieldArrayRenderProps) => (
                           <View>
                             {values.employmentHistory.map((job, index) => (
                               <View key={job.id} style={styles.arrayEntryCard}>
@@ -526,7 +614,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                         ),
                                     handleBlur,
                                   },
-                                  "employerName",
+                                  "name",
                                   "Employer Name",
                                   "Enter employer name"
                                 )}
@@ -541,7 +629,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                         ),
                                     handleBlur,
                                   },
-                                  "employerDetails",
+                                  "details",
                                   "Employer Details",
                                   "Enter employer details",
                                   "default",
@@ -555,8 +643,8 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                               onPress={() =>
                                 arrayHelpers.push({
                                   id: `emp-${Date.now()}`,
-                                  employerName: "",
-                                  employerDetails: "",
+                                  name: "",
+                                  details: "",
                                 })
                               }
                             >
@@ -571,9 +659,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
 
                     <CollapsibleSection title="Education">
                       <FieldArray name="educationHistory">
-                        {(
-                          arrayHelpers: FieldArrayRenderProps // CORRECTED
-                        ) => (
+                        {(arrayHelpers: FieldArrayRenderProps) => (
                           <View>
                             {values.educationHistory.map((edu, index) => (
                               <View key={edu.id} style={styles.arrayEntryCard}>
@@ -602,7 +688,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                         ),
                                     handleBlur,
                                   },
-                                  "universityName",
+                                  "name",
                                   "University/School Name",
                                   "Enter institution name"
                                 )}
@@ -617,7 +703,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                         ),
                                     handleBlur,
                                   },
-                                  "universityDetails",
+                                  "details",
                                   "Details (Degree, Year)",
                                   "Enter education details",
                                   "default",
@@ -631,8 +717,8 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                               onPress={() =>
                                 arrayHelpers.push({
                                   id: `edu-${Date.now()}`,
-                                  universityName: "",
-                                  universityDetails: "",
+                                  name: "",
+                                  details: "",
                                 })
                               }
                             >
@@ -647,9 +733,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
 
                     <CollapsibleSection title="Interests">
                       <FieldArray name="interests">
-                        {(
-                          arrayHelpers: FieldArrayRenderProps // CORRECTED
-                        ) => (
+                        {(arrayHelpers: FieldArrayRenderProps) => (
                           <View>
                             {values.interests.map((interest, index) => (
                               <View
@@ -660,12 +744,12 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                                   style={[styles.input, styles.interestInput]}
                                   placeholder="Enter an interest"
                                   placeholderTextColor={theme.colors.grey}
-                                  value={interest.value}
+                                  value={interest.name}
                                   onChangeText={handleChange(
-                                    `interests[${index}].value`
+                                    `interests[${index}].name`
                                   )}
                                   onBlur={handleBlur(
-                                    `interests[${index}].value`
+                                    `interests[${index}].name`
                                   )}
                                 />
                                 <TouchableOpacity
@@ -685,7 +769,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                               onPress={() =>
                                 arrayHelpers.push({
                                   id: `interest-${Date.now()}`,
-                                  value: "",
+                                  name: "",
                                 })
                               }
                             >
@@ -699,9 +783,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                     </CollapsibleSection>
 
                     <FieldArray name="customFields">
-                      {(
-                        arrayHelpers: FieldArrayRenderProps // CORRECTED
-                      ) => (
+                      {(arrayHelpers: FieldArrayRenderProps) => (
                         <View>
                           {values.customFields.map((field, index) => (
                             <View key={field.id} style={styles.customFieldRow}>
@@ -822,7 +904,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  // ... (Styles remain the same as the previous correct version)
+  // ... (Styles remain the same)
   container: { flex: 1 },
   headerRow: {
     flexDirection: "row",
@@ -942,11 +1024,11 @@ const styles = StyleSheet.create({
     color: theme.colors.grey,
   },
   arrayEntryCard: {
-    backgroundColor: theme.colors.grey,
+    backgroundColor: theme.colors.secondaryLight || theme.colors.grey,
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
-  },
+  }, // Added fallback for secondaryLight
   arrayEntryHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
