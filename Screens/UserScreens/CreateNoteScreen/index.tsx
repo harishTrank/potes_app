@@ -204,7 +204,9 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.formCard}>
-              <Text style={styles.formTitle}>Create a Note</Text>
+              <Text style={styles.formTitle}>{`${
+                route?.params?.type === "edit" ? "Edit" : "Create"
+              } a Note`}</Text>
 
               <Formik
                 initialValues={initialValues}

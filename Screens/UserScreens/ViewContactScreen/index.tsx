@@ -152,9 +152,10 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
       ]
     );
   const handleEdit = () =>
-    navigation.navigate("EditContactScreen", {
+    navigation.navigate("CreateContantScreen", {
       contactData: apiResponse?.data,
-    }); // Pass full apiResponse?.data
+      type: "edit",
+    });
   const handleAddNote = () =>
     navigation.navigate("CreateNoteScreen", {
       contactId: apiResponse?.data?.id,

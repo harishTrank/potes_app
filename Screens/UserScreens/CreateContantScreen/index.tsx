@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -30,7 +30,10 @@ import { DatePickerModal } from "react-native-paper-dates";
 import { en, registerTranslation } from "react-native-paper-dates";
 import { getImage, getfileobj, takePicture } from "../../../utils/ImagePicker"; // Assuming these are correct
 import Toast from "react-native-toast-message";
-import { createContactApi } from "../../../store/Services/Others";
+import {
+  createContactApi,
+  editContactApi,
+} from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
 // import { createContactApi } from "../../../store/Services/Others"; // Assuming this is correct
 
@@ -42,80 +45,11 @@ if (
 ) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-
-// --- Navigation & Props ---
-type CreateContactScreenNavigationProp = { goBack: () => void };
-interface CreateContactScreenProps {
-  navigation: CreateContactScreenNavigationProp;
-}
-
-// --- Form Value Interfaces (Updated to better match payload needs internally) ---
-interface ChildDetail {
-  id: string;
-  name: string;
-  birthday: Date | undefined;
-  details: string;
-}
-interface EmploymentDetail {
-  id: string;
-  name: string;
-  details: string;
-} // name, details
-interface EducationDetail {
-  id: string;
-  name: string;
-  details: string;
-} // name, details
-interface InterestDetail {
-  id: string;
-  name: string;
-} // name
-interface CreateContactFormValues {
-  avatarUri: string | null; // This will be the file URI from image picker
-  nameOrDescription: string;
-  birthday: Date | undefined;
-  anniversary: Date | undefined;
-  email: string;
-  number: string;
-  spouseName: string;
-  spouseBirthday: Date | undefined;
-  spouseDetails: string;
-  children: ChildDetail[];
-  employmentHistory: EmploymentDetail[];
-  educationHistory: EducationDetail[];
-  interests: InterestDetail[];
-  customFields: any;
-}
-
-// --- Initial Form State (Updated field names) ---
-const initialContactValues: CreateContactFormValues = {
-  avatarUri: null,
-  nameOrDescription: "",
-  birthday: undefined,
-  anniversary: undefined,
-  email: "",
-  number: "",
-  spouseName: "",
-  spouseBirthday: undefined,
-  spouseDetails: "",
-  children: [],
-  employmentHistory: [{ id: `emp-${Date.now()}`, name: "", details: "" }], // name, details
-  educationHistory: [{ id: `edu-${Date.now()}`, name: "", details: "" }], // name, details
-  interests: [{ id: `interest-${Date.now()}`, name: "" }], // name
-  customFields: [],
-};
-
-// --- Collapsible Section Component (no change) ---
-interface CollapsibleSectionProps {
-  title: string;
-  children: React.ReactNode;
-  initiallyOpen?: boolean;
-}
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
+const CollapsibleSection: any = ({
   title,
   children,
   initiallyOpen = false,
-}) => {
+}: any) => {
   const [isOpen, setIsOpen] = useState(initiallyOpen);
   const toggleOpen = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -137,9 +71,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 };
 
 // --- Main Screen Component ---
-const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
-  navigation,
-}) => {
+const CreateContactScreen: any = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
   const [selectedAvatarFileUri, setSelectedAvatarFileUri] = useState<
     string | null
@@ -153,14 +85,88 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
     undefined
   );
   const [loading, setLoading]: any = useState(false);
+  const [initialContactValues, setInitialContactValues]: any = useState({
+    avatarUri: null,
+    nameOrDescription: "",
+    birthday: undefined,
+    anniversary: undefined,
+    email: "",
+    number: "",
+    spouseName: "",
+    spouseBirthday: undefined,
+    spouseDetails: "",
+    children: [],
+    employmentHistory: [{ id: `emp-${Date.now()}`, name: "", details: "" }],
+    educationHistory: [{ id: `edu-${Date.now()}`, name: "", details: "" }],
+    interests: [{ id: `interest-${Date.now()}`, name: "" }],
+    customFields: [],
+  });
 
   const handleSearchPress = () => console.log("Search pressed");
+  const parseApiDate = (
+    dateString: string | null | undefined
+  ): Date | undefined => {
+    if (!dateString) return undefined;
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? undefined : date;
+  };
+  useEffect(() => {
+    const contactToEdit = route.params?.contactData;
+    const type = route.params?.type;
+
+    if (type === "edit" && contactToEdit) {
+      setInitialContactValues({
+        avatarUri: null,
+        nameOrDescription: contactToEdit.full_name || "",
+        birthday: parseApiDate(contactToEdit.birthday),
+        anniversary: parseApiDate(contactToEdit.anniversary),
+        email: contactToEdit.email || "",
+        number: contactToEdit.phone || "",
+        spouseName: contactToEdit.spouse_name || "",
+        spouseBirthday: parseApiDate(contactToEdit.spouse_birthday),
+        spouseDetails: contactToEdit.spouse_details || "",
+        children:
+          contactToEdit.children?.map((c: any) => ({
+            id: c.id?.toString() || `child-${Date.now()}-${Math.random()}`, // Ensure unique ID
+            name: c.name || "",
+            birthday: parseApiDate(c.birthday),
+            details: c.details || "",
+          })) || [],
+        employmentHistory:
+          contactToEdit.previous_employers?.map((e: any) => ({
+            id: e.id?.toString() || `emp-${Date.now()}-${Math.random()}`,
+            name: e.name || "",
+            details: e.details || "",
+          })) || [],
+        educationHistory:
+          contactToEdit.universities?.map((e: any) => ({
+            id: e.id?.toString() || `edu-${Date.now()}-${Math.random()}`,
+            name: e.name || "",
+            details: e.details || "",
+          })) || [],
+        interests:
+          contactToEdit.interests?.map((i: any) => ({
+            id: i.id?.toString() || `interest-${Date.now()}-${Math.random()}`,
+            name: i.name || "", // Assuming API returns 'name' for interest
+          })) || [],
+        customFields:
+          contactToEdit.custom_fields?.map((cf: any) => ({
+            id: cf.id?.toString() || `custom-${Date.now()}-${Math.random()}`,
+            title: cf.title || "",
+            values: Array.isArray(cf.values) ? cf.values.map(String) : [], // Ensure values is array of strings
+          })) || [],
+      });
+      if (contactToEdit.photo) {
+        setSelectedAvatarFileUri(contactToEdit.photo);
+        setSelectedAvatarFileUri(contactToEdit.photo);
+      }
+    }
+  }, [route.params?.contactData, route.params?.type]);
 
   const formatDateToYYYYMMDD = (
     date: Date | undefined | null
   ): string | undefined => {
     if (!date) return undefined;
-    // Ensure it's a Date object
     const d = new Date(date);
     const year = d.getFullYear();
     const month = `0${d.getMonth() + 1}`.slice(-2);
@@ -169,12 +175,11 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
   };
 
   const handleFormSubmit = async (
-    values: CreateContactFormValues, // Now correctly typed
-    { setSubmitting, resetForm }: FormikHelpers<CreateContactFormValues> // Correctly typed
+    values: any,
+    { setSubmitting, resetForm }: any
   ) => {
     const formData = new FormData();
     setLoading(true);
-
     formData.append("full_name", values.nameOrDescription);
     formData.append("phone", values.number);
     if (values.birthday)
@@ -189,24 +194,24 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
     if (values.anniversary)
       formData.append("anniversary", formatDateToYYYYMMDD(values.anniversary)!);
     formData.append("spouse_details", values.spouseDetails);
-    const formattedChildren = values.children.map((child) => ({
+    const formattedChildren = values.children.map((child: any) => ({
       ...child,
       id: undefined,
       birthday: formatDateToYYYYMMDD(child.birthday),
     }));
     formData.append("children", JSON.stringify(formattedChildren));
-    const formattedEmployment = values.employmentHistory.map((emp) => ({
+    const formattedEmployment = values.employmentHistory.map((emp: any) => ({
       name: emp.name,
       details: emp.details,
     }));
     formData.append("previous_employers", JSON.stringify(formattedEmployment));
-    const formattedEducation = values.educationHistory.map((edu) => ({
+    const formattedEducation = values.educationHistory.map((edu: any) => ({
       name: edu.name,
       details: edu.details,
     }));
     formData.append("universities", JSON.stringify(formattedEducation));
 
-    const formattedInterests = values.interests.map((interest) => ({
+    const formattedInterests = values.interests.map((interest: any) => ({
       name: interest.name,
     }));
     formData.append("interests", JSON.stringify(formattedInterests));
@@ -224,27 +229,50 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
     if (selectedAvatarFileUri) {
       formData.append("photo", getfileobj(selectedAvatarFileUri));
     }
-
-    console.log("Formatted FormData to be sent:");
-    createContactApi({
-      body: formData,
-    })
-      .then(() => {
-        resetForm({ values: initialContactValues });
-        setSelectedAvatarFileUri(null);
-        Toast.show({
-          type: "success",
-          text1: "Contact create successfully.",
-        });
-        setSubmitting(false);
-        setLoading(false);
-        navigation.goBack();
+    if (route.params?.type === "edit") {
+      editContactApi({
+        body: formData,
+        query: {
+          id: route.params?.contactData?.id,
+        },
       })
-      .catch(() => {
-        Toast.show({ type: "error", text1: "Failed to create contact." });
-        setSubmitting(false);
-        setLoading(false);
-      });
+        .then(() => {
+          resetForm({ values: initialContactValues });
+          setSelectedAvatarFileUri(null);
+          Toast.show({
+            type: "success",
+            text1: "Contact updated successfully.",
+          });
+          setSubmitting(false);
+          setLoading(false);
+          navigation.goBack();
+        })
+        .catch(() => {
+          Toast.show({ type: "error", text1: "Failed to updated contact." });
+          setSubmitting(false);
+          setLoading(false);
+        });
+    } else {
+      createContactApi({
+        body: formData,
+      })
+        .then(() => {
+          resetForm({ values: initialContactValues });
+          setSelectedAvatarFileUri(null);
+          Toast.show({
+            type: "success",
+            text1: "Contact create successfully.",
+          });
+          setSubmitting(false);
+          setLoading(false);
+          navigation.goBack();
+        })
+        .catch(() => {
+          Toast.show({ type: "error", text1: "Failed to create contact." });
+          setSubmitting(false);
+          setLoading(false);
+        });
+    }
   };
 
   const handleChangeProfileImage = () => {
@@ -391,7 +419,9 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.formCard}>
-              <Text style={styles.formTitle}>Create a Contact</Text>
+              <Text style={styles.formTitle}>{`${
+                route?.params?.type === "edit" ? "Edit" : "Create"
+              } a Contact`}</Text>
               <Formik
                 initialValues={initialContactValues}
                 onSubmit={handleFormSubmit}
@@ -501,7 +531,7 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                       <FieldArray name="children">
                         {(arrayHelpers: FieldArrayRenderProps) => (
                           <View>
-                            {values.children.map((child, index) => (
+                            {values.children.map((child: any, index: any) => (
                               <View
                                 key={child.id}
                                 style={styles.arrayEntryCard}
@@ -587,57 +617,62 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                       <FieldArray name="employmentHistory">
                         {(arrayHelpers: FieldArrayRenderProps) => (
                           <View>
-                            {values.employmentHistory.map((job, index) => (
-                              <View key={job.id} style={styles.arrayEntryCard}>
-                                <View style={styles.arrayEntryHeader}>
-                                  <Text style={styles.arrayEntryTitle}>
-                                    Employment {index + 1}
-                                  </Text>
-                                  <TouchableOpacity
-                                    onPress={() => arrayHelpers.remove(index)}
-                                  >
-                                    <Feather
-                                      name="trash-2"
-                                      size={20}
-                                      color={theme.colors.red}
-                                    />
-                                  </TouchableOpacity>
+                            {values.employmentHistory.map(
+                              (job: any, index: any) => (
+                                <View
+                                  key={job.id}
+                                  style={styles.arrayEntryCard}
+                                >
+                                  <View style={styles.arrayEntryHeader}>
+                                    <Text style={styles.arrayEntryTitle}>
+                                      Employment {index + 1}
+                                    </Text>
+                                    <TouchableOpacity
+                                      onPress={() => arrayHelpers.remove(index)}
+                                    >
+                                      <Feather
+                                        name="trash-2"
+                                        size={20}
+                                        color={theme.colors.red}
+                                      />
+                                    </TouchableOpacity>
+                                  </View>
+                                  {renderTextInput(
+                                    {
+                                      values: job,
+                                      handleChange:
+                                        (field: string) => (val: string) =>
+                                          setFieldValue(
+                                            `employmentHistory[${index}].${field}`,
+                                            val
+                                          ),
+                                      handleBlur,
+                                    },
+                                    "name",
+                                    "Employer Name",
+                                    "Enter employer name"
+                                  )}
+                                  {renderTextInput(
+                                    {
+                                      values: job,
+                                      handleChange:
+                                        (field: string) => (val: string) =>
+                                          setFieldValue(
+                                            `employmentHistory[${index}].${field}`,
+                                            val
+                                          ),
+                                      handleBlur,
+                                    },
+                                    "details",
+                                    "Employer Details",
+                                    "Enter employer details",
+                                    "default",
+                                    true,
+                                    3
+                                  )}
                                 </View>
-                                {renderTextInput(
-                                  {
-                                    values: job,
-                                    handleChange:
-                                      (field: string) => (val: string) =>
-                                        setFieldValue(
-                                          `employmentHistory[${index}].${field}`,
-                                          val
-                                        ),
-                                    handleBlur,
-                                  },
-                                  "name",
-                                  "Employer Name",
-                                  "Enter employer name"
-                                )}
-                                {renderTextInput(
-                                  {
-                                    values: job,
-                                    handleChange:
-                                      (field: string) => (val: string) =>
-                                        setFieldValue(
-                                          `employmentHistory[${index}].${field}`,
-                                          val
-                                        ),
-                                    handleBlur,
-                                  },
-                                  "details",
-                                  "Employer Details",
-                                  "Enter employer details",
-                                  "default",
-                                  true,
-                                  3
-                                )}
-                              </View>
-                            ))}
+                              )
+                            )}
                             <TouchableOpacity
                               style={styles.addArrayEntryButton}
                               onPress={() =>
@@ -661,57 +696,62 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                       <FieldArray name="educationHistory">
                         {(arrayHelpers: FieldArrayRenderProps) => (
                           <View>
-                            {values.educationHistory.map((edu, index) => (
-                              <View key={edu.id} style={styles.arrayEntryCard}>
-                                <View style={styles.arrayEntryHeader}>
-                                  <Text style={styles.arrayEntryTitle}>
-                                    Education {index + 1}
-                                  </Text>
-                                  <TouchableOpacity
-                                    onPress={() => arrayHelpers.remove(index)}
-                                  >
-                                    <Feather
-                                      name="trash-2"
-                                      size={20}
-                                      color={theme.colors.red}
-                                    />
-                                  </TouchableOpacity>
+                            {values.educationHistory.map(
+                              (edu: any, index: any) => (
+                                <View
+                                  key={edu.id}
+                                  style={styles.arrayEntryCard}
+                                >
+                                  <View style={styles.arrayEntryHeader}>
+                                    <Text style={styles.arrayEntryTitle}>
+                                      Education {index + 1}
+                                    </Text>
+                                    <TouchableOpacity
+                                      onPress={() => arrayHelpers.remove(index)}
+                                    >
+                                      <Feather
+                                        name="trash-2"
+                                        size={20}
+                                        color={theme.colors.red}
+                                      />
+                                    </TouchableOpacity>
+                                  </View>
+                                  {renderTextInput(
+                                    {
+                                      values: edu,
+                                      handleChange:
+                                        (field: string) => (val: string) =>
+                                          setFieldValue(
+                                            `educationHistory[${index}].${field}`,
+                                            val
+                                          ),
+                                      handleBlur,
+                                    },
+                                    "name",
+                                    "University/School Name",
+                                    "Enter institution name"
+                                  )}
+                                  {renderTextInput(
+                                    {
+                                      values: edu,
+                                      handleChange:
+                                        (field: string) => (val: string) =>
+                                          setFieldValue(
+                                            `educationHistory[${index}].${field}`,
+                                            val
+                                          ),
+                                      handleBlur,
+                                    },
+                                    "details",
+                                    "Details (Degree, Year)",
+                                    "Enter education details",
+                                    "default",
+                                    true,
+                                    3
+                                  )}
                                 </View>
-                                {renderTextInput(
-                                  {
-                                    values: edu,
-                                    handleChange:
-                                      (field: string) => (val: string) =>
-                                        setFieldValue(
-                                          `educationHistory[${index}].${field}`,
-                                          val
-                                        ),
-                                    handleBlur,
-                                  },
-                                  "name",
-                                  "University/School Name",
-                                  "Enter institution name"
-                                )}
-                                {renderTextInput(
-                                  {
-                                    values: edu,
-                                    handleChange:
-                                      (field: string) => (val: string) =>
-                                        setFieldValue(
-                                          `educationHistory[${index}].${field}`,
-                                          val
-                                        ),
-                                    handleBlur,
-                                  },
-                                  "details",
-                                  "Details (Degree, Year)",
-                                  "Enter education details",
-                                  "default",
-                                  true,
-                                  3
-                                )}
-                              </View>
-                            ))}
+                              )
+                            )}
                             <TouchableOpacity
                               style={styles.addArrayEntryButton}
                               onPress={() =>
@@ -735,35 +775,37 @@ const CreateContactScreen: React.FC<CreateContactScreenProps> = ({
                       <FieldArray name="interests">
                         {(arrayHelpers: FieldArrayRenderProps) => (
                           <View>
-                            {values.interests.map((interest, index) => (
-                              <View
-                                key={interest.id}
-                                style={styles.arrayEntryRow}
-                              >
-                                <TextInput
-                                  style={[styles.input, styles.interestInput]}
-                                  placeholder="Enter an interest"
-                                  placeholderTextColor={theme.colors.grey}
-                                  value={interest.name}
-                                  onChangeText={handleChange(
-                                    `interests[${index}].name`
-                                  )}
-                                  onBlur={handleBlur(
-                                    `interests[${index}].name`
-                                  )}
-                                />
-                                <TouchableOpacity
-                                  onPress={() => arrayHelpers.remove(index)}
-                                  style={styles.removeArrayEntryIcon}
+                            {values.interests.map(
+                              (interest: any, index: any) => (
+                                <View
+                                  key={interest.id}
+                                  style={styles.arrayEntryRow}
                                 >
-                                  <Feather
-                                    name="trash-2"
-                                    size={20}
-                                    color={theme.colors.red}
+                                  <TextInput
+                                    style={[styles.input, styles.interestInput]}
+                                    placeholder="Enter an interest"
+                                    placeholderTextColor={theme.colors.grey}
+                                    value={interest.name}
+                                    onChangeText={handleChange(
+                                      `interests[${index}].name`
+                                    )}
+                                    onBlur={handleBlur(
+                                      `interests[${index}].name`
+                                    )}
                                   />
-                                </TouchableOpacity>
-                              </View>
-                            ))}
+                                  <TouchableOpacity
+                                    onPress={() => arrayHelpers.remove(index)}
+                                    style={styles.removeArrayEntryIcon}
+                                  >
+                                    <Feather
+                                      name="trash-2"
+                                      size={20}
+                                      color={theme.colors.red}
+                                    />
+                                  </TouchableOpacity>
+                                </View>
+                              )
+                            )}
                             <TouchableOpacity
                               style={styles.addArrayEntryButton}
                               onPress={() =>
