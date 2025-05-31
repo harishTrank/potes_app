@@ -19,6 +19,8 @@ import * as Yup from "yup";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import theme from "../../../utils/theme";
 import DefaultBackground from "../../Components/DefaultBackground";
+import { changePass } from "../../../store/Services/Others";
+import Toast from "react-native-toast-message";
 
 const { height, width } = Dimensions.get("window");
 
@@ -75,23 +77,31 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({
 
   const handleChangePasswordSubmit = (
     values: ChangePasswordFormValues,
-    { setSubmitting, setFieldError }: any // FormikHelpers<ChangePasswordFormValues>
+    { setSubmitting, setFieldError }: any
   ) => {
-    console.log("Change Password Submitted:", values);
-    // Simulate API call for UI demonstration
     setSubmitting(true);
-    setTimeout(() => {
-      // Example of success:
-      // Toast.show({ type: 'success', text1: 'Password changed successfully!' });
-      // navigation.goBack();
-
-      // Example of error (e.g., current password incorrect):
-      // setFieldError('currentPassword', 'Incorrect current password');
-      // Toast.show({ type: 'error', text1: 'Failed to change password' });
-
-      setSubmitting(false);
-      console.log("Password change process simulated.");
-    }, 1500);
+    changePass({
+      body: {
+        curr_password: values?.currentPassword,
+        new_password1: values?.newPassword,
+        new_password2: values?.confirmPassword,
+      },
+    })
+      ?.then((res: any) => {
+        setSubmitting(false);
+        Toast.show({
+          type: "success",
+          text1: res?.msg,
+        });
+        navigation.goBack();
+      })
+      ?.catch((err: any) => {
+        setSubmitting(false);
+        Toast.show({
+          type: "error",
+          text1: "Incorrect current password.",
+        });
+      });
   };
 
   return (
@@ -270,8 +280,7 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({
                     )}
                   </TouchableOpacity>
 
-                  {/* Global form error (if any from onSubmit) */}
-                  {errors.submit && ( // Assuming you might set a general 'submit' error
+                  {errors.submit && (
                     <Text style={[styles.errorText, styles.submitError]}>
                       {errors.submit}
                     </Text>
@@ -296,20 +305,20 @@ const styles: any = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    position: "absolute", // Allows ScrollView content to go "behind" it initially
-    top: Platform.OS === "ios" ? 0 : 10, // Adjust if status bar handling is different
+    position: "absolute",
+    top: Platform.OS === "ios" ? 0 : 10,
     left: 0,
-    zIndex: 1, // Ensure it's above the ScrollView content
+    zIndex: 1,
     width: "100%",
-    paddingHorizontal: width * 0.02, // Padding for the back button
+    paddingHorizontal: width * 0.02,
   },
   backButton: {
-    padding: 10, // Make it easier to tap
+    padding: 10,
   },
   scrollContainer: {
     flexGrow: 1,
     alignItems: "center",
-    paddingHorizontal: width * 0.08, // 8% horizontal padding
+    paddingHorizontal: width * 0.08,
     paddingTop: height * 0.12, // Space for the absolute header and title
     paddingBottom: height * 0.05,
   },
