@@ -20,11 +20,7 @@ import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule";
-import {
-  Formik,
-  FieldArray,
-  FieldArrayRenderProps,
-} from "formik";
+import { Formik, FieldArray, FieldArrayRenderProps } from "formik";
 import { DatePickerModal } from "react-native-paper-dates";
 import { en, registerTranslation } from "react-native-paper-dates";
 import { getImage, getfileobj, takePicture } from "../../../utils/ImagePicker"; // Assuming these are correct
@@ -101,7 +97,8 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     customFields: [],
   });
 
-  const handleSearchPress = () => console.log("Search pressed");
+  const handleSearchPress = () =>
+    navigation.navigate("SearchResultScreen", { searchQuery: "" });
   const parseApiDate = (
     dateString: string | null | undefined
   ): Date | undefined => {

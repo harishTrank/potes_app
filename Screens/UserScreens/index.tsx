@@ -50,7 +50,13 @@ const UserScreens = () => {
       />
       <Stack.Screen name="ViewContactScreen" component={ViewContactScreen} />
       <Stack.Screen name="AllNotesScreen" component={AllNotesScreen} />
-      <Stack.Screen name="SearchResultScreen" component={SearchResultScreen} />
+      <Stack.Screen
+        name="SearchResultScreen"
+        component={SearchResultScreen}
+        options={{
+          animation: "none",
+        }}
+      />
       <Stack.Screen
         name="ChangePasswordScreen"
         component={ChangePasswordScreen}

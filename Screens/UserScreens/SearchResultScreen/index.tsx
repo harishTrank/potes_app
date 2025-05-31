@@ -9,13 +9,12 @@ import {
   Platform,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
-import DefaultBackground from "../../Components/DefaultBackground"; // Adjust path
-import theme from "../../../utils/theme"; // Adjust path
+import DefaultBackground from "../../Components/DefaultBackground";
+import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import Header from "../../Components/Header";
 import ActionButtons from "../../Components/ActionButtons";
-// Assuming you have these components from HomePage setup
 
 // --- Navigation & Props ---
 type SearchResultScreenNavigationProp = {
@@ -202,7 +201,6 @@ const highlightQuery = (text: string, query: string): React.ReactNode[] => {
   return parts;
 };
 
-// --- Search Result Item Component ---
 interface SearchResultItemProps {
   item: SearchResultItem;
   searchQuery: string;
@@ -271,7 +269,7 @@ const SearchResultScreen: React.FC<SearchResultScreenProps> = ({
           { paddingTop: Platform.OS === "android" ? insets.top : 0 },
         ]}
       >
-        <Header />
+        <Header menu={false} />
         <ActionButtons />
 
         <Text style={styles.searchResultTitle}>

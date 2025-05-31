@@ -87,7 +87,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
   }, []);
 
   const handleSearchPress = () => {
-    console.log("Search icon pressed on Create Note screen");
+    navigation.navigate("SearchResultScreen", { searchQuery: "" });
   };
 
   const handleFormSubmit = (values: any) => {

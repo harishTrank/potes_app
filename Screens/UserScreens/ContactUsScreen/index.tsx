@@ -47,12 +47,14 @@ const contactValidationSchema = Yup.object().shape({
     .min(10, "Message must be at least 10 characters"),
 });
 
-const ContactUsScreen: React.FC<ContactUsScreenProps> = ({ navigation }) => {
+const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
+  navigation,
+}: any) => {
   const insets = useSafeAreaInsets();
   const [loading, setLoading]: any = useState(false);
 
   const handleSearchPress = () => {
-    console.log("Search icon pressed on Contact Us screen");
+    navigation.navigate("SearchResultScreen", { searchQuery: "" });
   };
 
   const handleFormSubmit = (values: ContactFormValues) => {

@@ -24,7 +24,7 @@ interface AboutUsScreenProps {
   navigation: AboutUsScreenNavigationProp;
 }
 
-const AboutUsScreen: React.FC<AboutUsScreenProps> = ({ navigation }) => {
+const AboutUsScreen: React.FC<AboutUsScreenProps> = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const [apiResponse, setApiResponse]: any = useState({});
 
@@ -41,7 +41,7 @@ const AboutUsScreen: React.FC<AboutUsScreenProps> = ({ navigation }) => {
   }, []);
 
   const handleSearchPress = () => {
-    console.log("Search icon pressed on About Us screen");
+    navigation.navigate("SearchResultScreen", { searchQuery: "" });
   };
 
   return (

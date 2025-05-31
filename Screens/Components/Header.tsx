@@ -11,18 +11,22 @@ import Feather from "@expo/vector-icons/Feather";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import theme from "../../utils/theme";
 import ImageModule from "../../ImageModule";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAtom } from "jotai";
-import { apiCallBackGlobal, userProfileGlobal } from "../../jotaiStore";
+import {
+  apiCallBackGlobal,
+  searchValueGlobal,
+  userProfileGlobal,
+} from "../../jotaiStore";
 import { viewProfileApi } from "../../store/Services/Others";
 
 const Header: any = ({ menu = true }: any) => {
   const insets = useSafeAreaInsets();
   const navigation: any = useNavigation();
-  const [searchVal, setSearchVal]: any = useState("");
-  const [searchValOnClick, setSearchValOnClick]: any = useState("");
+  const route: any = useRoute();
+  const [searchVal, setSearchVal]: any = useAtom(searchValueGlobal);
   const [userProfile, setUserProfile]: any = useAtom(userProfileGlobal);
   const [globalCall]: any = useAtom(apiCallBackGlobal);
 
@@ -45,14 +49,14 @@ const Header: any = ({ menu = true }: any) => {
   const onProfilePress = () => navigation.navigate("UserProfileScreen");
 
   const onPressSearchhandler = () => {
-    setSearchValOnClick(searchVal);
-  };
-
-  useEffect(() => {
-    if (searchValOnClick && searchValOnClick?.length > 0) {
-      navigation.navigate("SearchResultScreen");
+    if (searchVal?.length > 0) {
+      if (route?.name === "SearchResultScreen") {
+        navigation.replace("SearchResultScreen", { searchQuery: searchVal });
+      } else {
+        navigation.navigate("SearchResultScreen", { searchQuery: searchVal });
+      }
     }
-  }, [searchValOnClick]);
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
@@ -78,6 +82,7 @@ const Header: any = ({ menu = true }: any) => {
             placeholderTextColor={theme.colors.searchPlaceholder}
             value={searchVal}
             onChangeText={(val: any) => setSearchVal(val)}
+            focusable
           />
           <TouchableOpacity onPress={onPressSearchhandler}>
             <Feather
