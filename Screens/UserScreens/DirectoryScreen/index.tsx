@@ -151,7 +151,6 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
   const handleCreateContact = () => navigation.navigate("CreateContactScreen");
   const handleCreateNote = () => navigation.navigate("CreateNoteScreen");
 
-  // This function will be called by your Header component when search text changes
   const handleHeaderSearchChange = (query: string) => {
     setSearchQuery(query);
   };

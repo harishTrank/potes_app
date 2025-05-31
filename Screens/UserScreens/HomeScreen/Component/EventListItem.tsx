@@ -1,11 +1,19 @@
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import theme from "../../../../utils/theme"; // Adjust this path to your global theme file
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useNavigation } from "@react-navigation/native";
 
 const EventListItem: any = ({ item, type }: any) => {
+  const navigation: any = useNavigation();
+  const cardClickHandler = () => {
+    navigation.navigate("ViewContactScreen", {
+      contactId: item?.id,
+      contactName: item?.full_name,
+    });
+  };
   return (
-    <View style={styles.container}>
+    <TouchableOpacity style={styles.container} onPress={cardClickHandler}>
       {item?.photo ? (
         <Image source={{ uri: item?.photo }} style={styles.profilePic} />
       ) : (
@@ -29,7 +37,7 @@ const EventListItem: any = ({ item, type }: any) => {
           ? item?.spouse_birthday
           : item?.birthday}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 

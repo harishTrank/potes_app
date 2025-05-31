@@ -117,7 +117,12 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
             {allNotesApiHandler?.data.length === 0 ? (
               <Text style={styles.noNotesText}>No notes found.</Text>
             ) : (
-              allNotesApiHandler?.data.map((note: any, index: number) => (
+              (route?.params?.noteId
+                ? allNotesApiHandler?.data?.filter(
+                    (obj: any) => obj.id === route?.params?.noteId
+                  )
+                : allNotesApiHandler?.data
+              ).map((note: any, index: number) => (
                 <View
                   key={note.id}
                   style={[

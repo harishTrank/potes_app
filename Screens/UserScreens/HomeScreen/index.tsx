@@ -58,6 +58,7 @@ const HomeScreen = ({ navigation }: any) => {
                 initiallyOpen: true,
                 name: "Today",
                 count: reminder?.today?.length,
+                type: "Reminders",
               }}
             />
             <ReminderCategory
@@ -66,6 +67,7 @@ const HomeScreen = ({ navigation }: any) => {
                 initiallyOpen: false,
                 name: "Tomorrow",
                 count: reminder?.tomorrow?.length,
+                type: "Reminders",
               }}
             />
             <ReminderCategory
@@ -74,6 +76,7 @@ const HomeScreen = ({ navigation }: any) => {
                 initiallyOpen: false,
                 name: "Upcoming",
                 count: reminder?.upcoming?.length,
+                type: "Reminders",
               }}
             />
             <ReminderCategory
@@ -82,6 +85,7 @@ const HomeScreen = ({ navigation }: any) => {
                 initiallyOpen: false,
                 name: "Missed",
                 count: reminder?.missed?.length,
+                type: "Reminders",
               }}
               setReminer={setReminer}
             />
@@ -95,6 +99,7 @@ const HomeScreen = ({ navigation }: any) => {
                 initiallyOpen: true,
                 name: "One Year Ago",
                 count: memories?.year?.length,
+                type: "memories",
               }}
             />
             <ReminderCategory
@@ -103,6 +108,7 @@ const HomeScreen = ({ navigation }: any) => {
                 initiallyOpen: false,
                 name: "Six Months Ago",
                 count: memories?.six_month?.length,
+                type: "memories",
               }}
             />
             <ReminderCategory
@@ -111,6 +117,7 @@ const HomeScreen = ({ navigation }: any) => {
                 initiallyOpen: false,
                 name: "One Month Ago",
                 count: memories?.one_month?.length,
+                type: "memories",
               }}
             />
           </View>
@@ -118,12 +125,16 @@ const HomeScreen = ({ navigation }: any) => {
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Events</Text>
             <View style={styles.eventData}>
-              <Text style={styles.smallHead}>Birthdays</Text>
+              <Text style={styles.smallHead}>{`${
+                birthday?.birthdays?.length === 0 ? "No" : ""
+              }Birthdays`}</Text>
               {birthday?.birthdays?.map((item: any) => (
                 <EventListItem item={item} key={item?.id} type={"Birthdays"} />
               ))}
 
-              <Text style={styles.smallHead}>Anniversary</Text>
+              <Text style={styles.smallHead}>{`${
+                birthday?.anniversary?.length === 0 ? "No" : ""
+              }Anniversary`}</Text>
               {birthday?.anniversary?.map((item: any) => (
                 <EventListItem
                   item={item}
@@ -132,12 +143,16 @@ const HomeScreen = ({ navigation }: any) => {
                 />
               ))}
 
-              <Text style={styles.smallHead}>Spouse's Birthdays</Text>
+              <Text style={styles.smallHead}>{`${
+                birthday?.spouse_birthday?.length === 0 ? "No" : ""
+              }Spouse's Birthdays`}</Text>
               {birthday?.spouse_birthday?.map((item: any) => (
                 <EventListItem item={item} key={item?.id} type={"spouse"} />
               ))}
 
-              <Text style={styles.smallHead}>Child's Birthdays</Text>
+              <Text style={styles.smallHead}>{`${
+                birthday?.child_birthday?.length === 0 ? "No " : ""
+              }Child's Birthdays`}</Text>
               {birthday?.child_birthday?.map((item: any) => (
                 <EventListItem item={item} key={item?.id} type={"child"} />
               ))}

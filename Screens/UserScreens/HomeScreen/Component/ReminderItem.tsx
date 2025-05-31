@@ -5,9 +5,12 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { completeTaskApi } from "../../../../store/Services/Others";
 import Toast from "react-native-toast-message";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useNavigation } from "@react-navigation/native";
 
-const ReminderItem: any = ({ item, name, setReminer }: any) => {
+const ReminderItem: any = ({ item, name, setReminer, type }: any) => {
   const [flagManager, setFlagManager]: any = useState(item?.completed);
+  const navigation: any = useNavigation();
+
   const reminderClickHandler = (note_id: any) => {
     completeTaskApi({
       query: {
@@ -32,8 +35,22 @@ const ReminderItem: any = ({ item, name, setReminer }: any) => {
       })
       ?.catch((err: any) => console.log("err", err));
   };
+
+  const clickCompleteComponent = () => {
+    if (type === "memories") {
+      navigation.navigate("ViewContactScreen", {
+        contactId: item.contact,
+        contactName: item.contact_full_name,
+      });
+    } else {
+      navigation.navigate("AllNotesScreen", {
+        contactId: item.contact,
+        noteId: item.id,
+      });
+    }
+  };
   return (
-    <View style={styles.container}>
+    <TouchableOpacity style={styles.container} onPress={clickCompleteComponent}>
       {item?.contact_photo ? (
         <Image source={{ uri: item?.contact_photo }} style={styles.userImage} />
       ) : (
@@ -58,7 +75,7 @@ const ReminderItem: any = ({ item, name, setReminer }: any) => {
             <View style={styles.dot} />
           </TouchableOpacity>
         ))}
-    </View>
+    </TouchableOpacity>
   );
 };
 

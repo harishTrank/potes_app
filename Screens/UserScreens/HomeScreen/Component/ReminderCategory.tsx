@@ -48,6 +48,7 @@ const ReminderCategory: any = ({ category, setReminer }: any) => {
               item={item}
               name={category?.name}
               setReminer={setReminer}
+              type={category?.type}
             />
           ))}
         </View>
