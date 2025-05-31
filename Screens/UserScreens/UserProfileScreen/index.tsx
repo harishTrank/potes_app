@@ -128,9 +128,8 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   const handleCreateNote = () => navigation.navigate("CreateNoteScreen");
 
   const handleChangePassword = () => {
-    navigation.navigate("ResetPasswordScreen", {
+    navigation.navigate("ChangePasswordScreen", {
       email: userData.email,
-      fromProfile: true,
     });
   };
 
