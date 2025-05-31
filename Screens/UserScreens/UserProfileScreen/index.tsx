@@ -7,22 +7,28 @@ import {
   ScrollView,
   Image,
   TextInput,
-  Platform,
   Alert,
-  ActivityIndicator, // Added for save button
+  ActivityIndicator,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import ImageModule from "../../../ImageModule";
-import { Formik, FormikHelpers } from "formik"; // Added Formik
-import * as Yup from "yup"; // Added Yup
+import { Formik, FormikHelpers } from "formik";
+import * as Yup from "yup";
 import ActionButtons from "../../Components/ActionButtons";
 import Header from "../../Components/Header";
+import {
+  changeProfileName,
+  viewProfileApi,
+} from "../../../store/Services/Others";
+import FullScreenLoader from "../../Components/FullScreenLoader";
+import Toast from "react-native-toast-message";
+import { getImage, getfileobj, takePicture } from "../../../utils/ImagePicker";
+import { useAtom } from "jotai";
+import { apiCallBackGlobal } from "../../../jotaiStore";
 
-// Define navigation prop type
 type UserProfileScreenNavigationProp = {
   navigate: (screen: string, params?: object) => void;
   openDrawer: () => void;
@@ -32,48 +38,91 @@ interface UserProfileScreenProps {
   navigation: UserProfileScreenNavigationProp;
 }
 
-interface UserData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  username: string;
-  avatarUri: string | null;
-}
-
-// Form values for updating name
 interface UpdateNameFormValues {
   firstName: string;
   lastName: string;
 }
 
-// Validation schema for updating name
 const updateNameValidationSchema = Yup.object().shape({
   firstName: Yup.string().required("First name is required"),
   lastName: Yup.string().required("Last name is required"),
 });
 
-const mockUser: UserData = {
-  firstName: "Ravi",
-  lastName: "Kumar",
-  email: "mansi@tranktechies.com",
-  username: "mansi",
-  avatarUri: null,
-};
-
 const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   navigation,
 }) => {
   const insets = useSafeAreaInsets();
-  const [userData, setUserData] = useState<UserData>(mockUser);
+  const [userData, setUserData] = useState<any>({});
   const [isEditingName, setIsEditingName] = useState(false);
+  const [profilePic, setProfilePic]: any = useState(undefined);
+  const [loading, setLoading]: any = useState(false);
+  const [, setGlobalCall]: any = useAtom(apiCallBackGlobal);
+
+  useEffect(() => {
+    setLoading(true);
+    viewProfileApi()
+      ?.then((res: any) => {
+        setUserData({
+          firstName: res?.first_name,
+          lastName: res?.last_name,
+          email: res?.email,
+          username: res?.username,
+          avatarUri: res?.profile_pic,
+        });
+        setLoading(false);
+      })
+      ?.catch(() => setLoading(false));
+  }, []);
 
   const handlePickImage = async () => {
-    console.log("Pick image pressed");
-    Alert.alert(
-      "Feature Placeholder",
-      "Image picking functionality to be implemented."
-    );
+    Alert.alert("Pick Image", "Choose from camera or gallery", [
+      {
+        text: "Gallery",
+        onPress: () => getImage(setProfilePic),
+        style: "default",
+      },
+      {
+        text: "Camera",
+        onPress: async () => await takePicture(setProfilePic),
+        style: "default",
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
+
+  useEffect(() => {
+    if (profilePic) {
+      setLoading(true);
+      const formData = new FormData();
+      if (profilePic) {
+        formData.append("profile_pic", getfileobj(profilePic));
+      }
+      changeProfileName({
+        body: formData,
+      })
+        ?.then(() => {
+          setLoading(false);
+          setGlobalCall((oldVal: any) => oldVal + 1);
+          Toast.show({
+            type: "success",
+            text1: "Profile pic updated successfully.",
+          });
+        })
+        ?.catch(() => {
+          setLoading(false);
+          Toast.show({
+            type: "error",
+            text1: "Something went wrong.",
+          });
+        });
+      setUserData((olddata: any) => {
+        return {
+          ...olddata,
+          avatarUri: profilePic,
+        };
+      });
+    }
+  }, [profilePic]);
 
   const handleCreateContact = () => navigation.navigate("CreateContactScreen");
   const handleCreateNote = () => navigation.navigate("CreateNoteScreen");
@@ -85,23 +134,40 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
     });
   };
 
-  // Formik submission handler for updating name
   const handleUpdateNameSubmit = (
     values: UpdateNameFormValues,
     { setSubmitting }: FormikHelpers<UpdateNameFormValues>
   ) => {
-    console.log("Updating name with:", values);
-    // Simulate API call
-    setTimeout(() => {
-      setUserData((prev) => ({
-        ...prev,
-        firstName: values.firstName,
-        lastName: values.lastName,
-      }));
-      setIsEditingName(false); // Exit edit mode
-      setSubmitting(false);
-      Alert.alert("Success", "Name updated successfully!");
-    }, 1500);
+    setLoading(true);
+    changeProfileName({
+      body: {
+        first_name: values.firstName,
+        last_name: values.lastName,
+      },
+    })
+      ?.then((res: any) => {
+        setUserData((prev: any) => ({
+          ...prev,
+          firstName: values.firstName,
+          lastName: values.lastName,
+        }));
+        setLoading(false);
+        setIsEditingName(false);
+        setSubmitting(false);
+        Toast.show({
+          type: "success",
+          text1: "Profile update successfully.",
+        });
+      })
+      ?.catch(() => {
+        setLoading(false);
+        setIsEditingName(false);
+        setSubmitting(false);
+        Toast.show({
+          type: "error",
+          text1: "Something went wrong.",
+        });
+      });
   };
 
   const renderInfoField = (label: string, value: string) => (
@@ -115,6 +181,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
 
   return (
     <DefaultBackground>
+      {loading && <FullScreenLoader />}
       <StatusBar style="light" />
       <View style={[styles.flexContainer]}>
         <Header menu={false} />

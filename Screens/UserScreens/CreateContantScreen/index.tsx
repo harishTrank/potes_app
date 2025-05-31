@@ -22,7 +22,6 @@ import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule";
 import {
   Formik,
-  FormikHelpers,
   FieldArray,
   FieldArrayRenderProps,
 } from "formik";

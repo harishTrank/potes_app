@@ -15,7 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAtom } from "jotai";
-import { userProfileGlobal } from "../../jotaiStore";
+import { apiCallBackGlobal, userProfileGlobal } from "../../jotaiStore";
 import { viewProfileApi } from "../../store/Services/Others";
 
 const Header: any = ({ menu = true }: any) => {
@@ -24,6 +24,7 @@ const Header: any = ({ menu = true }: any) => {
   const [searchVal, setSearchVal]: any = useState("");
   const [searchValOnClick, setSearchValOnClick]: any = useState("");
   const [userProfile, setUserProfile]: any = useAtom(userProfileGlobal);
+  const [globalCall]: any = useAtom(apiCallBackGlobal);
 
   useEffect(() => {
     viewProfileApi()
@@ -31,7 +32,7 @@ const Header: any = ({ menu = true }: any) => {
         setUserProfile(res);
       })
       ?.catch((err: any) => console.log("err", err));
-  }, []);
+  }, [globalCall]);
 
   const onMenuPress = () => {
     navigation.toggleDrawer();
