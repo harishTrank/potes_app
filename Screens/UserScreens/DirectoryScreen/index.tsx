@@ -261,7 +261,7 @@ const screenHeight = Dimensions.get("window").height;
 const alphabetItemHeight = Math.min(20, screenHeight / (ALPHABET.length * 1.8));
 
 const styles = StyleSheet.create({
-  flexContainer: { flex: 1 },
+  flexContainer: { flex: 1, paddingBottom: 70 },
   directoryContentWrapper: {
     flex: 1,
     flexDirection: "row",

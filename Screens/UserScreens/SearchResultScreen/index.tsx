@@ -448,9 +448,8 @@ const SearchResultScreen: React.FC<SearchResultScreenProps> = ({
       setSearchResults([]);
       setLoading(false);
     }
-  }, [searchQuery, route.params?.searchQuery]); // Ensure dependency array is correct
+  }, [searchQuery, route.params?.searchQuery]);
 
-  // ... rest of the component (loading, error, render) remains the same
   if (loading) {
     return (
       <DefaultBackground>
@@ -490,7 +489,6 @@ const SearchResultScreen: React.FC<SearchResultScreenProps> = ({
       <View
         style={[
           styles.flexContainer,
-          { paddingTop: Platform.OS === "android" ? insets.top : 0 },
         ]}
       >
         <Header menu={false} />

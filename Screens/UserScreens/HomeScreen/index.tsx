@@ -126,14 +126,14 @@ const HomeScreen = ({ navigation }: any) => {
             <Text style={styles.sectionTitle}>Events</Text>
             <View style={styles.eventData}>
               <Text style={styles.smallHead}>{`${
-                birthday?.birthdays?.length === 0 ? "No" : ""
+                birthday?.birthdays?.length === 0 ? "No " : ""
               }Birthdays`}</Text>
               {birthday?.birthdays?.map((item: any) => (
                 <EventListItem item={item} key={item?.id} type={"Birthdays"} />
               ))}
 
               <Text style={styles.smallHead}>{`${
-                birthday?.anniversary?.length === 0 ? "No" : ""
+                birthday?.anniversary?.length === 0 ? "No " : ""
               }Anniversary`}</Text>
               {birthday?.anniversary?.map((item: any) => (
                 <EventListItem
@@ -144,7 +144,7 @@ const HomeScreen = ({ navigation }: any) => {
               ))}
 
               <Text style={styles.smallHead}>{`${
-                birthday?.spouse_birthday?.length === 0 ? "No" : ""
+                birthday?.spouse_birthday?.length === 0 ? "No " : ""
               }Spouse's Birthdays`}</Text>
               {birthday?.spouse_birthday?.map((item: any) => (
                 <EventListItem item={item} key={item?.id} type={"spouse"} />

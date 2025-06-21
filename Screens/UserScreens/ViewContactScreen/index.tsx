@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -17,10 +17,7 @@ import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule";
-import {
-  deleteContactApi,
-  profileContactApi,
-} from "../../../store/Services/Others";
+import { deleteContactApi } from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader"; // Assuming you have this
 import dayjs from "dayjs";
 import Toast from "react-native-toast-message";
@@ -78,6 +75,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
   const [loading, setLoading] = useState(false);
   const [areAllSectionsOpen, setAreAllSectionsOpen] = useState(false);
   const apiResponse: any = useProfileContactApi({ query: { id: contactId } });
+  const scrollViewRef: any = useRef(null);
 
   const initialSectionStates = {
     personal: true,
@@ -99,6 +97,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
     }));
   };
   const toggleAllSections = () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     const newState = !areAllSectionsOpen;
     setSectionOpenState({
@@ -242,6 +241,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
           style={styles.contentScrollView}
           contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
           showsVerticalScrollIndicator={false}
+          ref={scrollViewRef}
         >
           <View style={styles.mainInfoCard}>
             <View style={styles.avatarDisplaySection}>

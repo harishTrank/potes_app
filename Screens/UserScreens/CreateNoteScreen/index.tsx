@@ -60,7 +60,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
   const [initialValues, setInitialValues]: any = useState({
     contactId: null,
     noteText: "",
-    reminderOption: "",
+    reminderOption: "None",
     customReminderDate: undefined,
   });
 
@@ -160,7 +160,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
       setInitialValues({
         contactId: route?.params?.contactId,
         noteText: "",
-        reminderOption: "",
+        reminderOption: "None",
         customReminderDate: undefined,
       });
     }
@@ -297,18 +297,17 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     </View>
 
                     <View style={styles.inputGroup}>
-                      <Text style={styles.label}>Note reminder</Text>
+                      <Text style={styles.label}>Note reminder{values.reminderOption}</Text>
                       <DropDownComponent
                         data={reminderOptions}
-                        value={values.reminderOption} // Stores the 'value'
+                        value={values.reminderOption} 
                         setValue={(selectedValue: string) => {
                           setFieldValue("reminderOption", selectedValue);
                           if (selectedValue !== "Custom") {
-                            // Reset custom date if not "Custom"
                             setFieldValue("customReminderDate", undefined);
                           }
                         }}
-                        placeholder="Select reminder type" // Changed placeholder
+                        placeholder="Select reminder type"
                         fieldKey="label"
                         objectSave={false}
                         search={false}

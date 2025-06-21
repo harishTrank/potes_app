@@ -52,8 +52,10 @@ const Header: any = ({ menu = true }: any) => {
     if (searchVal?.length > 0) {
       if (route?.name === "SearchResultScreen") {
         navigation.replace("SearchResultScreen", { searchQuery: searchVal });
+        setSearchVal("");
       } else {
         navigation.navigate("SearchResultScreen", { searchQuery: searchVal });
+        setSearchVal("");
       }
     }
   };
