@@ -60,9 +60,12 @@ const AboutUsScreen: React.FC<AboutUsScreenProps> = ({ navigation }: any) => {
           >
             <Feather name="chevron-left" size={24} color={theme.colors.white} />
           </TouchableOpacity>
-
-          <Image source={ImageModule.logo} style={styles.logoImg} />
-
+          <TouchableOpacity
+            style={styles.btnlogoImg}
+            onPress={() => navigation.navigate("HomeScreen")}
+          >
+            <Image style={styles.logoImg} source={ImageModule.logo} />
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={handleSearchPress}
             style={styles.iconButton}
@@ -100,11 +103,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 15,
     paddingVertical: 10,
-  },
-  logoImg: {
-    width: "50%",
-    height: 40,
-    resizeMode: "contain",
   },
   iconButton: {
     backgroundColor: theme.colors.secondary,
@@ -147,6 +145,17 @@ const styles = StyleSheet.create({
     textAlign: "left",
     lineHeight: 24,
     paddingHorizontal: 5,
+  },
+  logoImg: {
+    resizeMode: "contain",
+    width: "50%",
+    height: 40,
+  },
+  btnlogoImg: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "50%",
+    height: 40,
   },
 });
 

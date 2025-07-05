@@ -20,24 +20,26 @@ const HomeScreen = ({ navigation }: any) => {
   const handleProfilePress = () => console.log("Profile pressed");
 
   useEffect(() => {
-    showReminders()
-      .then((res: any) => {
-        setReminer(res?.reminders);
-      })
-      ?.catch((err: any) => console.log("err", err));
-
-    showBirthdays()
-      .then((res: any) => {
-        setBirthday(res);
-      })
-      ?.catch((err: any) => console.log("err", err));
-
-    yearsAgo()
-      .then((res: any) => {
-        setMemories(res);
-      })
-      ?.catch((err: any) => console.log("err", err));
-  }, []);
+    return navigation.addListener("focus", () => {
+      showReminders()
+        .then((res: any) => {
+          setReminer(res?.reminders);
+        })
+        ?.catch((err: any) => console.log("err", err));
+  
+      showBirthdays()
+        .then((res: any) => {
+          setBirthday(res);
+        })
+        ?.catch((err: any) => console.log("err", err));
+  
+      yearsAgo()
+        .then((res: any) => {
+          setMemories(res);
+        })
+        ?.catch((err: any) => console.log("err", err));
+    })
+  }, [navigation]);
 
   return (
     <DefaultBackground>

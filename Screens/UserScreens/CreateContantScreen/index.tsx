@@ -296,7 +296,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     placeholder: string,
     keyboardType: any = "default",
     multiline = false,
-    numberOfLines = 1
+    numberOfLines = 1,
   ) => (
     <View style={styles.inputGroup}>
       <Text style={styles.label}>{label}</Text>
@@ -310,6 +310,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
         keyboardType={keyboardType}
         multiline={multiline}
         numberOfLines={numberOfLines}
+        maxLength={label === "Number" ? 10 : 200}
       />
     </View>
   );
@@ -499,7 +500,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         "number",
                         "Number",
                         "Enter number",
-                        "phone-pad"
+                        "phone-pad",
                       )}
                     </CollapsibleSection>
 

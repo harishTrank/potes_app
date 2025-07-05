@@ -241,7 +241,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
                 touched,
                 isSubmitting,
                 resetForm, // To cancel editing
-              }) => (
+              }: any) => (
                 <>
                   <View style={styles.infoFieldGroup}>
                     <Text style={styles.label}>First Name</Text>

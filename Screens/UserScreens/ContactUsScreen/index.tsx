@@ -105,7 +105,12 @@ const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
               />
             </TouchableOpacity>
 
-            <Image source={ImageModule.logo} style={styles.logoImg} />
+            <TouchableOpacity
+              style={styles.btnlogoImg}
+              onPress={() => navigation.navigate("HomeScreen")}
+            >
+              <Image style={styles.logoImg} source={ImageModule.logo} />
+            </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleSearchPress}
@@ -241,11 +246,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
   },
-  logoImg: {
-    width: "50%",
-    height: 40,
-    objectFit: "contain",
-  },
   iconButton: {
     backgroundColor: theme.colors.secondary, // Dark grey buttons
     padding: 8,
@@ -323,6 +323,17 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     backgroundColor: theme.colors.grey,
     opacity: 0.7,
+  },
+  logoImg: {
+    resizeMode: "contain",
+    width: "50%",
+    height: 40,
+  },
+  btnlogoImg: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "50%",
+    height: 40,
   },
 });
 

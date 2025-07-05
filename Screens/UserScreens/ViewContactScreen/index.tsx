@@ -465,7 +465,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                 </Text>
                 <Text style={styles.noteCreationDate}>
                   Noted created at <Feather name="clock" size={13} />{" "}
-                  {dayjs(note.created_at).format("MM-DD-YYYY")}
+                  {dayjs(note?.created_date).format("MM-DD-YYYY")}
                 </Text>
               </View>
             ))}
@@ -631,7 +631,7 @@ const styles = StyleSheet.create({
   }, // Changed separator to grey
   noteDate: {
     fontSize: 12,
-    /* API provides reminder or created_at */ ...theme.font.fontSemiBold,
+    ...theme.font.fontSemiBold,
     color: theme.colors.secondary,
     marginBottom: 3,
   },

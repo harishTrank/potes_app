@@ -35,7 +35,7 @@ interface RegisterFormValues {
 
 const registerValidationSchema = Yup.object().shape({
   firstName: Yup.string().required("First name is required"),
-  lastName: Yup.string().required("Last name is required"),
+  lastName: Yup.string(),
   username: Yup.string().required("Username is required"),
   email: Yup.string()
     .email("Invalid email format")
@@ -101,10 +101,10 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: any) => {
       });
   };
 
-  const renderLabel = (label: string) => (
+  const renderLabel = (label: string, required: any = true) => (
     <Text style={styles.label}>
       {label}
-      <Text style={styles.asterisk}>*</Text>
+      {required && <Text style={styles.asterisk}>*</Text>}
     </Text>
   );
 
@@ -182,7 +182,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: any) => {
                   </View>
 
                   <View style={styles.inputGroup}>
-                    {renderLabel("Last name:")}
+                    {renderLabel("Last name:", false)}
                     <TextInput
                       style={[
                         styles.input,

@@ -178,7 +178,7 @@ const OTPScreenResgister = ({ navigation, route }: any) => {
             <View style={styles.contentContainer}>
               <Text style={styles.screenTitle}>Enter the OTP</Text>
               <Text style={styles.subtitle}>
-                We've sent a password recover OTP{"\n"}to{" "}
+                Enter the otp you recieved on{" "}
                 {emailFromPreviousScreen}
               </Text>
 

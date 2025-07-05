@@ -297,7 +297,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     </View>
 
                     <View style={styles.inputGroup}>
-                      <Text style={styles.label}>Note reminder{values.reminderOption}</Text>
+                      <Text style={styles.label}>{`Note reminder ${values.reminderOption}`}</Text>
                       <DropDownComponent
                         data={reminderOptions}
                         value={values.reminderOption} 

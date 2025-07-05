@@ -176,7 +176,7 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
                   </View>
 
                   <Text style={styles.noteDate}>
-                    {dayjs(note.created_at).format("MM-DD-YYYY")}
+                    {dayjs(note?.created_date).format("MM-DD-YYYY")}
                   </Text>
                   <Text style={styles.noteContent}>{note.note}</Text>
 
