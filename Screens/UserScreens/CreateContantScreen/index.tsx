@@ -90,7 +90,14 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     spouseName: "",
     spouseBirthday: undefined,
     spouseDetails: "",
-    children: [],
+    children: [
+      {
+        id: `child-${Date.now()}`,
+        name: "",
+        birthday: undefined,
+        details: "",
+      },
+    ],
     employmentHistory: [{ id: `emp-${Date.now()}`, name: "", details: "" }],
     educationHistory: [{ id: `edu-${Date.now()}`, name: "", details: "" }],
     interests: [{ id: `interest-${Date.now()}`, name: "" }],
@@ -296,7 +303,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     placeholder: string,
     keyboardType: any = "default",
     multiline = false,
-    numberOfLines = 1,
+    numberOfLines = 1
   ) => (
     <View style={styles.inputGroup}>
       <Text style={styles.label}>{label}</Text>
@@ -500,7 +507,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         "number",
                         "Number",
                         "Enter number",
-                        "phone-pad",
+                        "phone-pad"
                       )}
                     </CollapsibleSection>
 
@@ -727,8 +734,8 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                       handleBlur,
                                     },
                                     "name",
-                                    "University/School Name",
-                                    "Enter institution name"
+                                    "University Name",
+                                    "Enter University name"
                                   )}
                                   {renderTextInput(
                                     {
@@ -742,8 +749,8 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                       handleBlur,
                                     },
                                     "details",
-                                    "Details (Degree, Year)",
-                                    "Enter education details",
+                                    "University Details",
+                                    "Enter University details",
                                     "default",
                                     true,
                                     3

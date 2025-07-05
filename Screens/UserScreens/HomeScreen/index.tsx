@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
@@ -12,37 +12,57 @@ import {
   showReminders,
   yearsAgo,
 } from "../../../store/Services/Others";
+import FullScreenLoader from "../../Components/FullScreenLoader";
 const HomeScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const [reminder, setReminer]: any = useState({});
   const [birthday, setBirthday]: any = useState({});
   const [memories, setMemories]: any = useState({});
+  const [loading, setLoading]: any = useState(false);
+
   const handleProfilePress = () => console.log("Profile pressed");
+
+  const homeScreenDataManager = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const results: any = await Promise.allSettled([
+        showReminders(),
+        showBirthdays(),
+        yearsAgo(),
+      ]);
+      if (results[0].status === "fulfilled") {
+        setReminer(results[0].value?.reminders);
+        
+      } else {
+        console.error("Error fetching reminders:", results[0].reason);
+      }
+      if (results[1].status === "fulfilled") {
+        setBirthday(results[1].value);
+      } else {
+        console.error("Error fetching birthdays:", results[1].reason);
+      }
+      if (results[2].status === "fulfilled") {
+        setMemories(results[2].value);
+      } else {
+        console.error("Error fetching memories:", results[2].reason);
+      }
+    } catch (error) {
+      console.error("A critical error occurred during data fetching:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     return navigation.addListener("focus", () => {
-      showReminders()
-        .then((res: any) => {
-          setReminer(res?.reminders);
-        })
-        ?.catch((err: any) => console.log("err", err));
-  
-      showBirthdays()
-        .then((res: any) => {
-          setBirthday(res);
-        })
-        ?.catch((err: any) => console.log("err", err));
-  
-      yearsAgo()
-        .then((res: any) => {
-          setMemories(res);
-        })
-        ?.catch((err: any) => console.log("err", err));
-    })
+      homeScreenDataManager();
+    });
   }, [navigation]);
 
   return (
     <DefaultBackground>
+      {loading && <FullScreenLoader />}
       <View style={styles.flexContainer}>
         <Header onProfilePress={handleProfilePress} />
         <ScrollView

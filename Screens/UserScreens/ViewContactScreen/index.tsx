@@ -441,16 +441,18 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
           <View style={styles.notesCard}>
             <View style={styles.notesHeader}>
               <Text style={styles.notesTitle}>Notes</Text>
-              <TouchableOpacity onPress={handleViewAllNotes}>
-                <Text style={styles.allNotesLink}>
-                  All notes{" "}
-                  <Feather
-                    name="arrow-right-circle"
-                    size={14}
-                    color={theme.colors.primary}
-                  />
-                </Text>
-              </TouchableOpacity>
+              {apiResponse?.data.contact_notes?.length && (
+                <TouchableOpacity onPress={handleViewAllNotes}>
+                  <Text style={styles.allNotesLink}>
+                    All notes{" "}
+                    <Feather
+                      name="arrow-right-circle"
+                      size={14}
+                      color={theme.colors.primary}
+                    />
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
             {apiResponse?.data.contact_notes?.map((note: any) => (
               <View key={note.id} style={styles.noteItem}>
@@ -645,7 +647,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     ...theme.font.fontRegular,
     color: theme.colors.grey,
-    textAlign: "right"
+    textAlign: "right",
   },
   noNotesText: {
     textAlign: "center",
