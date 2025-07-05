@@ -158,3 +158,18 @@ export const getfileobj: any = (fileUri: string) => {
     type,
   };
 };
+
+export const formatPhoneNumber = (phoneString: string | null | undefined): string => {
+  if (!phoneString) {
+    return ""; 
+  }
+  const cleaned = String(phoneString).replace(/\D/g, '');
+  const length = cleaned.length;
+  if (length <= 3) {
+    return cleaned;
+  }
+  if (length <= 6) {
+    return `${cleaned.slice(0, 3)}.${cleaned.slice(3)}`;
+  }
+  return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6)}`;
+};

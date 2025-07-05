@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   highlightedText: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: "yellow",
     color: theme.colors.black,
     ...theme.font.fontBold,
   },

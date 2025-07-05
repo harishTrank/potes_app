@@ -1,21 +1,22 @@
 import React from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import theme from "../../../../utils/theme"; // Adjust this path to your global theme file
+import theme from "../../../../utils/theme";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useNavigation } from "@react-navigation/native";
+import dayjs from "dayjs";
 
 const EventListItem: any = ({ item, type }: any) => {
   const navigation: any = useNavigation();
   const cardClickHandler = () => {
     navigation.navigate("ViewContactScreen", {
-      contactId: item?.id,
-      contactName: item?.full_name,
+      contactId: item?.id || item?.contact,
+      contactName: item?.full_name || item?.contact__full_name,
     });
   };
   return (
     <TouchableOpacity style={styles.container} onPress={cardClickHandler}>
-      {item?.photo ? (
-        <Image source={{ uri: item?.photo }} style={styles.profilePic} />
+      {(item?.photo || item?.contact__photo) ? (
+        <Image source={{ uri: item?.photo|| item?.contact__photo }} style={styles.profilePic} />
       ) : (
         <FontAwesome name="user-circle" size={24} color={theme.colors.white} />
       )}
@@ -29,13 +30,13 @@ const EventListItem: any = ({ item, type }: any) => {
         </Text>
       </View>
       <Text style={styles.eventDate}>
-        {type === "Birthdays"
+        {dayjs(type === "Birthdays"
           ? item.birthday
           : type === "Anniversary"
           ? item?.anniversary
           : type === "spouse"
           ? item?.spouse_birthday
-          : item?.birthday}
+          : item?.birthday).format("MM-DD-YYYY")}
       </Text>
     </TouchableOpacity>
   );

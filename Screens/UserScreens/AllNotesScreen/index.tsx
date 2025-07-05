@@ -37,7 +37,7 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
   }, [contactIdFilter, navigation]);
 
   const handleSearchPress = () =>
-    console.log("Search pressed on All Notes screen");
+    navigation.navigate("SearchResultScreen", { searchQuery: "" });
 
   const handleEditNote = (note: any) => {
     navigation.navigate("CreateNoteScreen", {
@@ -132,7 +132,15 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
                   ]}
                 >
                   <View style={styles.noteHeader}>
-                    <View style={styles.contactInfo}>
+                    <TouchableOpacity
+                      onPress={() =>
+                        navigation.navigate("ViewContactScreen", {
+                          contactId: note.contact,
+                          contactName: note.contact_full_name,
+                        })
+                      }
+                      style={styles.contactInfo}
+                    >
                       <View style={styles.noteAvatarPlaceholder}>
                         {note.contact_photo ? (
                           <Image
@@ -150,7 +158,7 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
                       <Text style={styles.contactName}>
                         {note.contact_full_name}
                       </Text>
-                    </View>
+                    </TouchableOpacity>
                     <View style={styles.noteActions}>
                       <TouchableOpacity
                         onPress={() => handleDeleteNote(note.id)}
@@ -175,11 +183,6 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
                     </View>
                   </View>
 
-                  <Text style={styles.noteDate}>
-                    {dayjs(note?.created_date).format("MM-DD-YYYY")}
-                  </Text>
-                  <Text style={styles.noteContent}>{note.note}</Text>
-
                   {note.reminder && (
                     <View style={styles.reminderInfo}>
                       <Feather
@@ -193,6 +196,11 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
                       </Text>
                     </View>
                   )}
+                  <Text style={styles.noteContent}>{note.note}</Text>
+                  <Text style={styles.noteDate}>
+                    Note created at <Feather name="clock" size={13} />{" "}
+                    {dayjs(note?.created_date).format("MM-DD-YYYY")}
+                  </Text>
                 </View>
               ))
             )}
@@ -242,7 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.grey,
-  }, // Using grey for separator
+  },
   lastNoteItemContainer: { borderBottomWidth: 0, marginBottom: 0 },
   noteHeader: {
     flexDirection: "row",
@@ -250,7 +258,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  contactInfo: { flexDirection: "row", alignItems: "center" },
+  contactInfo: { flexDirection: "row", alignItems: "center", width: "75%" },
   noteAvatarPlaceholder: {
     width: 28,
     height: 28,
@@ -274,6 +282,7 @@ const styles = StyleSheet.create({
     ...theme.font.fontRegular,
     color: theme.colors.grey,
     marginBottom: 5,
+    textAlign: "right",
   },
   noteContent: {
     fontSize: 15,
@@ -285,7 +294,7 @@ const styles = StyleSheet.create({
   reminderInfo: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-end",
+    alignSelf: "flex-start",
   },
   reminderDateText: {
     fontSize: 12,

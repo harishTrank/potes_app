@@ -63,7 +63,7 @@ const ReminderItem: any = ({ item, name, setReminer, type }: any) => {
       )}
       <View style={styles.textContainer}>
         <Text style={styles.messageText} numberOfLines={1}>
-          <Text style={styles.userText}>{item.contact_full_name}:</Text>{" "}
+          <Text style={styles.userText}>{item.contact_full_name.length < 10 ? item.contact_full_name : `${item.contact_full_name?.slice(0,10)}... `}:</Text>{" "}
           {item.note}
         </Text>
       </View>

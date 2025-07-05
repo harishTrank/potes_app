@@ -18,6 +18,7 @@ import Header from "../../Components/Header"; // Ensure this path is correct
 import ActionButtons from "../../Components/ActionButtons"; // Ensure this path is correct
 import FullScreenLoader from "../../Components/FullScreenLoader"; // Ensure this path is correct
 import { allContactApiHook } from "../../../hooks/Others/query"; // Ensure this path is correct
+import { formatPhoneNumber } from "../../../utils/ImagePicker";
 
 // --- Navigation & Props ---
 type DirectoryScreenNavigationProp = {
@@ -183,7 +184,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
         {item.phone && item.phone !== "-" && (
           <Text style={styles.contactDetail} numberOfLines={1}>
             <Feather name="phone" size={13} color={theme.colors.white} />
-            <Text> {item.phone}</Text>
+            <Text> {formatPhoneNumber(item.phone)}</Text>
           </Text>
         )}
         {item.birthday && (

@@ -70,7 +70,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
         contactId: route?.params?.note?.contact,
         noteText: route?.params?.note?.note,
         reminderOption: route?.params?.note?.reminder_type,
-        customReminderDate: new Date(route?.params?.note?.reminder),
+        customReminderDate: route?.params?.note?.reminder === null ? dayjs().format("YYYY-MM-DD") : new Date(route?.params?.note?.reminder),
       });
     }
   }, [route?.params?.note?.id]);
@@ -165,6 +165,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
       });
     }
   }, [route?.params?.type]);
+
 
   return (
     <DefaultBackground>
@@ -386,7 +387,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                       mode="single"
                       visible={datePickerVisible}
                       onDismiss={onDismissDatePicker}
-                      date={values.customReminderDate || new Date()} // Use current value or default to today
+                      date={values.customReminderDate}
                       onConfirm={(params) =>
                         onConfirmCustomDate(params, setFieldValue)
                       }

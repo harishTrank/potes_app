@@ -455,7 +455,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             {apiResponse?.data.contact_notes?.map((note: any) => (
               <View key={note.id} style={styles.noteItem}>
                 <Text style={styles.noteDate}>
-                  <Feather name="calendar" size={13} />{" "}
+                  <Feather name="bell" size={13} />{" "}
                   {note.reminder
                     ? dayjs(note.reminder).format("MM-DD-YYYY")
                     : ""}
@@ -464,7 +464,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                   {note.note}
                 </Text>
                 <Text style={styles.noteCreationDate}>
-                  Noted created at <Feather name="clock" size={13} />{" "}
+                  Note created at <Feather name="clock" size={13} />{" "}
                   {dayjs(note?.created_date).format("MM-DD-YYYY")}
                 </Text>
               </View>
@@ -645,6 +645,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     ...theme.font.fontRegular,
     color: theme.colors.grey,
+    textAlign: "right"
   },
   noNotesText: {
     textAlign: "center",
