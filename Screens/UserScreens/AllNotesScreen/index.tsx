@@ -20,9 +20,12 @@ import FullScreenLoader from "../../Components/FullScreenLoader";
 import dayjs from "dayjs";
 import Toast from "react-native-toast-message";
 import { useGetNotesApi } from "../../../hooks/Others/query";
+import FastImage from "react-native-fast-image";
+import { useNavigation } from "@react-navigation/native";
 
-const AllNotesScreen: any = ({ navigation, route }: any) => {
+const AllNotesScreen: any = ({ route }: any) => {
   const insets = useSafeAreaInsets();
+  const navigation: any = useNavigation();
   const contactIdFilter = route.params?.contactId;
   const allNotesApiHandler: any = useGetNotesApi({
     query: {
@@ -93,7 +96,12 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
           >
             <Feather name="chevron-left" size={24} color={theme.colors.white} />
           </TouchableOpacity>
-          <Image source={ImageModule.logo} style={styles.logoImg} />
+          <TouchableOpacity
+            style={styles.btnlogoImg}
+            onPress={() => navigation.navigate("DrawerNavigation")}
+          >
+            <Image source={ImageModule.logo} style={styles.logoImg} />
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={handleSearchPress}
             style={styles.iconButton}
@@ -143,9 +151,12 @@ const AllNotesScreen: any = ({ navigation, route }: any) => {
                     >
                       <View style={styles.noteAvatarPlaceholder}>
                         {note.contact_photo ? (
-                          <Image
-                            source={{ uri: note.contact_photo }}
+                          <FastImage
                             style={styles.avatarImageInList}
+                            source={{
+                              uri: note.contact_photo,
+                              priority: FastImage.priority.normal,
+                            }}
                           />
                         ) : (
                           <Feather
@@ -220,7 +231,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
   },
-  logoImg: { width: "50%", height: 40, resizeMode: "contain" },
+  logoImg: { width: "70%", resizeMode: "contain" },
+  btnlogoImg: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "50%",
+    height: 40,
+  },
   iconButton: {
     backgroundColor: theme.colors.secondary,
     padding: 8,

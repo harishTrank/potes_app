@@ -54,13 +54,13 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
 
   return (
     <SafeAreaView style={[styles.safeArea, { paddingTop: insets.top }]}>
-      <View
-        style={[
-          styles.headerContainer,
-          { paddingTop: useSafeAreaInsets().top },
-        ]}
-      >
-        <Image source={ImageModule.logo} style={styles.logoImg} />
+      <View style={[styles.headerContainer]}>
+        <TouchableOpacity
+          style={styles.btnlogoImg}
+          onPress={() => navigation.navigate("HomeScreen")}
+        >
+          <Image source={ImageModule.logo} style={styles.logoImg} />
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => navigation.closeDrawer()}
           style={styles.closeButton}
@@ -155,6 +155,11 @@ const styles = StyleSheet.create({
   logoImg: {
     height: 50,
     objectFit: "contain",
+    width: "100%",
+  },
+  btnlogoImg: {
+    alignItems: "center",
+    justifyContent: "center",
     width: "70%",
   },
 });

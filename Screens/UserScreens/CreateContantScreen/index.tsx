@@ -31,6 +31,7 @@ import {
 } from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
 // import { createContactApi } from "../../../store/Services/Others"; // Assuming this is correct
+import FastImage from "react-native-fast-image";
 
 registerTranslation("en", en);
 
@@ -409,7 +410,12 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                 color={theme.colors.white}
               />
             </TouchableOpacity>
-            <Image source={ImageModule.logo} style={styles.logoImg} />
+            <TouchableOpacity
+              style={styles.btnlogoImg}
+              onPress={() => navigation.navigate("DrawerNavigation")}
+            >
+              <Image source={ImageModule.logo} style={styles.logoImg} />
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSearchPress}
               style={styles.iconButton}
@@ -448,8 +454,11 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         style={styles.avatarContainer}
                       >
                         {selectedAvatarFileUri ? (
-                          <Image
-                            source={{ uri: selectedAvatarFileUri }}
+                          <FastImage
+                            source={{
+                              uri: selectedAvatarFileUri,
+                              priority: FastImage.priority.normal,
+                            }}
                             style={styles.avatarImage}
                           />
                         ) : (
@@ -1019,7 +1028,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
   },
-  logoImg: { width: "50%", height: 40, objectFit: "contain" },
+  logoImg: { width: "70%", objectFit: "contain" },
+  btnlogoImg: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "50%",
+    height: 40,
+  },
   iconButton: {
     backgroundColor: theme.colors.secondary,
     padding: 8,

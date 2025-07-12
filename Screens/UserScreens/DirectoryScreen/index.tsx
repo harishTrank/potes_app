@@ -19,7 +19,7 @@ import ActionButtons from "../../Components/ActionButtons"; // Ensure this path 
 import FullScreenLoader from "../../Components/FullScreenLoader"; // Ensure this path is correct
 import { allContactApiHook } from "../../../hooks/Others/query"; // Ensure this path is correct
 import { formatPhoneNumber } from "../../../utils/ImagePicker";
-
+import FastImage from "react-native-fast-image";
 // --- Navigation & Props ---
 type DirectoryScreenNavigationProp = {
   navigate: (screen: string, params?: object) => void;
@@ -168,7 +168,13 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
     >
       <View style={styles.avatarPlaceholder}>
         {item.photo ? (
-          <Image source={{ uri: item.photo }} style={styles.avatarImage} />
+          <FastImage
+            style={styles.avatarImage}
+            source={{
+              uri: item.photo,
+              priority: FastImage.priority.normal,
+            }}
+          />
         ) : (
           <Feather name="user" size={20} color={theme.colors.white} />
         )}

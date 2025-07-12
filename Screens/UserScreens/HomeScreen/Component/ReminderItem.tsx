@@ -6,6 +6,7 @@ import { completeTaskApi } from "../../../../store/Services/Others";
 import Toast from "react-native-toast-message";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
+import FastImage from "react-native-fast-image";
 
 const ReminderItem: any = ({ item, name, setReminer, type }: any) => {
   const [flagManager, setFlagManager]: any = useState(item?.completed);
@@ -52,7 +53,13 @@ const ReminderItem: any = ({ item, name, setReminer, type }: any) => {
   return (
     <TouchableOpacity style={styles.container} onPress={clickCompleteComponent}>
       {item?.contact_photo ? (
-        <Image source={{ uri: item?.contact_photo }} style={styles.userImage} />
+        <FastImage
+          source={{
+            uri: item?.contact_photo,
+            priority: FastImage.priority.normal,
+          }}
+          style={styles.userImage}
+        />
       ) : (
         <FontAwesome
           name="user-circle-o"
@@ -63,7 +70,12 @@ const ReminderItem: any = ({ item, name, setReminer, type }: any) => {
       )}
       <View style={styles.textContainer}>
         <Text style={styles.messageText} numberOfLines={1}>
-          <Text style={styles.userText}>{item.contact_full_name.length < 10 ? item.contact_full_name : `${item.contact_full_name?.slice(0,10)}... `}:</Text>{" "}
+          <Text style={styles.userText}>
+            {item.contact_full_name.length < 10
+              ? item.contact_full_name
+              : `${item.contact_full_name?.slice(0, 10)}... `}
+            :
+          </Text>{" "}
           {item.note}
         </Text>
       </View>

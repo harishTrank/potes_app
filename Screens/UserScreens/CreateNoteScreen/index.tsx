@@ -70,7 +70,10 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
         contactId: route?.params?.note?.contact,
         noteText: route?.params?.note?.note,
         reminderOption: route?.params?.note?.reminder_type,
-        customReminderDate: route?.params?.note?.reminder === null ? dayjs().format("YYYY-MM-DD") : new Date(route?.params?.note?.reminder),
+        customReminderDate:
+          route?.params?.note?.reminder === null
+            ? dayjs().format("YYYY-MM-DD")
+            : new Date(route?.params?.note?.reminder),
       });
     }
   }, [route?.params?.note?.id]);
@@ -166,7 +169,6 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
     }
   }, [route?.params?.type]);
 
-
   return (
     <DefaultBackground>
       <StatusBar style="light" />
@@ -187,7 +189,12 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                 color={theme.colors.white}
               />
             </TouchableOpacity>
-            <Image source={ImageModule.logo} style={styles.logoImg} />
+            <TouchableOpacity
+              style={styles.btnlogoImg}
+              onPress={() => navigation.navigate("DrawerNavigation")}
+            >
+              <Image source={ImageModule.logo} style={styles.logoImg} />
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSearchPress}
               style={styles.iconButton}
@@ -298,10 +305,12 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     </View>
 
                     <View style={styles.inputGroup}>
-                      <Text style={styles.label}>{`Note reminder ${values.reminderOption}`}</Text>
+                      <Text
+                        style={styles.label}
+                      >{`Note reminder ${values.reminderOption}`}</Text>
                       <DropDownComponent
                         data={reminderOptions}
-                        value={values.reminderOption} 
+                        value={values.reminderOption}
                         setValue={(selectedValue: string) => {
                           setFieldValue("reminderOption", selectedValue);
                           if (selectedValue !== "Custom") {
@@ -413,7 +422,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
   },
-  logoImg: { width: "50%", height: 40, objectFit: "contain" },
+  logoImg: { width: "70%", resizeMode: "contain" },
+  btnlogoImg: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "50%",
+    height: 40,
+  },
   iconButton: {
     backgroundColor: theme.colors.secondary,
     padding: 8,

@@ -15,6 +15,7 @@ import SearchResultScreen from "./SearchResultScreen";
 import SplashScreen from "../SplashScreen";
 import OTPScreenResgister from "./OTPScreenResgister";
 import ChangePasswordScreen from "./ChangePasswordScreen";
+import HomeScreen from "./HomeScreen";
 
 const Stack = createStackNavigator<any>();
 

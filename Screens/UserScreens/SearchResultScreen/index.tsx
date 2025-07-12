@@ -18,7 +18,7 @@ import Header from "../../Components/Header";
 import ActionButtons from "../../Components/ActionButtons";
 import { mainSearchApi } from "../../../store/Services/Others"; // Ensure this path is correct
 import { useNavigation } from "@react-navigation/native";
-
+import FastImage from "react-native-fast-image";
 // --- Navigation & Props ---
 type SearchResultScreenNavigationProp = {
   navigate: (screen: string, params?: object) => void;
@@ -233,7 +233,10 @@ const SearchResultDisplayItem: React.FC<UnifiedSearchResultItemProps> = ({
     <TouchableOpacity style={styles.resultItem} onPress={onItemPress}>
       <View style={styles.itemAvatarContainer}>
         {itemAvatar ? (
-          <Image source={{ uri: itemAvatar }} style={styles.itemAvatarImage} />
+          <FastImage
+            source={{ uri: itemAvatar, priority: FastImage.priority.normal }}
+            style={styles.itemAvatarImage}
+          />
         ) : (
           <View style={styles.itemAvatarPlaceholder}>
             <Feather name="user" size={18} color={theme.colors.white} />
@@ -486,11 +489,7 @@ const SearchResultScreen: React.FC<SearchResultScreenProps> = ({
   return (
     <DefaultBackground>
       <StatusBar style="light" />
-      <View
-        style={[
-          styles.flexContainer,
-        ]}
-      >
+      <View style={[styles.flexContainer]}>
         <Header menu={false} />
         <ActionButtons />
 

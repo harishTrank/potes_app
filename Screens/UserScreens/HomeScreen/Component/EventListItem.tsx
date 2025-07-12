@@ -4,6 +4,7 @@ import theme from "../../../../utils/theme";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
+import FastImage from "react-native-fast-image";
 
 const EventListItem: any = ({ item, type }: any) => {
   const navigation: any = useNavigation();
@@ -15,8 +16,14 @@ const EventListItem: any = ({ item, type }: any) => {
   };
   return (
     <TouchableOpacity style={styles.container} onPress={cardClickHandler}>
-      {(item?.photo || item?.contact__photo) ? (
-        <Image source={{ uri: item?.photo|| item?.contact__photo }} style={styles.profilePic} />
+      {item?.photo || item?.contact__photo ? (
+        <FastImage
+          source={{
+            uri: item?.photo || item?.contact__photo,
+            priority: FastImage.priority.normal,
+          }}
+          style={styles.profilePic}
+        />
       ) : (
         <FontAwesome name="user-circle" size={24} color={theme.colors.white} />
       )}
@@ -30,13 +37,15 @@ const EventListItem: any = ({ item, type }: any) => {
         </Text>
       </View>
       <Text style={styles.eventDate}>
-        {dayjs(type === "Birthdays"
-          ? item.birthday
-          : type === "Anniversary"
-          ? item?.anniversary
-          : type === "spouse"
-          ? item?.spouse_birthday
-          : item?.birthday).format("MM-DD-YYYY")}
+        {dayjs(
+          type === "Birthdays"
+            ? item.birthday
+            : type === "Anniversary"
+            ? item?.anniversary
+            : type === "spouse"
+            ? item?.spouse_birthday
+            : item?.birthday
+        ).format("MM-DD-YYYY")}
       </Text>
     </TouchableOpacity>
   );

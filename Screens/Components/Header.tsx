@@ -21,6 +21,7 @@ import {
   userProfileGlobal,
 } from "../../jotaiStore";
 import { viewProfileApi } from "../../store/Services/Others";
+import FastImage from 'react-native-fast-image';
 
 const Header: any = ({ menu = true }: any) => {
   const insets = useSafeAreaInsets();
@@ -64,7 +65,7 @@ const Header: any = ({ menu = true }: any) => {
     <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
       <TouchableOpacity onPress={() => navigation.navigate("HomeScreen")}>
         <Image source={ImageModule.logo} style={styles.logoImg} />
-        </TouchableOpacity>
+      </TouchableOpacity>
       <View style={styles.searchRow}>
         {menu ? (
           <TouchableOpacity onPress={onMenuPress} style={styles.iconButton}>
@@ -99,9 +100,12 @@ const Header: any = ({ menu = true }: any) => {
         </View>
         <TouchableOpacity onPress={onProfilePress} style={styles.iconButton}>
           {userProfile?.profile_pic ? (
-            <Image
-              source={{ uri: userProfile?.profile_pic }}
+            <FastImage
               style={styles.profilePic}
+              source={{
+                uri: userProfile?.profile_pic,
+                priority: FastImage.priority.normal,
+              }}
             />
           ) : (
             <FontAwesome

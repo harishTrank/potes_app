@@ -28,6 +28,7 @@ import Toast from "react-native-toast-message";
 import { getImage, getfileobj, takePicture } from "../../../utils/ImagePicker";
 import { useAtom } from "jotai";
 import { apiCallBackGlobal } from "../../../jotaiStore";
+import FastImage from 'react-native-fast-image';
 
 type UserProfileScreenNavigationProp = {
   navigate: (screen: string, params?: object) => void;
@@ -204,8 +205,8 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
                 style={styles.avatarContainer}
               >
                 {userData.avatarUri ? (
-                  <Image
-                    source={{ uri: userData.avatarUri }}
+                  <FastImage
+                    source={{ uri: userData.avatarUri,priority: FastImage.priority.normal, }}
                     style={styles.avatarImage}
                   />
                 ) : (

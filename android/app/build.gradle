@@ -88,10 +88,6 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace 'com.harish1999.potes'
-    lintOptions {
-        checkReleaseBuilds false
-    }
-
     defaultConfig {
         applicationId 'com.harish1999.potes'
         minSdkVersion rootProject.ext.minSdkVersion

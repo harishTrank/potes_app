@@ -22,6 +22,8 @@ import FullScreenLoader from "../../Components/FullScreenLoader"; // Assuming yo
 import dayjs from "dayjs";
 import Toast from "react-native-toast-message";
 import { useProfileContactApi } from "../../../hooks/Others/query";
+import FastImage from "react-native-fast-image";
+import { useNavigation } from "@react-navigation/native";
 
 if (
   Platform.OS === "android" &&
@@ -70,7 +72,7 @@ const InfoDisplayField: React.FC<InfoDisplayFieldProps> = ({
 
 // --- Main Screen Component ---
 const ViewContactScreen: any = ({ navigation, route }: any) => {
-  const { contactId, contactName: nameFromRoute } = route?.params || {}; // Destructure contactId and optional name
+  const { contactId, contactName: nameFromRoute } = route?.params || {};
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
   const [areAllSectionsOpen, setAreAllSectionsOpen] = useState(false);
@@ -199,7 +201,12 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             <Feather name="chevron-left" size={24} color={theme.colors.white} />
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <Image source={ImageModule.logo} style={styles.logoImgSmall} />
+            <TouchableOpacity
+              style={styles.btnlogoImg}
+              onPress={() => navigation.navigate("DrawerNavigation")}
+            >
+              <Image source={ImageModule.logo} style={styles.logoImgSmall} />
+            </TouchableOpacity>
           </View>
           <TouchableOpacity
             onPress={handleSearchPress}
@@ -246,8 +253,11 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
           <View style={styles.mainInfoCard}>
             <View style={styles.avatarDisplaySection}>
               {apiResponse?.data.photo ? (
-                <Image
-                  source={{ uri: apiResponse?.data.photo }}
+                <FastImage
+                  source={{
+                    uri: apiResponse?.data.photo,
+                    priority: FastImage.priority.normal,
+                  }}
                   style={styles.avatarImage}
                 />
               ) : (
@@ -511,11 +521,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   logoImgSmall: {
-    width: "50%",
-    height: 35,
+    width: "80%",
     resizeMode: "contain",
-    opacity: 0.8,
-    marginTop: 2,
+  },
+  btnlogoImg: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "50%",
+    height: 40,
   },
   actionBar: {
     flexDirection: "row",
