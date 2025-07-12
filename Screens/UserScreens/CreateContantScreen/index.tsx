@@ -232,7 +232,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
       .filter((cf: any) => cf.title !== "" && cf.values.length > 0);
     formData.append("custom_fields", JSON.stringify(filteredCustomFields));
 
-    if (selectedAvatarFileUri) {
+    if (selectedAvatarFileUri && !selectedAvatarFileUri.includes("http")) {
       formData.append("photo", getfileobj(selectedAvatarFileUri));
     }
     if (route.params?.type === "edit") {
@@ -1145,7 +1145,7 @@ const styles = StyleSheet.create({
     color: theme.colors.grey,
   },
   arrayEntryCard: {
-    backgroundColor: theme.colors.secondaryLight,
+    backgroundColor: theme.colors.secondary,
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
@@ -1247,7 +1247,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
   },
   customFieldEntry: {
-    backgroundColor: theme.colors.secondaryLight,
+    backgroundColor: theme.colors.secondary,
     borderRadius: 8,
     padding: 10,
     marginBottom: 15,

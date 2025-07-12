@@ -24,6 +24,7 @@ export const makeUrl = (
 
 export const getDefaultHeaders = async (multipart: boolean) => {
   const accessToken = await AsyncStorage.getItem("accessToken");
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const contentType =
     multipart === true ? "multipart/form-data" : "application/json";
 
@@ -32,12 +33,13 @@ export const getDefaultHeaders = async (multipart: boolean) => {
 
     return {
       authorization,
-
       "Content-Type": contentType,
+      "Time-Zone": timezone,
     };
   } else {
     return {
       "Content-Type": contentType,
+      "Time-Zone": timezone,
     };
   }
 };

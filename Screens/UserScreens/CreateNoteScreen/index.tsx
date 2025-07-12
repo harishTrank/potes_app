@@ -72,7 +72,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
         reminderOption: route?.params?.note?.reminder_type,
         customReminderDate:
           route?.params?.note?.reminder === null
-            ? dayjs().format("YYYY-MM-DD")
+            ? new Date()
             : new Date(route?.params?.note?.reminder),
       });
     }
@@ -305,9 +305,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     </View>
 
                     <View style={styles.inputGroup}>
-                      <Text
-                        style={styles.label}
-                      >{`Note reminder ${values.reminderOption}`}</Text>
+                      <Text style={styles.label}>{`Note reminder`}</Text>
                       <DropDownComponent
                         data={reminderOptions}
                         value={values.reminderOption}
@@ -355,11 +353,11 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                                 : styles.dateInputPlaceholder
                             }
                           >
-                            {values.customReminderDate
+                            {values?.customReminderDate
                               ? dayjs(values.customReminderDate).format(
                                   "YYYY-MM-DD"
                                 )
-                              : "yyyy-mm-dd"}
+                              : "YYYY-MM-DD"}
                           </Text>
                           <Feather
                             name="calendar"
@@ -396,7 +394,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                       mode="single"
                       visible={datePickerVisible}
                       onDismiss={onDismissDatePicker}
-                      date={values.customReminderDate}
+                      date={values?.customReminderDate}
                       onConfirm={(params) =>
                         onConfirmCustomDate(params, setFieldValue)
                       }

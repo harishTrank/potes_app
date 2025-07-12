@@ -239,7 +239,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               color={theme.colors.white}
             />
             <Text style={styles.actionText}>
-              {areAllSectionsOpen ? "Collapse" : "Expand"} +
+              {areAllSectionsOpen ? "Collapse -" : "Expand +"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -316,24 +316,34 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               isOpen={sectionOpenState.spouse}
               onPress={() => toggleSection("spouse")}
             >
-              <InfoDisplayField
-                label="Spouse Name"
-                value={apiResponse?.data.spouse_name || "-"}
-              />
-              <InfoDisplayField
-                label="Spouse Birthday"
-                value={
-                  apiResponse?.data.spouse_birthday
-                    ? dayjs(apiResponse?.data.spouse_birthday).format(
-                        "MM-DD-YYYY"
-                      )
-                    : "-"
-                }
-              />
-              <InfoDisplayField
-                label="Spouse Details"
-                value={apiResponse?.data.spouse_details || "-"}
-              />
+              {apiResponse?.data?.spouse_name ||
+              apiResponse?.data?.spouse_birthday ||
+              apiResponse?.data?.spouse_details ? (
+                <View style={styles.arrayItemCard}>
+                  <InfoDisplayField
+                    label="Spouse Name"
+                    value={apiResponse?.data.spouse_name || "-"}
+                  />
+                  <InfoDisplayField
+                    label="Spouse Birthday"
+                    value={
+                      apiResponse?.data.spouse_birthday
+                        ? dayjs(apiResponse?.data.spouse_birthday).format(
+                            "MM-DD-YYYY"
+                          )
+                        : "-"
+                    }
+                  />
+                  <InfoDisplayField
+                    label="Spouse Details"
+                    value={apiResponse?.data.spouse_details || "-"}
+                  />
+                </View>
+              ) : (
+                <Text style={styles.noArrayItemsText}>
+                  No spouse details added.
+                </Text>
+              )}
             </CollapsibleSection>
 
             <CollapsibleSection
@@ -467,9 +477,9 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             {apiResponse?.data.contact_notes?.map((note: any) => (
               <View key={note.id} style={styles.noteItem}>
                 <Text style={styles.noteDate}>
-                  <Feather name="bell" size={13} />{" "}
+                  {note?.reminder && <Feather name="bell" size={13} />}
                   {note.reminder
-                    ? dayjs(note.reminder).format("MM-DD-YYYY")
+                    ? ` ${dayjs(note.reminder).format("MM-DD-YYYY")}`
                     : ""}
                 </Text>
                 <Text style={styles.noteContent} numberOfLines={2}>

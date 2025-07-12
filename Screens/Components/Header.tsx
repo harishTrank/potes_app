@@ -88,6 +88,7 @@ const Header: any = ({ menu = true }: any) => {
             value={searchVal}
             onChangeText={(val: any) => setSearchVal(val)}
             focusable
+            autoFocus
           />
           <TouchableOpacity onPress={onPressSearchhandler}>
             <Feather

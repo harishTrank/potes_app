@@ -162,8 +162,6 @@ const OTPScreen = ({ navigation, route }: any) => {
               style={styles.hiddenInput}
               onFocus={() => setIsInputFocused(true)}
               onBlur={() => setIsInputFocused(false)}
-              caretHidden
-              autoFocus={true}
             />
 
             <View style={styles.contentContainer}>

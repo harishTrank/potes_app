@@ -134,7 +134,7 @@ const ForgotPasswordScreen = ({ navigation }: any) => {
                       {isSubmitting ? (
                         <ActivityIndicator color={theme.colors.white} />
                       ) : (
-                        <Text style={styles.submitButtonText}>sent email</Text>
+                        <Text style={styles.submitButtonText}>send email</Text>
                       )}
                     </TouchableOpacity>
 

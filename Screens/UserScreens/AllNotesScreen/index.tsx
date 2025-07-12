@@ -61,9 +61,7 @@ const AllNotesScreen: any = ({ route }: any) => {
             },
           })
             ?.then((res: any) => {
-              allNotesApiHandler?.data((prevNotes: any[]) =>
-                prevNotes.filter((note: any) => note.id !== noteId)
-              );
+              allNotesApiHandler?.refetch();;
               Toast.show({
                 type: "success",
                 text1: "Note deleted successfully.",
@@ -194,7 +192,7 @@ const AllNotesScreen: any = ({ route }: any) => {
                     </View>
                   </View>
 
-                  {note.reminder && (
+                  {note?.reminder && (
                     <View style={styles.reminderInfo}>
                       <Feather
                         name="bell"
@@ -202,8 +200,7 @@ const AllNotesScreen: any = ({ route }: any) => {
                         color={theme.colors.secondary}
                       />
                       <Text style={styles.reminderDateText}>
-                        Reminder: {dayjs(note.reminder).format("MM-DD-YYYY")} (
-                        {note.reminder_type})
+                        {dayjs(note.reminder).format("MM-DD-YYYY")}
                       </Text>
                     </View>
                   )}

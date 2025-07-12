@@ -20,6 +20,7 @@ import FullScreenLoader from "../../Components/FullScreenLoader"; // Ensure this
 import { allContactApiHook } from "../../../hooks/Others/query"; // Ensure this path is correct
 import { formatPhoneNumber } from "../../../utils/ImagePicker";
 import FastImage from "react-native-fast-image";
+import dayjs from "dayjs";
 // --- Navigation & Props ---
 type DirectoryScreenNavigationProp = {
   navigate: (screen: string, params?: object) => void;
@@ -193,10 +194,10 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
             <Text> {formatPhoneNumber(item.phone)}</Text>
           </Text>
         )}
-        {item.birthday && (
+        {item?.birthday && (
           <Text style={styles.contactDetail} numberOfLines={1}>
             <Feather name="gift" size={13} color={theme.colors.white} />
-            <Text> {item.birthday}</Text>
+            <Text> {item?.birthday? dayjs(item.birthday).format('MM-DD-YYYY') : "-"}</Text>
           </Text>
         )}
       </View>

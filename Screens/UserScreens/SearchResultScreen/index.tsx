@@ -493,10 +493,6 @@ const SearchResultScreen: React.FC<SearchResultScreenProps> = ({
         <Header menu={false} />
         <ActionButtons />
 
-        <Text style={styles.searchResultTitle}>
-          Search result for "{searchQuery}"
-        </Text>
-
         <ScrollView
           style={styles.scrollableContent}
           contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
