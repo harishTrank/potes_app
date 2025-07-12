@@ -21,6 +21,7 @@ const DropDownComponent = ({
     <Dropdown
       disable={disable}
       style={[styles.mainDroper, style]}
+      dropdownPosition="auto"
       placeholderStyle={[styles.placeholderText, placeholderStyle]} // Use a slightly different style for placeholder if needed
       placeholder={placeholder}
       selectedTextStyle={styles.textStyle} // This is the style for the selected item's text

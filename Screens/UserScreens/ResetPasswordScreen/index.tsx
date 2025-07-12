@@ -67,12 +67,13 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({
   };
 
   const handleResetSubmit = (values: ResetPasswordFormValues) => {
-    forgotPasswordChange({
+    const body: any = {
       email: route?.params?.email,
       otp: route?.params?.otp,
       new_password: values?.newPassword,
       confirm_password: values?.confirmPassword,
-    })
+    }
+    forgotPasswordChange({body})
       ?.then((res: any) => {
         console.log("res", res);
         Toast.show({

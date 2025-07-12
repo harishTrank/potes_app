@@ -104,7 +104,6 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
           ? dayjs(values.customReminderDate).format("YYYY-MM-DD")
           : null,
     };
-    console.log("payload", payload);
     if (route?.params?.type === "edit") {
       editNote({
         query: {
