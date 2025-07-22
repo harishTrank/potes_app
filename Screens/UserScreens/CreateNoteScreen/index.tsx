@@ -176,7 +176,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -100}
       >
-        <View style={[styles.container, { paddingTop: insets.top }]}>
+        <ScrollView style={[styles.container, { paddingTop: insets.top }]}>
           <View style={styles.headerRow}>
             <TouchableOpacity
               onPress={() => navigation.goBack()}
@@ -403,7 +403,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
               </Formik>
             </View>
           </ScrollView>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </DefaultBackground>
   );
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
   },
-  logoImg: { width: "70%", resizeMode: "contain" },
+  logoImg: { width: "100%", height: 40, resizeMode: "contain" },
   btnlogoImg: {
     alignItems: "center",
     justifyContent: "center",

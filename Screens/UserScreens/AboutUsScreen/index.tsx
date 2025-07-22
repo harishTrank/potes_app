@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
   logoImg: {
     resizeMode: "contain",
-    width: "50%",
+    width: "100%",
     height: 40,
   },
   btnlogoImg: {

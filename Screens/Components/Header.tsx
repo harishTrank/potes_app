@@ -63,7 +63,7 @@ const Header: any = ({ menu = true }: any) => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
-      <TouchableOpacity onPress={() => navigation.navigate("HomeScreen")}>
+      <TouchableOpacity onPress={() => navigation.navigate("DrawerNavigation")}>
         <Image source={ImageModule.logo} style={styles.logoImg} />
       </TouchableOpacity>
       <View style={styles.searchRow}>

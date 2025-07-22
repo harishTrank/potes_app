@@ -1028,7 +1028,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
   },
-  logoImg: { width: "70%", objectFit: "contain" },
+  logoImg: { width: "100%", height: 40, objectFit: "contain" },
   btnlogoImg: {
     alignItems: "center",
     justifyContent: "center",

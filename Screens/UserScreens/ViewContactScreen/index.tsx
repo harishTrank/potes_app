@@ -277,38 +277,42 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               isOpen={sectionOpenState.personal}
               onPress={() => toggleSection("personal")}
             >
-              <InfoDisplayField
-                label="Name"
-                value={apiResponse?.data.full_name}
-              />
-              <InfoDisplayField
-                label="Description"
-                value={apiResponse?.data.description}
-              />
-              <InfoDisplayField
-                label="Birthday"
-                value={
-                  apiResponse?.data.birthday
-                    ? dayjs(apiResponse?.data.birthday).format("MM-DD-YYYY")
-                    : "-"
-                }
-              />
-              <InfoDisplayField
-                label="Email"
-                value={apiResponse?.data.email || "-"}
-              />
-              <InfoDisplayField
-                label="Number"
-                value={apiResponse?.data.phone}
-              />
-              <InfoDisplayField
-                label="Anniversary"
-                value={
-                  apiResponse?.data.anniversary
-                    ? dayjs(apiResponse?.data.anniversary).format("MM-DD-YYYY")
-                    : "-"
-                }
-              />
+              <View style={styles.arrayItemCard}>
+                <InfoDisplayField
+                  label="Name"
+                  value={apiResponse?.data.full_name}
+                />
+                <InfoDisplayField
+                  label="Description"
+                  value={apiResponse?.data.description}
+                />
+                <InfoDisplayField
+                  label="Birthday"
+                  value={
+                    apiResponse?.data.birthday
+                      ? dayjs(apiResponse?.data.birthday).format("MM-DD-YYYY")
+                      : "-"
+                  }
+                />
+                <InfoDisplayField
+                  label="Email"
+                  value={apiResponse?.data.email || "-"}
+                />
+                <InfoDisplayField
+                  label="Number"
+                  value={apiResponse?.data.phone}
+                />
+                <InfoDisplayField
+                  label="Anniversary"
+                  value={
+                    apiResponse?.data.anniversary
+                      ? dayjs(apiResponse?.data.anniversary).format(
+                          "MM-DD-YYYY"
+                        )
+                      : "-"
+                  }
+                />
+              </View>
             </CollapsibleSection>
 
             <CollapsibleSection
@@ -353,7 +357,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             >
               {apiResponse?.data.children?.map((child: any, index: any) => (
                 <View key={child.id} style={styles.arrayItemCard}>
-                  <Text style={styles.arrayItemTitle}>Child {index + 1}</Text>
+                  <Text style={styles.arrayItemTitle}>Child</Text>
                   <InfoDisplayField label="Name" value={child.name} />
                   <InfoDisplayField
                     label="Birthday"
@@ -378,9 +382,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               {apiResponse?.data.previous_employers?.map(
                 (job: any, index: any) => (
                   <View key={job.id} style={styles.arrayItemCard}>
-                    <Text style={styles.arrayItemTitle}>
-                      Employment {index + 1}
-                    </Text>
+                    <Text style={styles.arrayItemTitle}>Employment</Text>
                     <InfoDisplayField label="Employer" value={job.name} />
                     <InfoDisplayField label="Details" value={job.details} />
                   </View>
@@ -401,9 +403,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             >
               {apiResponse?.data.universities?.map((edu: any, index: any) => (
                 <View key={edu.id} style={styles.arrayItemCard}>
-                  <Text style={styles.arrayItemTitle}>
-                    Education {index + 1}
-                  </Text>
+                  <Text style={styles.arrayItemTitle}>Education</Text>
                   <InfoDisplayField label="Institution" value={edu.name} />
                   <InfoDisplayField label="Details" value={edu.details} />
                 </View>
@@ -422,9 +422,11 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               onPress={() => toggleSection("interests")}
             >
               {apiResponse?.data.interests?.map((interest: any) => (
-                <Text key={interest.id} style={styles.interestItemValue}>
-                  • {interest.name}
-                </Text>
+                <View style={styles.arrayItemCard}>
+                  <Text key={interest.id} style={styles.interestItemValue}>
+                    • {interest.name}
+                  </Text>
+                </View>
               ))}
               {(!apiResponse?.data.interests ||
                 apiResponse?.data.interests.length === 0) && (
@@ -438,16 +440,18 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               onPress={() => toggleSection("others")}
             >
               {apiResponse?.data.custom_fields?.map((field: any) => (
-                <InfoDisplayField
-                  key={field.id || field.title}
-                  label={field.title}
-                >
-                  {field.values.map((val: any, idx: any) => (
-                    <Text key={idx} style={styles.infoValue}>
-                      • {val}
-                    </Text>
-                  ))}
-                </InfoDisplayField>
+                <View style={styles.arrayItemCard}>
+                  <InfoDisplayField
+                    key={field.id || field.title}
+                    label={field.title}
+                  >
+                    {field.values.map((val: any, idx: any) => (
+                      <Text key={idx} style={styles.infoValue}>
+                        • {val}
+                      </Text>
+                    ))}
+                  </InfoDisplayField>
+                </View>
               ))}
               {(!apiResponse?.data.custom_fields ||
                 apiResponse?.data.custom_fields.length === 0) && (
@@ -531,13 +535,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   logoImgSmall: {
-    width: "80%",
+    width: "100%",
+    height: 40,
     resizeMode: "contain",
   },
   btnlogoImg: {
     alignItems: "center",
     justifyContent: "center",
-    width: "50%",
+    width: "100%",
     height: 40,
   },
   actionBar: {
