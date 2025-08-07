@@ -13,7 +13,6 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
   const navigation: any = useNavigation();
 
   const reminderClickHandler = (note_id: any) => {
-    // Your existing function logic is perfect, no changes needed here
     completeTaskApi({ query: { note_id } })
       ?.then(() => {
         if (name === "Today") {
@@ -30,7 +29,6 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
   };
 
   const clickCompleteComponent = () => {
-    // Your existing function logic is perfect, no changes needed here
     if (type === "memories") {
       navigation.navigate("ViewContactScreen", {
         contactId: item.contact,
@@ -44,7 +42,6 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
     }
   };
 
-  // --- JSX & STYLE CHANGES START HERE ---
   return (
     <TouchableOpacity style={styles.container} onPress={clickCompleteComponent}>
       {/* 1. RENDER AVATAR (Image or Placeholder) */}
@@ -54,20 +51,15 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
             uri: item?.contact_photo,
             priority: FastImage.priority.normal,
           }}
-          style={styles.avatar} // Use new 'avatar' style
+          style={styles.avatar}
         />
       ) : (
-        // Placeholder view to precisely match the web's look
         <View style={styles.avatar}>
-          <FontAwesome
-            name="user" // 'user' is a solid icon, closer to the web version
-            size={18}
-            color={theme.colors.white}
-          />
+          <FontAwesome name="user" size={18} color={theme.colors.white} />
         </View>
       )}
 
-      {/* 2. TEXT CONTAINER (Name stacked on top of Note) */}
+      {/* 2. TEXT CONTAINER */}
       <View style={styles.textContainer}>
         <Text style={styles.userText} numberOfLines={1}>
           {item.contact_full_name}
@@ -77,15 +69,21 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
         </Text>
       </View>
 
-      {/* 3. COMPLETION INDICATOR (Checkmark or Dot) */}
-      {(name === "Today" || name === "Missed") && (
+      {/* 3. COMPLETION INDICATOR */}
+      {name === "Missed" && (
         <View style={styles.indicatorContainer}>
           {flagManager ? (
             <Ionicons name="checkmark-circle" size={22} color={"#73f440"} />
           ) : (
-            <TouchableOpacity onPress={() => reminderClickHandler(item?.id)}>
+            // --- CHANGE IS HERE ---
+            <TouchableOpacity
+              onPress={() => reminderClickHandler(item?.id)}
+              // Add hitSlop to increase the touchable area around the dot
+              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+            >
               <View style={styles.dot} />
             </TouchableOpacity>
+            // --- END OF CHANGE ---
           )}
         </View>
       )}
@@ -93,48 +91,49 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
   );
 };
 
-// --- UPDATED STYLES ---
+// --- STYLES ARE UNCHANGED ---
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    alignItems: "center", // Vertically aligns avatar, text block, and dot
-    paddingVertical: 12, // Increased vertical padding for more space
+    alignItems: "center",
+    paddingVertical: 12,
     paddingHorizontal: 15,
   },
   avatar: {
-    height: 40, // Increased size
-    width: 40, // Increased size
-    borderRadius: 20, // Rounded corners, not a full circle
-    backgroundColor: "#555", // Placeholder background for the icon
+    height: 40,
+    width: 40,
+    borderRadius: 20, // This should be half of height/width for a perfect circle
+    backgroundColor: "#555",
     justifyContent: "center",
     alignItems: "center",
   },
   textContainer: {
-    flex: 1, // Takes up available space
-    marginLeft: 12, // Creates a gap between avatar and text
+    flex: 1,
+    marginLeft: 12,
     marginRight: 10,
   },
   userText: {
     ...theme.font.fontBold,
-    fontSize: 15, // Slightly larger font for the name
+    fontSize: 15,
     color: theme.colors.white,
-    marginBottom: 2, // Small space between name and message
+    marginBottom: 2,
   },
   messageText: {
     fontSize: 14,
     ...theme.font.fontRegular,
     color: theme.colors.reminderMessageText,
-    lineHeight: 18, // Improves readability for wrapped text
+    lineHeight: 18,
   },
   indicatorContainer: {
-    // Ensures the indicator has a consistent size and alignment
     width: 24,
-    alignItems: "center",
+    height: 24, // Explicitly set height to help center the touchable
+    justifyContent: "center", // Center the child vertically
+    alignItems: "center", // Center the child horizontally
   },
   dot: {
-    width: 12, // Smaller dot
-    height: 12, // Smaller dot
-    borderRadius: 6, // To keep it a circle
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: theme.colors.white,
   },
 });

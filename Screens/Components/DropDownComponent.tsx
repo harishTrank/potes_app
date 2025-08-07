@@ -16,9 +16,11 @@ const DropDownComponent = ({
   fieldKey,
   objectSave,
   disable = false,
+  mode = "default",
 }: any) => {
   return (
     <Dropdown
+      mode={mode}
       disable={disable}
       style={[styles.mainDroper, style]}
       dropdownPosition="auto"

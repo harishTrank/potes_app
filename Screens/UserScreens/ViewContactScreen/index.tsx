@@ -24,6 +24,7 @@ import Toast from "react-native-toast-message";
 import { useProfileContactApi } from "../../../hooks/Others/query";
 import FastImage from "react-native-fast-image";
 import { useNavigation } from "@react-navigation/native";
+import { formatPhoneNumber } from "../../../utils/ImagePicker";
 
 if (
   Platform.OS === "android" &&
@@ -300,7 +301,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                 />
                 <InfoDisplayField
                   label="Number"
-                  value={apiResponse?.data.phone}
+                  value={formatPhoneNumber(apiResponse?.data.phone)}
                 />
                 <InfoDisplayField
                   label="Anniversary"
@@ -361,7 +362,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                   <InfoDisplayField label="Name" value={child.name} />
                   <InfoDisplayField
                     label="Birthday"
-                    value={dayjs(child.birthday).format("MM-DD-YYYY")}
+                    value={child.birthday? dayjs(child.birthday).format("MM-DD-YYYY"):'-'}
                   />
                   <InfoDisplayField label="Details" value={child.details} />
                 </View>

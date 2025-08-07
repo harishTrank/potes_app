@@ -213,6 +213,8 @@ const styles = StyleSheet.create({
     ...theme.font.fontSemiBold,
     color: theme.colors.reminderMessageText,
     paddingTop: 5,
+    borderBottomColor: theme.colors.grey, // Assuming 'grey' is a subtle separator in your theme
+    borderBottomWidth: 0.5
   },
   eventData: {
     paddingHorizontal: 15,

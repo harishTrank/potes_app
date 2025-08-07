@@ -21,9 +21,9 @@ import {
   userProfileGlobal,
 } from "../../jotaiStore";
 import { viewProfileApi } from "../../store/Services/Others";
-import FastImage from 'react-native-fast-image';
+import FastImage from "react-native-fast-image";
 
-const Header: any = ({ menu = true }: any) => {
+const Header: any = ({ menu = true, directory = false }: any) => {
   const insets = useSafeAreaInsets();
   const navigation: any = useNavigation();
   const route: any = useRoute();
@@ -50,6 +50,7 @@ const Header: any = ({ menu = true }: any) => {
   const onProfilePress = () => navigation.navigate("UserProfileScreen");
 
   const onPressSearchhandler = () => {
+    // This function is already perfect, we just need to call it from another place.
     if (searchVal?.length > 0) {
       if (route?.name === "SearchResultScreen") {
         navigation.replace("SearchResultScreen", { searchQuery: searchVal });
@@ -63,7 +64,11 @@ const Header: any = ({ menu = true }: any) => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
-      <TouchableOpacity onPress={() => navigation.navigate("DrawerNavigation")}>
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate(directory ? "HomeScreen" : "DrawerNavigation")
+        }
+      >
         <Image source={ImageModule.logo} style={styles.logoImg} />
       </TouchableOpacity>
       <View style={styles.searchRow}>
@@ -81,6 +86,7 @@ const Header: any = ({ menu = true }: any) => {
           </TouchableOpacity>
         )}
         <View style={styles.searchContainer}>
+          {/* --- CHANGES ARE HERE --- */}
           <TextInput
             style={styles.searchInput}
             placeholder="Search..."
@@ -88,8 +94,12 @@ const Header: any = ({ menu = true }: any) => {
             value={searchVal}
             onChangeText={(val: any) => setSearchVal(val)}
             focusable
-            autoFocus
+            // 1. Add this prop to trigger search on keyboard submit
+            onSubmitEditing={onPressSearchhandler}
+            // 2. (Optional but recommended) Change the return key to "search"
+            returnKeyType="search"
           />
+          {/* --- END OF CHANGES --- */}
           <TouchableOpacity onPress={onPressSearchhandler}>
             <Feather
               name="search"
@@ -121,6 +131,7 @@ const Header: any = ({ menu = true }: any) => {
   );
 };
 
+// --- STYLES ARE UNCHANGED ---
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 15,
@@ -130,12 +141,14 @@ const styles = StyleSheet.create({
     height: 40,
     width: 40,
     borderRadius: 20,
-    objectFit: "cover",
+    // Note: 'objectFit' is not a valid style property in React Native.
+    // Use 'resizeMode' for the <Image> component instead. For FastImage, it's a prop.
+    // However, for a circular image, this doesn't matter much.
   },
   logoImg: {
     width: "100%",
     height: 40,
-    objectFit: "contain",
+    resizeMode: "contain", // Use resizeMode for <Image>
   },
   searchRow: {
     flexDirection: "row",

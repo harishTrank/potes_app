@@ -57,8 +57,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12, // Adjusted padding
     paddingHorizontal: 15,
-    borderBottomWidth: 0.5,
-    borderBottomColor: theme.colors.grey, // Assuming 'grey' is a subtle separator in your theme
   },
   profilePic: {
     height: 30,

@@ -218,7 +218,8 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
         <Header
           onMenuPress={handleMenuPress}
           onProfilePress={handleProfilePress}
-          onSearchChange={handleHeaderSearchChange} // Pass search handler to Header
+          onSearchChange={handleHeaderSearchChange}
+          directory={true}
         />
         <ActionButtons
           onCreateContactPress={handleCreateContact}

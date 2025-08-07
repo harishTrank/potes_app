@@ -173,8 +173,8 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   const renderInfoField = (label: string, value: string) => (
     <View style={styles.infoFieldGroup}>
       <Text style={styles.label}>{label}</Text>
-      <View style={styles.valueContainer}>
-        <Text style={styles.valueText}>{value}</Text>
+      <View style={{...styles.valueContainer, backgroundColor: "rgba(255,255,255,0.05)"}}>
+        <Text style={{...styles.valueText, color:'#fff'}}>{value}</Text>
       </View>
     </View>
   );

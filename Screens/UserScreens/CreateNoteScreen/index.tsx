@@ -73,7 +73,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
         customReminderDate:
           route?.params?.note?.reminder === null
             ? new Date()
-            : new Date(route?.params?.note?.reminder),
+            : route?.params?.note?.reminder,
       });
     }
   }, [route?.params?.note?.id]);
@@ -236,7 +236,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                       <Text style={styles.label}>Contact Name</Text>
                       <DropDownComponent
                         data={contacts}
-                        disable={route?.params?.type === "AddNote"}
+                        // disable={route?.params?.type === "AddNote"}
                         value={
                           values.contactId
                             ? contacts.find(
@@ -308,6 +308,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                       <DropDownComponent
                         data={reminderOptions}
                         value={values.reminderOption}
+                        mode={"modal"}
                         setValue={(selectedValue: string) => {
                           setFieldValue("reminderOption", selectedValue);
                           if (selectedValue !== "Custom") {
@@ -354,9 +355,9 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                           >
                             {values?.customReminderDate
                               ? dayjs(values.customReminderDate).format(
-                                  "YYYY-MM-DD"
+                                  "MM-DD-YYYY"
                                 )
-                              : "YYYY-MM-DD"}
+                              : "MM-DD-YYYY"}
                           </Text>
                           <Feather
                             name="calendar"
@@ -410,7 +411,6 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
 };
 
 const styles = StyleSheet.create({
-  // ... (Your existing styles)
   container: { flex: 1 },
   headerRow: {
     flexDirection: "row",

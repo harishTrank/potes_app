@@ -32,6 +32,7 @@ import {
 import FullScreenLoader from "../../Components/FullScreenLoader";
 // import { createContactApi } from "../../../store/Services/Others"; // Assuming this is correct
 import FastImage from "react-native-fast-image";
+import dayjs from "dayjs";
 
 registerTranslation("en", en);
 
@@ -381,7 +382,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
               displayValue ? styles.dateInputText : styles.dateInputPlaceholder
             }
           >
-            {displayValue ? displayValue.toLocaleDateString() : placeholder}
+            {displayValue ?  dayjs(displayValue).format("MM-DD-YYYY") : placeholder}
           </Text>
           <Feather name="calendar" size={20} color={theme.colors.grey} />
         </TouchableOpacity>
@@ -955,7 +956,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                             }
                           >
                             <Text style={styles.addCustomButtonText}>
-                              Add Custom Field Title
+                              Add Custom Field
                             </Text>
                           </TouchableOpacity>
                           {values.customFields.length > 0 && (
@@ -1187,14 +1188,14 @@ const styles = StyleSheet.create({
   removeCustomFieldIcon: { paddingLeft: 10 },
   addCustomButton: {
     backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    paddingVertical: 12,
     alignItems: "center",
-    marginTop: 10,
     marginBottom: 5,
+    borderRadius: 8,
+    paddingVertical: 15,
+    marginTop: 10,
   },
   addCustomButtonText: {
-    fontSize: 16,
+    fontSize: 18,
     ...theme.font.fontSemiBold,
     color: theme.colors.white,
   },
