@@ -174,7 +174,7 @@ const HomeScreen = ({ navigation }: any) => {
 
               <Text style={styles.smallHead}>{`${
                 birthday?.child_birthday?.length === 0 ? "No " : ""
-              }Child's Birthdays`}</Text>
+              }Family Member's Birthdays`}</Text>
               {birthday?.child_birthday?.map((item: any) => (
                 <EventListItem item={item} key={item?.id} type={"child"} />
               ))}

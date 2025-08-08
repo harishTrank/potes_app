@@ -354,13 +354,13 @@ const handleSearchPress = () => {
             </CollapsibleSection>
 
             <CollapsibleSection
-              title="Children Details"
+              title="Family Member Details"
               isOpen={sectionOpenState.children}
               onPress={() => toggleSection("children")}
             >
               {apiResponse?.data.children?.map((child: any, index: any) => (
                 <View key={child.id} style={styles.arrayItemCard}>
-                  <Text style={styles.arrayItemTitle}>Child</Text>
+                  <Text style={styles.arrayItemTitle}>Family Member</Text>
                   <InfoDisplayField label="Name" value={child.name} />
                   <InfoDisplayField
                     label="Birthday"

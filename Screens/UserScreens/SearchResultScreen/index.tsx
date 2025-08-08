@@ -370,7 +370,7 @@ const SearchResultScreen: React.FC<SearchResultScreenProps> = ({
                 avatarUri: childData.photo, // Assuming childData might have parent's photo or its own
               })
             );
-            newSections.push({ title: "Children", data: childItems });
+            newSections.push({ title: "Family Member", data: childItems });
           }
 
           // Employers

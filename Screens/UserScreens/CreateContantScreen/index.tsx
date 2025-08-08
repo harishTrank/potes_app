@@ -554,7 +554,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                               >
                                 <View style={styles.arrayEntryHeader}>
                                   <Text style={styles.arrayEntryTitle}>
-                                    Child {index + 1}
+                                    Family Member {index + 1}
                                   </Text>
                                   <TouchableOpacity
                                     onPress={() => arrayHelpers.remove(index)}
@@ -578,15 +578,15 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                     handleBlur,
                                   },
                                   "name",
-                                  "Child Name",
-                                  "Enter child name"
+                                  "Family Member Name",
+                                  "Enter Family Member name"
                                 )}
                                 {renderPaperDateInput(
                                   values,
                                   setFieldValue,
                                   `children[index].birthday`,
-                                  "Child Birthday",
-                                  "Select Child Birthday",
+                                  "Family Member Birthday",
+                                  "Select Family Member Birthday",
                                   index
                                 )}
                                 {renderTextInput(
@@ -601,8 +601,8 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                     handleBlur,
                                   },
                                   "details",
-                                  "Child Details",
-                                  "Enter child details",
+                                  "Family Member Details",
+                                  "Enter Family Member details",
                                   "default",
                                   true,
                                   2
@@ -621,7 +621,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                               }
                             >
                               <Text style={styles.addArrayEntryButtonText}>
-                                + Add Child
+                                + Add Family Member
                               </Text>
                             </TouchableOpacity>
                           </View>

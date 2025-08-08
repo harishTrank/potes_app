@@ -33,7 +33,7 @@ const EventListItem: any = ({ item, type }: any) => {
             ? item?.full_name
             : type === "spouse"
             ? `${item?.spouse_name}\n(${item?.full_name}'s Spouse)`
-            : `${item?.name || ""}\n(${item?.contact__full_name}'s Child)`}
+            : `${item?.name || ""}\n(${item?.contact__full_name}'s Family Member)`}
         </Text>
       </View>
       <Text style={styles.eventDate}>
