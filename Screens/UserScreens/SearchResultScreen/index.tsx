@@ -109,37 +109,43 @@ interface UnifiedSearchResultSection {
 
 // --- Highlighting Logic (remains the same) ---
 const highlightQuery = (text: string, query: string): React.ReactNode[] => {
-  if (!query || !text) return [<Text key="fulltext">{text || ""}</Text>];
+  if (!query || !text) {
+    return [<Text key="fulltext">{text || ""}</Text>];
+  }
+
   const lowerText = text.toLowerCase();
   const lowerQuery = query.toLowerCase();
-  const parts: React.ReactNode[] = [];
-  let lastIndex = 0;
-  let partIndex = 0;
+  const index = lowerText.indexOf(lowerQuery);
 
-  while (lastIndex < text.length) {
-    const index = lowerText.indexOf(lowerQuery, lastIndex);
-    if (index === -1) {
-      parts.push(
-        <Text key={`part-${partIndex++}`}>{text.substring(lastIndex)}</Text>
-      );
-      break;
-    }
-    if (index > lastIndex) {
-      parts.push(
-        <Text key={`part-${partIndex++}`}>
-          {text.substring(lastIndex, index)}
-        </Text>
-      );
-    }
-    parts.push(
-      <Text key={`highlight-${partIndex++}`} style={styles.highlightedText}>
-        {text.substring(index, index + query.length)}
-      </Text>
-    );
-    lastIndex = index + query.length;
+  if (index === -1) {
+    // No match → return whole text
+    return [<Text key="fulltext">{text}</Text>];
   }
-  return parts;
+
+  // Calculate start/end positions with boundaries
+  const start = Math.max(0, index - 25);
+  const end = Math.min(text.length, index + query.length + 25);
+
+  // Get the substring with context
+  const before = text.substring(start, index);
+  const match = text.substring(index, index + query.length);
+  const after = text.substring(index + query.length, end);
+
+  return [
+    <Text key="before">
+      {start > 0 ? "…" : ""}
+      {before}
+    </Text>,
+    <Text key="highlight" style={styles.highlightedText}>
+      {match}
+    </Text>,
+    <Text key="after">
+      {after}
+      {end < text.length ? "…" : ""}
+    </Text>,
+  ];
 };
+
 
 // --- SearchResultDisplayItem (Updated onPress) ---
 interface UnifiedSearchResultItemProps {

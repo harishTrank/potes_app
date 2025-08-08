@@ -933,10 +933,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                         }
                                       >
                                         <Text style={styles.addValueButtonText}>
-                                          + Add Value for "
-                                          {customField.title ||
-                                            `Field ${cfIndex + 1}`}
-                                          "
+                                          + Add Value
                                         </Text>
                                       </TouchableOpacity>
                                     </View>

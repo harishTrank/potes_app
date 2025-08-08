@@ -46,7 +46,7 @@ interface UpdateNameFormValues {
 
 const updateNameValidationSchema = Yup.object().shape({
   firstName: Yup.string().required("First name is required"),
-  lastName: Yup.string().required("Last name is required"),
+  lastName: Yup.string(),
 });
 
 const UserProfileScreen: React.FC<UserProfileScreenProps> = ({

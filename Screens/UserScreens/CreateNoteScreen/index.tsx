@@ -29,6 +29,8 @@ import { DatePickerModal } from "react-native-paper-dates"; // Import DatePicker
 import { en, registerTranslation } from "react-native-paper-dates"; // For localization
 import Toast from "react-native-toast-message";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
 registerTranslation("en", en); // Register English locale
 
 const createNoteValidationSchema = Yup.object().shape({
@@ -73,7 +75,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
         customReminderDate:
           route?.params?.note?.reminder === null
             ? new Date()
-            : route?.params?.note?.reminder,
+            : dayjs.utc(route.params.note.reminder).toDate(),
       });
     }
   }, [route?.params?.note?.id]);

@@ -120,8 +120,10 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
       apiResponse?.refetch();
     });
   }, [contactId, navigation]);
-
-  const handleSearchPress = () => console.log("Search pressed on View Contact");
+const handleSearchPress = () => {
+    navigation.navigate("SearchResultScreen", { searchQuery: "" });
+  };
+  
   const handleDelete = () =>
     Alert.alert(
       "Delete Contact",

@@ -61,11 +61,14 @@ const AllNotesScreen: any = ({ route }: any) => {
             },
           })
             ?.then((res: any) => {
-              allNotesApiHandler?.refetch();;
+              allNotesApiHandler?.refetch();
               Toast.show({
                 type: "success",
                 text1: "Note deleted successfully.",
               });
+              if (route?.params?.noteId) {
+                navigation.goBack();
+              }
             })
             ?.catch((err: any) => console.log("err", err));
         },
