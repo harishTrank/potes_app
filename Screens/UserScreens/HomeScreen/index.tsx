@@ -212,7 +212,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     ...theme.font.fontSemiBold,
     color: theme.colors.reminderMessageText,
-    paddingTop: 5,
+    paddingTop: 12,
+    paddingBottom:10,
     borderBottomColor: theme.colors.grey, // Assuming 'grey' is a subtle separator in your theme
     borderBottomWidth: 0.5
   },

@@ -55,7 +55,7 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
         />
       ) : (
         <View style={styles.avatar}>
-          <FontAwesome name="user" size={18} color={theme.colors.white} />
+          <FontAwesome name="user-circle" size={40} color={theme.colors.white} />
         </View>
       )}
 

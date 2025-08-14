@@ -25,7 +25,7 @@ const EventListItem: any = ({ item, type }: any) => {
           style={styles.profilePic}
         />
       ) : (
-        <FontAwesome name="user-circle" size={24} color={theme.colors.white} />
+        <FontAwesome name="user-circle" size={30} color={theme.colors.white} />
       )}
       <View style={styles.textContainer}>
         <Text style={styles.eventText}>
