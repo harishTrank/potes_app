@@ -79,6 +79,12 @@ const processContactsForSectionList = (
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
 
+// --- FIX: Add constants for estimated item and header heights ---
+// We estimate the height of items and headers to help SectionList calculate positions.
+// This is crucial for making scrollToLocation work reliably.
+const ITEM_ESTIMATED_HEIGHT = 85; // Average height for a contact item
+const SECTION_HEADER_HEIGHT = 38; // Height of a section letter (e.g., 'A', 'B')
+
 // --- Main Screen Component ---
 const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
   navigation,
@@ -124,6 +130,41 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
     });
     return unsubscribe;
   }, [navigation, apiRefetch]);
+
+  // --- FIX: Implement the getItemLayout function ---
+  const getItemLayout = (
+    data: SectionData[] | null,
+    index: number
+  ): { length: number; offset: number; index: number } => {
+    if (!data) {
+      return { length: 0, offset: 0, index };
+    }
+
+    let offset = 0;
+    let i = 0;
+
+    for (const section of data) {
+      // Account for the section header
+      if (i === index) {
+        return { length: SECTION_HEADER_HEIGHT, offset, index };
+      }
+      offset += SECTION_HEADER_HEIGHT;
+      i++;
+
+      // Check if the index is for an item within this section
+      if (i + section.data.length > index) {
+        const itemOffsetInList = offset + (index - i) * ITEM_ESTIMATED_HEIGHT;
+        return { length: ITEM_ESTIMATED_HEIGHT, offset: itemOffsetInList, index };
+      }
+
+      // Move to the next section
+      offset += section.data.length * ITEM_ESTIMATED_HEIGHT;
+      i += section.data.length;
+    }
+
+    // Fallback
+    return { length: 0, offset, index };
+  };
 
   const handleAlphabetPress = (letter: string) => {
     const sectionIndex = sections.findIndex(
@@ -194,10 +235,11 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
             <Text> {formatPhoneNumber(item.phone)}</Text>
           </Text>
         )}
-        {item?.birthday && (
+        {/* FIX: Simplified and corrected the birthday rendering logic */}
+        {item.birthday && (
           <Text style={styles.contactDetail} numberOfLines={1}>
             <Feather name="gift" size={13} color={theme.colors.white} />
-            <Text> {item?.birthday? dayjs(item.birthday).format('MM-DD-YYYY') : "-"}</Text>
+            <Text> {dayjs(item.birthday).format("MM-DD-YYYY")}</Text>
           </Text>
         )}
       </View>
@@ -244,6 +286,10 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
                 contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
                 showsVerticalScrollIndicator={false}
                 stickySectionHeadersEnabled={false}
+                // --- FIX: Add getItemLayout and other performance props ---
+                getItemLayout={getItemLayout}
+                initialNumToRender={20} // Render more items initially
+                windowSize={21} // The number of viewports to render (default is 21)
               />
             )}
           </View>
