@@ -55,7 +55,7 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
         />
       ) : (
         <View style={styles.avatar}>
-          <FontAwesome name="user-circle" size={40} color={theme.colors.white} />
+          <FontAwesome name="user-circle" size={30} color={theme.colors.white} />
         </View>
       )}
 
@@ -100,9 +100,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   avatar: {
-    height: 40,
-    width: 40,
-    borderRadius: 20, // This should be half of height/width for a perfect circle
+    height: 30,
+    width: 30,
+    borderRadius: 15, // This should be half of height/width for a perfect circle
     backgroundColor: "#555",
     justifyContent: "center",
     alignItems: "center",

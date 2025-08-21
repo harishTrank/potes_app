@@ -318,6 +318,8 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
         onBlur={formikBag.handleBlur(name)}
         keyboardType={keyboardType}
         multiline={multiline}
+        blurOnSubmit={true}
+        returnKeyType="done"
         numberOfLines={numberOfLines}
         maxLength={label === "Number" ? 10 : 200}
       />

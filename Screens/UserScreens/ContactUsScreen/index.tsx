@@ -204,6 +204,8 @@ const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
                         onBlur={handleBlur("message")}
                         multiline
                         numberOfLines={4} // Suggests initial height
+                        blurOnSubmit={true}
+                        returnKeyType="done"
                       />
                       {touched.message && errors.message && (
                         <Text style={styles.errorText}>{errors.message}</Text>

@@ -296,6 +296,8 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                           onBlur={handleBlur("noteText")}
                           multiline
                           numberOfLines={5}
+                          blurOnSubmit={true}
+                          returnKeyType="done"
                         />
                       </View>
                       {touched.noteText && errors.noteText && (
