@@ -61,7 +61,7 @@ const reminderOptions = [
 const CreateNoteScreen: any = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
   const item = route?.params?.note ?? null;
-  const contact_name = route?.params?.note?.contact_full_name ?? {};
+  const contact_name = route?.params?.note?.contact_full_name;
   const [contactNames, setContactNames]: any = useState([]);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
