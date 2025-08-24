@@ -7,9 +7,12 @@ import Toast from "react-native-toast-message";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import FastImage from "react-native-fast-image";
+import { useAtom } from "jotai";
+import { homeNoteEditGlobal } from "../../../../jotaiStore";
 
 const ReminderItem = ({ item, name, setReminer, type }: any) => {
   const [flagManager, setFlagManager] = useState(item?.completed);
+  const [, setGlobalNoteFlag]: any = useAtom(homeNoteEditGlobal);
   const navigation: any = useNavigation();
 
   const reminderClickHandler = (note_id: any) => {
@@ -35,6 +38,7 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
         contactName: item.contact_full_name,
       });
     } else {
+      setGlobalNoteFlag(true);
       navigation.navigate("AllNotesScreen", {
         contactId: item.contact,
         noteId: item.id,

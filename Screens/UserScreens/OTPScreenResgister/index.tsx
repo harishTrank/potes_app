@@ -177,7 +177,7 @@ const OTPScreenResgister = ({ navigation, route }: any) => {
               <Text style={styles.screenTitle}>Enter the OTP</Text>
               <Text style={styles.subtitle}>
                 Enter the otp you recieved on{" "}
-                {emailFromPreviousScreen}
+                {route?.params?.values?.email}
               </Text>
 
               <Pressable onPress={focusInput} style={styles.otpBoxContainer}>

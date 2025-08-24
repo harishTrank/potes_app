@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react"; // Added useCallback
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
+  FlatList,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import DefaultBackground from "../../Components/DefaultBackground";
@@ -25,13 +26,15 @@ import {
   createNotesApi,
   editNote,
 } from "../../../store/Services/Others";
-import { DatePickerModal } from "react-native-paper-dates"; // Import DatePickerModal
-import { en, registerTranslation } from "react-native-paper-dates"; // For localization
+import { DatePickerModal } from "react-native-paper-dates";
+import { en, registerTranslation } from "react-native-paper-dates";
 import Toast from "react-native-toast-message";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { useAtom } from "jotai";
+import { homeNoteEditGlobal } from "../../../jotaiStore";
 dayjs.extend(utc);
-registerTranslation("en", en); // Register English locale
+registerTranslation("en", en);
 
 const createNoteValidationSchema = Yup.object().shape({
   contactId: Yup.mixed().nullable().required("Contact name is required"),
@@ -40,10 +43,10 @@ const createNoteValidationSchema = Yup.object().shape({
     .min(5, "Note must be at least 5 characters"),
   reminderOption: Yup.string().required("Reminder option is required"),
   customReminderDate: Yup.date().when("reminderOption", {
-    is: "Custom", // Condition: if reminderOption is "Custom"
+    is: "Custom",
     then: (schema) =>
-      schema.required("Custom reminder date is required").nullable(), // Then customReminderDate is required
-    otherwise: (schema) => schema.nullable(), // Otherwise, it's optional
+      schema.required("Custom reminder date is required").nullable(),
+    otherwise: (schema) => schema.nullable(),
   }),
 });
 
@@ -57,19 +60,43 @@ const reminderOptions = [
 
 const CreateNoteScreen: any = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
-  const [contacts, setContacts] = useState<any>([]);
+  const item = route?.params?.note ?? null;
+  const contact_name = route?.params?.note?.contact_full_name ?? {};
+  const [contactNames, setContactNames]: any = useState([]);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isContactDropdownOpen, setContactDropdownOpen] = useState(false);
+  const [globalNoteFlag, setGlobalNoteFlag]: any = useAtom(homeNoteEditGlobal);
   const [initialValues, setInitialValues]: any = useState({
     contactId: null,
+    contactName: item?.contact_full_name || contact_name || "select contact",
     noteText: "",
     reminderOption: "None",
     customReminderDate: undefined,
   });
 
+  const filteredContacts = contactNames.filter((contact: any) =>
+    contact.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  useEffect(() => {
+    allContactOptionApi()
+      .then((res: any) => {
+        setContactNames(res?.contacts);
+      })
+      .catch((err: any) => {
+        Toast.show({
+          type: "error",
+          text1: err?.data?.details,
+        });
+      });
+  }, []);
+
   useEffect(() => {
     if (route?.params?.note?.id) {
       setInitialValues({
         contactId: route?.params?.note?.contact,
+        contactName: route?.params?.note?.contact_full_name,
         noteText: route?.params?.note?.note,
         reminderOption: route?.params?.note?.reminder_type,
         customReminderDate:
@@ -79,17 +106,6 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
       });
     }
   }, [route?.params?.note?.id]);
-
-  useEffect(() => {
-    allContactOptionApi()
-      ?.then((res: any) => {
-        setContacts(res?.contacts || []);
-      })
-      ?.catch((err: any) => {
-        console.log("Error fetching contacts:", err);
-        setContacts([]);
-      });
-  }, []);
 
   const handleSearchPress = () => {
     navigation.navigate("SearchResultScreen", { searchQuery: "" });
@@ -108,40 +124,29 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
     };
     if (route?.params?.type === "edit") {
       editNote({
-        query: {
-          id: route?.params?.note?.id,
-        },
+        query: { id: route?.params?.note?.id },
         body: payload,
       })
-        ?.then((res: any) => {
-          Toast.show({
-            type: "success",
-            text1: "Note edit successfully.",
-          });
-          navigation.goBack();
+        ?.then(() => {
+          Toast.show({ type: "success", text1: "Note edit successfully." });
+          if (globalNoteFlag) {
+            setGlobalNoteFlag(false);
+            navigation.navigate("DrawerNavigation");
+          } else {
+            navigation.goBack();
+          }
         })
-        ?.catch((err: any) => {
-          Toast.show({
-            type: "error",
-            text1: "All fields are required.",
-          });
+        ?.catch(() => {
+          Toast.show({ type: "error", text1: "All fields are required." });
         });
     } else {
-      createNotesApi({
-        body: payload,
-      })
+      createNotesApi({ body: payload })
         ?.then((res: any) => {
-          Toast.show({
-            type: "success",
-            text1: res.msg,
-          });
+          Toast.show({ type: "success", text1: res.msg });
           navigation.goBack();
         })
         ?.catch((err: any) => {
-          Toast.show({
-            type: "error",
-            text1: err.data.error,
-          });
+          Toast.show({ type: "error", text1: err.data.error });
         });
     }
   };
@@ -178,236 +183,254 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -100}
       >
-        <ScrollView style={[styles.container, { paddingTop: insets.top }]}>
-          <View style={styles.headerRow}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.iconButton}
-            >
-              <Feather
-                name="chevron-left"
-                size={24}
-                color={theme.colors.white}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.btnlogoImg}
-              onPress={() => navigation.navigate("DrawerNavigation")}
-            >
-              <Image source={ImageModule.logo} style={styles.logoImg} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleSearchPress}
-              style={styles.iconButton}
-            >
-              <Feather name="search" size={24} color={theme.colors.white} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            style={styles.formScrollView}
-            contentContainerStyle={[
-              styles.formScrollContentContainer,
-              { paddingBottom: insets.bottom + 20 },
-            ]}
-            keyboardShouldPersistTaps="handled"
+        {/* Header */}
+        <View style={[styles.headerRow, { paddingTop: insets.top }]}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.iconButton}
           >
-            <View style={styles.formCard}>
-              <Text style={styles.formTitle}>{`${
-                route?.params?.type === "edit" ? "Edit" : "Create"
-              } a Note`}</Text>
+            <Feather name="chevron-left" size={24} color={theme.colors.white} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.btnlogoImg}
+            onPress={() => navigation.navigate("DrawerNavigation")}
+          >
+            <Image source={ImageModule.logo} style={styles.logoImg} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleSearchPress}
+            style={styles.iconButton}
+          >
+            <Feather name="search" size={24} color={theme.colors.white} />
+          </TouchableOpacity>
+        </View>
+        <ScrollView
+          style={[styles.container]}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Form */}
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>{`${
+              route?.params?.type === "edit" ? "Edit" : "Create"
+            } a Note`}</Text>
 
-              <Formik
-                initialValues={initialValues}
-                validationSchema={createNoteValidationSchema}
-                onSubmit={handleFormSubmit}
-                enableReinitialize
-              >
-                {({
-                  handleChange,
-                  handleBlur,
-                  handleSubmit,
-                  values,
-                  errors,
-                  touched,
-                  isSubmitting,
-                  setFieldValue,
-                }) => (
-                  <>
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.label}>Contact Name</Text>
-                      <DropDownComponent
-                        data={contacts}
-                        // disable={route?.params?.type === "AddNote"}
-                        value={
-                          values.contactId
-                            ? contacts.find(
-                                (c: any) => c.id === values.contactId
-                              )?.full_name || null
-                            : null
-                        }
-                        setValue={(selectedFullName: string | null) => {
-                          if (selectedFullName) {
-                            const selectedContact = contacts.find(
-                              (c: any) => c.full_name === selectedFullName
-                            );
-                            setFieldValue(
-                              "contactId",
-                              selectedContact ? selectedContact.id : null
-                            );
-                          } else {
-                            setFieldValue("contactId", null);
-                          }
-                        }}
-                        placeholder="Select any contact"
-                        fieldKey="full_name"
-                        objectSave={false}
-                        search={true}
-                        style={[
-                          styles.dropdownStyle,
-                          touched.contactId &&
-                            errors.contactId &&
-                            styles.inputError,
-                        ]}
-                      />
-                      {touched.contactId && errors.contactId && (
-                        <Text style={styles.errorText}>
-                          {errors.contactId as string}
-                        </Text>
-                      )}
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.label}>Enter the Note</Text>
-                      <View
-                        style={[
-                          styles.textAreaContainer,
-                          touched.noteText &&
-                            errors.noteText &&
-                            styles.inputErrorContainer,
-                        ]}
-                      >
-                        <TextInput
-                          style={[styles.input, styles.textArea]}
-                          placeholder="Enter your note"
-                          placeholderTextColor={theme.colors.grey}
-                          value={values.noteText}
-                          onChangeText={handleChange("noteText")}
-                          onBlur={handleBlur("noteText")}
-                          multiline
-                          numberOfLines={5}
-                          blurOnSubmit={true}
-                          returnKeyType="done"
-                        />
-                      </View>
-                      {touched.noteText && errors.noteText && (
-                        <Text style={styles.errorText}>
-                          {errors.noteText as string}
-                        </Text>
-                      )}
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.label}>{`Note reminder`}</Text>
-                      <DropDownComponent
-                        data={reminderOptions}
-                        value={values.reminderOption}
-                        mode={"modal"}
-                        setValue={(selectedValue: string) => {
-                          setFieldValue("reminderOption", selectedValue);
-                          if (selectedValue !== "Custom") {
-                            setFieldValue("customReminderDate", undefined);
-                          }
-                        }}
-                        placeholder="Select reminder type"
-                        fieldKey="label"
-                        objectSave={false}
-                        search={false}
-                        style={[
-                          styles.dropdownStyle,
-                          touched.reminderOption &&
-                            errors.reminderOption &&
-                            styles.inputError,
-                        ]}
-                      />
-                      {touched.reminderOption && errors.reminderOption && (
-                        <Text style={styles.errorText}>
-                          {errors.reminderOption as string}
-                        </Text>
-                      )}
-                    </View>
-
-                    {/* Conditionally Render Custom Date Picker */}
-                    {values.reminderOption === "Custom" && (
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Set a Reminder</Text>
-                        <TouchableOpacity
-                          style={[
-                            styles.dateInputDisplay,
-                            touched.customReminderDate &&
-                              errors.customReminderDate &&
-                              styles.inputError,
-                          ]}
-                          onPress={() => setDatePickerVisible(true)}
-                        >
-                          <Text
-                            style={
-                              values.customReminderDate
-                                ? styles.dateInputText
-                                : styles.dateInputPlaceholder
-                            }
-                          >
-                            {values?.customReminderDate
-                              ? dayjs(values.customReminderDate).format(
-                                  "MM-DD-YYYY"
-                                )
-                              : "MM-DD-YYYY"}
-                          </Text>
-                          <Feather
-                            name="calendar"
-                            size={20}
-                            color={theme.colors.grey}
-                          />
-                        </TouchableOpacity>
-                        {touched.customReminderDate &&
-                          errors.customReminderDate && (
-                            <Text style={styles.errorText}>
-                              {errors.customReminderDate as string}
-                            </Text>
-                          )}
-                      </View>
-                    )}
-
+            <Formik
+              initialValues={initialValues}
+              validationSchema={createNoteValidationSchema}
+              onSubmit={handleFormSubmit}
+              enableReinitialize
+            >
+              {({
+                handleChange,
+                handleBlur,
+                handleSubmit,
+                values,
+                errors,
+                touched,
+                isSubmitting,
+                setFieldValue,
+              }: any) => (
+                <>
+                  {/* Contact Dropdown */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Contact Name</Text>
                     <TouchableOpacity
-                      style={[
-                        styles.submitButton,
-                        isSubmitting && styles.buttonDisabled,
-                      ]}
-                      onPress={() => handleSubmit()}
-                      disabled={isSubmitting}
+                      style={styles.dropdownSelector}
+                      onPress={() =>
+                        setContactDropdownOpen(!isContactDropdownOpen)
+                      }
                     >
-                      {isSubmitting ? (
-                        <ActivityIndicator color={theme.colors.black} />
-                      ) : (
-                        <Text style={styles.submitButtonText}>Submit</Text>
-                      )}
+                      <Text style={styles.dropdownSelectorText}>
+                        {initialValues.contactName}
+                      </Text>
+                      <Feather
+                        name={
+                          isContactDropdownOpen ? "chevron-up" : "chevron-down"
+                        }
+                        size={20}
+                        color="#333"
+                      />
                     </TouchableOpacity>
 
-                    <DatePickerModal
-                      locale="en"
-                      mode="single"
-                      visible={datePickerVisible}
-                      onDismiss={onDismissDatePicker}
-                      date={values?.customReminderDate}
-                      onConfirm={(params) =>
-                        onConfirmCustomDate(params, setFieldValue)
-                      }
+                    {touched.contactId && errors.contactId && (
+                      <Text style={styles.errorText}>
+                        {errors.contactId as string}
+                      </Text>
+                    )}
+
+                    {isContactDropdownOpen && (
+                      <View style={styles.dropdownArea}>
+                        <TextInput
+                          style={styles.searchInput}
+                          placeholder="Search contacts..."
+                          placeholderTextColor="#888"
+                          value={searchTerm}
+                          onChangeText={setSearchTerm}
+                        />
+                        <FlatList
+                          data={filteredContacts}
+                          keyExtractor={(item) => item.id.toString()}
+                          renderItem={({ item }) => (
+                            <TouchableOpacity
+                              style={styles.dropdownItem}
+                              onPress={() => {
+                                setInitialValues({
+                                  ...initialValues,
+                                  contactName: item?.full_name,
+                                  contactId: item?.id,
+                                });
+                                setContactDropdownOpen(false);
+                                setSearchTerm("");
+                              }}
+                            >
+                              <Text style={{ color: "#000" }}>
+                                {item.full_name}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                          style={{ maxHeight: 200 }}
+                          keyboardShouldPersistTaps="handled"
+                          nestedScrollEnabled
+                          showsVerticalScrollIndicator={true}
+                        />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Note Text */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Enter the Note</Text>
+                    <View
+                      style={[
+                        styles.textAreaContainer,
+                        touched.noteText &&
+                          errors.noteText &&
+                          styles.inputErrorContainer,
+                      ]}
+                    >
+                      <TextInput
+                        style={[styles.input, styles.textArea]}
+                        placeholder="Enter your note"
+                        placeholderTextColor={theme.colors.grey}
+                        value={values.noteText}
+                        onChangeText={handleChange("noteText")}
+                        onBlur={handleBlur("noteText")}
+                        multiline
+                        numberOfLines={5}
+                        blurOnSubmit={true}
+                        returnKeyType="done"
+                      />
+                    </View>
+                    {touched.noteText && errors.noteText && (
+                      <Text style={styles.errorText}>
+                        {errors.noteText as string}
+                      </Text>
+                    )}
+                  </View>
+
+                  {/* Reminder Dropdown */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Note reminder</Text>
+                    <DropDownComponent
+                      data={reminderOptions}
+                      value={values.reminderOption}
+                      mode={"modal"}
+                      setValue={(selectedValue: string) => {
+                        setFieldValue("reminderOption", selectedValue);
+                        if (selectedValue !== "Custom") {
+                          setFieldValue("customReminderDate", undefined);
+                        }
+                      }}
+                      placeholder="Select reminder type"
+                      fieldKey="label"
+                      objectSave={false}
+                      search={false}
+                      style={[
+                        styles.dropdownStyle,
+                        touched.reminderOption &&
+                          errors.reminderOption &&
+                          styles.inputError,
+                      ]}
                     />
-                  </>
-                )}
-              </Formik>
-            </View>
-          </ScrollView>
+                    {touched.reminderOption && errors.reminderOption && (
+                      <Text style={styles.errorText}>
+                        {errors.reminderOption as string}
+                      </Text>
+                    )}
+                  </View>
+
+                  {/* Custom Reminder Date */}
+                  {values.reminderOption === "Custom" && (
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Set a Reminder</Text>
+                      <TouchableOpacity
+                        style={[
+                          styles.dateInputDisplay,
+                          touched.customReminderDate &&
+                            errors.customReminderDate &&
+                            styles.inputError,
+                        ]}
+                        onPress={() => setDatePickerVisible(true)}
+                      >
+                        <Text
+                          style={
+                            values.customReminderDate
+                              ? styles.dateInputText
+                              : styles.dateInputPlaceholder
+                          }
+                        >
+                          {values?.customReminderDate
+                            ? dayjs(values.customReminderDate).format(
+                                "MM-DD-YYYY"
+                              )
+                            : "MM-DD-YYYY"}
+                        </Text>
+                        <Feather
+                          name="calendar"
+                          size={20}
+                          color={theme.colors.grey}
+                        />
+                      </TouchableOpacity>
+                      {touched.customReminderDate &&
+                        errors.customReminderDate && (
+                          <Text style={styles.errorText}>
+                            {errors.customReminderDate as string}
+                          </Text>
+                        )}
+                    </View>
+                  )}
+
+                  {/* Submit */}
+                  <TouchableOpacity
+                    style={[
+                      styles.submitButton,
+                      isSubmitting && styles.buttonDisabled,
+                    ]}
+                    onPress={() => handleSubmit()}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <ActivityIndicator color={theme.colors.black} />
+                    ) : (
+                      <Text style={styles.submitButtonText}>Submit</Text>
+                    )}
+                  </TouchableOpacity>
+
+                  <DatePickerModal
+                    locale="en"
+                    mode="single"
+                    visible={datePickerVisible}
+                    onDismiss={onDismissDatePicker}
+                    date={values?.customReminderDate}
+                    onConfirm={(params) =>
+                      onConfirmCustomDate(params, setFieldValue)
+                    }
+                  />
+                </>
+              )}
+            </Formik>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </DefaultBackground>
@@ -415,7 +438,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, margin: 15 },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -439,8 +462,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  formScrollView: { flex: 1 },
-  formScrollContentContainer: { paddingHorizontal: 15, paddingTop: 10 },
   formCard: {
     backgroundColor: theme.colors.secondary,
     paddingVertical: 20,
@@ -478,22 +499,14 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     backgroundColor: theme.colors.white,
     borderRadius: 8,
-    position: "relative" /* For voice icon */,
   },
   textArea: {
     flex: 1,
     height: 140,
     textAlignVertical: "top",
     paddingTop: 12,
-    paddingHorizontal: 15 /* Added paddingHorizontal */,
+    paddingHorizontal: 15,
     backgroundColor: "transparent",
-  },
-  voiceIcon: {
-    position: "absolute",
-    right: 12,
-    top: 12,
-    padding: 5,
-    zIndex: 1,
   },
   inputError: { borderColor: theme.colors.red, borderWidth: 1.5 },
   inputErrorContainer: { borderColor: theme.colors.red, borderWidth: 1.5 },
@@ -529,6 +542,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     ...theme.font.fontRegular,
     color: theme.colors.grey,
+  },
+  dropdownSelector: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  dropdownSelectorText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  dropdownArea: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    marginTop: 5,
+    maxHeight: 200,
+  },
+  searchInput: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+    color: "#000",
+  },
+  dropdownItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
 });
 
