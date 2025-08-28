@@ -33,7 +33,9 @@ const EventListItem: any = ({ item, type }: any) => {
             ? item?.full_name
             : type === "spouse"
             ? `${item?.spouse_name}\n(${item?.full_name}'s Spouse)`
-            : `${item?.name || ""}\n(${item?.contact__full_name}'s Family Member)`}
+            : `${item?.name || ""}\n(${
+                item?.contact__full_name
+              }'s Family Member)`}
         </Text>
       </View>
       <Text style={styles.eventDate}>
@@ -68,10 +70,11 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   eventText: {
+    ...theme.font.fontBold,
     fontSize: 15,
-    ...theme.font.fontMedium, // Assuming you have fontMedium in your theme
-    color: theme.colors.white, // Assuming white text on dark card
-    marginLeft: 5,
+    color: theme.colors.white,
+    marginBottom: 2,
+    marginLeft: 12,
   },
   eventDate: {
     fontSize: 14,

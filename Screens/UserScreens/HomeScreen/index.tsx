@@ -33,7 +33,6 @@ const HomeScreen = ({ navigation }: any) => {
       ]);
       if (results[0].status === "fulfilled") {
         setReminer(results[0].value?.reminders);
-        
       } else {
         console.error("Error fetching reminders:", results[0].reason);
       }
@@ -153,7 +152,9 @@ const HomeScreen = ({ navigation }: any) => {
               {birthday?.birthdays?.map((item: any) => (
                 <EventListItem item={item} key={item?.id} type={"Birthdays"} />
               ))}
+            </View>
 
+            <View style={styles.eventData}>
               <Text style={styles.smallHead}>{`${
                 birthday?.anniversary?.length === 0 ? "No " : ""
               }Anniversary`}</Text>
@@ -164,14 +165,18 @@ const HomeScreen = ({ navigation }: any) => {
                   type={"Anniversary"}
                 />
               ))}
+            </View>
 
+            <View style={styles.eventData}>
               <Text style={styles.smallHead}>{`${
                 birthday?.spouse_birthday?.length === 0 ? "No " : ""
               }Spouse's Birthdays`}</Text>
               {birthday?.spouse_birthday?.map((item: any) => (
                 <EventListItem item={item} key={item?.id} type={"spouse"} />
               ))}
+            </View>
 
+            <View style={styles.eventData}>
               <Text style={styles.smallHead}>{`${
                 birthday?.child_birthday?.length === 0 ? "No " : ""
               }Family Member's Birthdays`}</Text>
@@ -213,11 +218,11 @@ const styles = StyleSheet.create({
     ...theme.font.fontSemiBold,
     color: theme.colors.reminderMessageText,
     paddingTop: 12,
-    paddingBottom:10,
-    borderBottomColor: theme.colors.grey, // Assuming 'grey' is a subtle separator in your theme
-    borderBottomWidth: 0.5
+    paddingBottom: 10,
   },
   eventData: {
+    borderBottomColor: theme.colors.grey, // Assuming 'grey' is a subtle separator in your theme
+    borderBottomWidth: 0.5,
     paddingHorizontal: 15,
   },
 });
