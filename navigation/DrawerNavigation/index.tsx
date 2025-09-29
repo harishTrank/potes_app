@@ -6,6 +6,7 @@ import HomeScreen from "../../Screens/UserScreens/HomeScreen";
 import AboutUsScreen from "../../Screens/UserScreens/AboutUsScreen";
 import ContactUsScreen from "../../Screens/UserScreens/ContactUsScreen";
 import DirectoryScreen from "../../Screens/UserScreens/DirectoryScreen";
+import PrivacyPolicyScreen from "../../Screens/UserScreens/PrivacyPolicyScreen";
 
 const Drawer = createDrawerNavigator();
 
@@ -29,6 +30,10 @@ export default function DrawerNavigator() {
     >
       <Drawer.Screen name="HomeScreen" component={HomeScreen} />
       <Drawer.Screen name="ContactUsScreen" component={ContactUsScreen} />
+      <Drawer.Screen
+        name="PrivacyPolicyScreen"
+        component={PrivacyPolicyScreen}
+      />
       <Drawer.Screen name="AboutUsScreen" component={AboutUsScreen} />
       <Drawer.Screen name="DirectoryScreen" component={DirectoryScreen} />
     </Drawer.Navigator>

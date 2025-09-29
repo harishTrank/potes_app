@@ -27,6 +27,11 @@ const drawerItems = [
   { label: "Directory", iconName: "users", navigateTo: "DirectoryScreen" }, // Add screen name
   { label: "About Us", iconName: "info", navigateTo: "AboutUsScreen" }, // Add screen name
   { label: "Contact Us", iconName: "phone", navigateTo: "ContactUsScreen" }, // Add screen name
+  {
+    label: "Privacy Policy",
+    iconName: "shield",
+    navigateTo: "PrivacyPolicyScreen",
+  }, // Add screen name
   { label: "Logout", iconName: "log-out", isLogout: true },
 ];
 

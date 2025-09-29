@@ -162,4 +162,11 @@ export const allApi = {
       uri: "/complete-reminder/",
     },
   },
+  deleteAccountApi: {
+    v1: {
+      ...defaults.methods.DELETE,
+      ...defaults.versions.v1,
+      uri: "/delete-account/",
+    },
+  },
 };

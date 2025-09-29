@@ -9,6 +9,7 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import DefaultBackground from "../../Components/DefaultBackground";
@@ -21,6 +22,7 @@ import ActionButtons from "../../Components/ActionButtons";
 import Header from "../../Components/Header";
 import {
   changeProfileName,
+  deleteAccountApi,
   viewProfileApi,
 } from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
@@ -28,7 +30,8 @@ import Toast from "react-native-toast-message";
 import { getImage, getfileobj, takePicture } from "../../../utils/ImagePicker";
 import { useAtom } from "jotai";
 import { apiCallBackGlobal } from "../../../jotaiStore";
-import FastImage from 'react-native-fast-image';
+import FastImage from "react-native-fast-image";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type UserProfileScreenNavigationProp = {
   navigate: (screen: string, params?: object) => void;
@@ -58,6 +61,9 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   const [profilePic, setProfilePic]: any = useState(undefined);
   const [loading, setLoading]: any = useState(false);
   const [, setGlobalCall]: any = useAtom(apiCallBackGlobal);
+  const [deleteModalOpen, setDeleteModalOpen]: any = useState(false);
+  const [modalPasswordOpen, setModalPasswordOpen]: any = useState(false);
+  const [deletePassword, setDeletePassword]: any = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -173,11 +179,43 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   const renderInfoField = (label: string, value: string) => (
     <View style={styles.infoFieldGroup}>
       <Text style={styles.label}>{label}</Text>
-      <View style={{...styles.valueContainer, backgroundColor: "rgba(255,255,255,0.05)"}}>
-        <Text style={{...styles.valueText, color:'#fff'}}>{value}</Text>
+      <View
+        style={{
+          ...styles.valueContainer,
+          backgroundColor: "rgba(255,255,255,0.05)",
+        }}
+      >
+        <Text style={{ ...styles.valueText, color: "#fff" }}>{value}</Text>
       </View>
     </View>
   );
+
+  const handleDeleteAccount = () => {
+    deleteAccountApi({
+      body: {
+        password: deletePassword,
+      },
+    })
+      .then((res: any) => {
+        console.log("account deleted", res);
+        Toast.show({
+          type: "success",
+          text1: res?.msg,
+        });
+        setDeleteModalOpen(false);
+        setModalPasswordOpen(false);
+        AsyncStorage.clear();
+        navigation.navigate("LoginScreen");
+      })
+      .catch((err: any) => {
+        Toast.show({
+          type: "error",
+          text1: "Wrong Password entered",
+        });
+        setDeleteModalOpen(false);
+        setModalPasswordOpen(false);
+      });
+  };
 
   return (
     <DefaultBackground>
@@ -206,7 +244,10 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
               >
                 {userData.avatarUri ? (
                   <FastImage
-                    source={{ uri: userData.avatarUri,priority: FastImage.priority.normal, }}
+                    source={{
+                      uri: userData.avatarUri,
+                      priority: FastImage.priority.normal,
+                    }}
                     style={styles.avatarImage}
                   />
                 ) : (
@@ -371,8 +412,84 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
             >
               <Text style={styles.actionButtonText}>Change Password</Text>
             </TouchableOpacity>
+            <TouchableOpacity onPress={() => setDeleteModalOpen(true)}>
+              <Text style={styles.deleteText}>Delete Account</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={deleteModalOpen}
+          onRequestClose={() => {
+            Alert.alert("Modal has been closed.");
+            setDeleteModalOpen(!deleteModalOpen);
+          }}
+        >
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <Text style={styles.confirmdeleteText}>
+                Do you really want to delete account!
+              </Text>
+
+              <Text style={styles.confirmdeleteText}>
+                This will delete your complete data
+              </Text>
+              {!modalPasswordOpen && (
+                <View style={styles.modalButtonView}>
+                  <TouchableOpacity
+                    style={{
+                      ...styles.modalButton,
+                      backgroundColor: "red",
+                    }}
+                    onPress={() => setModalPasswordOpen(true)}
+                  >
+                    <Text style={styles.btnText}>Yes, Delete</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.modalButton}
+                    onPress={() => setDeleteModalOpen(false)}
+                  >
+                    <Text style={styles.btnText}>cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {modalPasswordOpen && (
+                <View>
+                  <View style={styles.passwordInputView}>
+                    <TextInput
+                      placeholder="Enter your account password"
+                      placeholderTextColor="#000"
+                      secureTextEntry={true}
+                      style={styles.passwordInput}
+                      onChangeText={setDeletePassword}
+                    />
+                  </View>
+                  <View style={styles.modalButtonView}>
+                    <TouchableOpacity
+                      style={{
+                        ...styles.modalButton,
+                        backgroundColor: "red",
+                      }}
+                      onPress={handleDeleteAccount}
+                    >
+                      <Text style={styles.btnText}>Confirm</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.modalButton}
+                      onPress={() => {
+                        setDeleteModalOpen(false);
+                        setModalPasswordOpen(false);
+                      }}
+                    >
+                      <Text style={styles.btnText}>cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        </Modal>
       </View>
     </DefaultBackground>
   );
@@ -509,6 +626,66 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.7,
+  },
+  deleteText: {
+    marginVertical: 20,
+    color: "red",
+    textAlign: "right",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  confirmdeleteText: {
+    color: "#000",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalButtonView: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+    marginTop: 20,
+  },
+  modalButton: {
+    backgroundColor: "gray",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  btnText: {
+    color: "#fff",
+    fontWeight: "500",
+    fontSize: 14,
+  },
+  passwordInputView: {
+    color: "#000",
+    fontSize: 14,
+    borderBottomWidth: 1,
+    borderColor: "#000",
+    marginTop: 20,
+  },
+  passwordInput: {
+    paddingVertical: 5,
+    fontSize: 16,
   },
 });
 
