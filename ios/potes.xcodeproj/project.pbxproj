@@ -22,7 +22,7 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = potes/Info.plist; sourceTree = "<group>"; };
 		2EE939250A1BCC0589620E87 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-potes/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		4E5094471266843A49343FB8 /* Pods-potes.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-potes.release.xcconfig"; path = "Target Support Files/Pods-potes/Pods-potes.release.xcconfig"; sourceTree = "<group>"; };
-		75E24376F7D1AD7CEE5AEC05 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = potes/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		75E24376F7D1AD7CEE5AEC05 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = potes/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		814D73E7D67E5803DE818881 /* libPods-potes.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-potes.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = potes/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BA44F33DBCF670FEF3FDA806 /* Pods-potes.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-potes.debug.xcconfig"; path = "Target Support Files/Pods-potes/Pods-potes.debug.xcconfig"; sourceTree = "<group>"; };
@@ -64,7 +64,6 @@
 				BA44F33DBCF670FEF3FDA806 /* Pods-potes.debug.xcconfig */,
 				4E5094471266843A49343FB8 /* Pods-potes.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -334,6 +333,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = potes/potes.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VKM6DR4UZQ;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -370,6 +370,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = potes/potes.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = VKM6DR4UZQ;
 				INFOPLIST_FILE = potes/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
