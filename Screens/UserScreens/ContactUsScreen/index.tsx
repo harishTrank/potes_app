@@ -22,6 +22,7 @@ import * as Yup from "yup"; // For validation
 import { contactUsApi } from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
 import Toast from "react-native-toast-message";
+import { Linking } from "react-native";
 
 type ContactUsScreenNavigationProp = {
   goBack: () => void;
@@ -57,7 +58,10 @@ const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
     navigation.navigate("SearchResultScreen", { searchQuery: "" });
   };
 
-  const handleFormSubmit = (values: ContactFormValues) => {
+  const handleFormSubmit = (
+    values: ContactFormValues,
+    actions: FormikHelpers<ContactFormValues>
+  ) => {
     setLoading(true);
     contactUsApi({
       body: {
@@ -72,7 +76,32 @@ const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
           type: "success",
           text1: res?.msg,
         });
-        navigation?.goBack();
+        const subject = encodeURIComponent("Potes, I have a query");
+        const body = encodeURIComponent(
+          `I'm ${values.fullName},\n\n${values.message}`
+        );
+        const to = "admin@mypotes.com";
+        const mailtoUrl = `mailto:${to}?subject=${subject}&body=${body}`;
+
+        Linking.canOpenURL(mailtoUrl)
+          .then((supported) => {
+            if (supported) {
+              Linking.openURL(mailtoUrl);
+            } else {
+              Toast.show({
+                type: "error",
+                text1: "No email app found.",
+              });
+            }
+          })
+          .catch((err) => {
+            Toast.show({
+              type: "error",
+              text1: "Could not open email app.",
+              text2: err?.message || "Please try again later.",
+            });
+          });
+        actions.resetForm();
       })
       ?.catch(() => {
         Toast.show({
@@ -134,7 +163,9 @@ const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
               <Formik
                 initialValues={{ fullName: "", email: "", message: "" }}
                 validationSchema={contactValidationSchema}
-                onSubmit={handleFormSubmit}
+                onSubmit={(values, actions) =>
+                  handleFormSubmit(values, actions)
+                }
               >
                 {({
                   handleChange,
