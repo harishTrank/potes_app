@@ -8,6 +8,7 @@ import {
   Image,
   Platform,
   Dimensions,
+  Alert,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import DefaultBackground from "../../Components/DefaultBackground";
@@ -21,6 +22,7 @@ import { allContactApiHook } from "../../../hooks/Others/query";
 import { formatPhoneNumber } from "../../../utils/ImagePicker";
 import FastImage from "react-native-fast-image";
 import dayjs from "dayjs";
+import * as Contacts from "expo-contacts";
 // --- Navigation & Props ---
 type DirectoryScreenNavigationProp = {
   navigate: (screen: string, params?: object) => void;
@@ -193,6 +195,53 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
     }
   };
 
+  const importContacts = async () => {
+    const { status } = await Contacts.requestPermissionsAsync();
+
+    if (status === "granted") {
+      const { data } = await Contacts.getContactsAsync({
+        fields: [
+          Contacts.Fields.PhoneNumbers,
+          Contacts.Fields.Emails,
+          Contacts.Fields.Birthday,
+        ],
+      });
+
+      if (data.length > 0) {
+        const formattedContacts = data.map((c) => {
+          let birthday = null;
+          if (c.birthday) {
+            const { day, month, year } = c.birthday;
+            if (day && month && year) {
+              birthday = dayjs(`${year}-${month}-${day}`).format("YYYY-MM-DD");
+            } else if (day && month) {
+              birthday = `1999-${month}-${day}`;
+            }
+          }
+
+          return {
+            full_name: c.name || "",
+            phone: c.phoneNumbers?.[0]?.number || "",
+            email: c.emails?.[0]?.email || "",
+            birthday,
+          };
+        });
+
+        try {
+          console.log("first", { contacts: formattedContacts });
+          Alert.alert("Success", "Contacts imported successfully!");
+        } catch (err) {
+          console.log("Error uploading contacts:", err);
+          Alert.alert("Error", "Failed to upload contacts.");
+        }
+      } else {
+        Alert.alert("No contacts found");
+      }
+    } else {
+      Alert.alert("Permission denied", "Contacts access is required.");
+    }
+  };
+
   const handleMenuPress = () => navigation.openDrawer();
   const handleProfilePress = () => navigation.navigate("UserProfileScreen");
   const handleCreateContact = () => navigation.navigate("CreateContactScreen");
@@ -239,7 +288,6 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
             <Text> {formatPhoneNumber(item.phone)}</Text>
           </Text>
         )}
-        {/* FIX: Simplified and corrected the birthday rendering logic */}
         {item.birthday && (
           <Text style={styles.contactDetail} numberOfLines={1}>
             <Feather name="gift" size={13} color={theme.colors.white} />
@@ -310,6 +358,21 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
             </View>
           )}
         </View>
+        <TouchableOpacity onPress={() => importContacts()}>
+          <View
+            style={{ alignItems: "center", marginBottom: 5, marginTop: -5 }}
+          >
+            <Text
+              style={{
+                color: theme.colors.secondary,
+                fontWeight: "700",
+                fontSize: 12,
+              }}
+            >
+              Import Contacts
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
     </DefaultBackground>
   );
