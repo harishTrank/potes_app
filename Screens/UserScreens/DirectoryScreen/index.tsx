@@ -14,10 +14,10 @@ import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import Header from "../../Components/Header"; // Ensure this path is correct
-import ActionButtons from "../../Components/ActionButtons"; // Ensure this path is correct
-import FullScreenLoader from "../../Components/FullScreenLoader"; // Ensure this path is correct
-import { allContactApiHook } from "../../../hooks/Others/query"; // Ensure this path is correct
+import Header from "../../Components/Header";
+import ActionButtons from "../../Components/ActionButtons";
+import FullScreenLoader from "../../Components/FullScreenLoader";
+import { allContactApiHook } from "../../../hooks/Others/query";
 import { formatPhoneNumber } from "../../../utils/ImagePicker";
 import FastImage from "react-native-fast-image";
 import dayjs from "dayjs";
@@ -154,7 +154,11 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
       // Check if the index is for an item within this section
       if (i + section.data.length > index) {
         const itemOffsetInList = offset + (index - i) * ITEM_ESTIMATED_HEIGHT;
-        return { length: ITEM_ESTIMATED_HEIGHT, offset: itemOffsetInList, index };
+        return {
+          length: ITEM_ESTIMATED_HEIGHT,
+          offset: itemOffsetInList,
+          index,
+        };
       }
 
       // Move to the next section
@@ -286,10 +290,9 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
                 contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
                 showsVerticalScrollIndicator={false}
                 stickySectionHeadersEnabled={false}
-                // --- FIX: Add getItemLayout and other performance props ---
                 getItemLayout={getItemLayout}
-                initialNumToRender={20} // Render more items initially
-                windowSize={21} // The number of viewports to render (default is 21)
+                initialNumToRender={20}
+                windowSize={21}
               />
             )}
           </View>
@@ -379,8 +382,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.secondary,
     borderTopRightRadius: 15,
     borderBottomRightRadius: 15,
-    paddingVertical: 10,
-    justifyContent: "space-around",
+    paddingVertical: 3,
+    justifyContent: "space-between",
     alignItems: "center",
   },
   alphabetLetterButton: {

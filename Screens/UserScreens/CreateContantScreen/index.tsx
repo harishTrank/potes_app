@@ -303,12 +303,16 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     name: string,
     label: string,
     placeholder: string,
+    required: any = false,
     keyboardType: any = "default",
     multiline = false,
     numberOfLines = 1
   ) => (
     <View style={styles.inputGroup}>
-      <Text style={styles.label}>{label}</Text>
+      <View style={{ flexDirection: "row", gap: 3 }}>
+        <Text style={styles.label}>{label}</Text>
+        {required && <Text style={{ color: "red", fontSize: 18 }}>*</Text>}
+      </View>
       <TextInput
         style={[styles.input, multiline && styles.textArea]}
         placeholder={placeholder}
@@ -384,7 +388,9 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
               displayValue ? styles.dateInputText : styles.dateInputPlaceholder
             }
           >
-            {displayValue ?  dayjs(displayValue).format("MM-DD-YYYY") : placeholder}
+            {displayValue
+              ? dayjs(displayValue).format("MM-DD-YYYY")
+              : placeholder}
           </Text>
           <Feather name="calendar" size={20} color={theme.colors.grey} />
         </TouchableOpacity>
@@ -491,7 +497,8 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         { values, handleChange, handleBlur },
                         "nameOrDescription",
                         "Name or Description",
-                        "Enter name or description"
+                        "Enter name or description",
+                        true
                       )}
                       {renderPaperDateInput(
                         values,
@@ -512,6 +519,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         "email",
                         "Email",
                         "Enter email",
+                        false,
                         "email-address"
                       )}
                       {renderTextInput(
@@ -519,6 +527,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         "number",
                         "Number",
                         "Enter number",
+                        false,
                         "phone-pad"
                       )}
                     </CollapsibleSection>
@@ -542,6 +551,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         "spouseDetails",
                         "Spouse Details",
                         "Enter spouse details",
+                        false,
                         "default",
                         true,
                         3
@@ -605,6 +615,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                   "details",
                                   "Family Member Details",
                                   "Enter Family Member details",
+                                  false,
                                   "default",
                                   true,
                                   2
@@ -684,6 +695,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                     "details",
                                     "Employer Details",
                                     "Enter employer details",
+                                    false,
                                     "default",
                                     true,
                                     3
@@ -763,6 +775,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                     "details",
                                     "University Details",
                                     "Enter University details",
+                                    false,
                                     "default",
                                     true,
                                     3

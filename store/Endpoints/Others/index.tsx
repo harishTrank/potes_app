@@ -169,4 +169,25 @@ export const allApi = {
       uri: "/delete-account/",
     },
   },
+  getAiChat: {
+    v1: {
+      ...defaults.methods.GET,
+      ...defaults.versions.v1,
+      uri: "/aichat/",
+    },
+  },
+  postAiChat: {
+    v1: {
+      ...defaults.methods.POST,
+      ...defaults.versions.v1,
+      uri: "/aichat/",
+    },
+  },
+  deleteAiChat: {
+    v1: {
+      ...defaults.methods.DELETE,
+      ...defaults.versions.v1,
+      uri: "/aichat/",
+    },
+  },
 };

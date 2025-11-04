@@ -16,6 +16,7 @@ import SplashScreen from "../SplashScreen";
 import OTPScreenResgister from "./OTPScreenResgister";
 import ChangePasswordScreen from "./ChangePasswordScreen";
 import HomeScreen from "./HomeScreen";
+import ChatWithAI from "./ChatAiScreen";
 
 const Stack = createStackNavigator<any>();
 
@@ -45,6 +46,7 @@ const UserScreens = () => {
       <Stack.Screen name="DrawerNavigation" component={DrawerNavigation} />
       <Stack.Screen name="CreateNoteScreen" component={CreateNoteScreen} />
       <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
+      <Stack.Screen name="ChatAiScreen" component={ChatWithAI} />
       <Stack.Screen
         name="CreateContantScreen"
         component={CreateContantScreen}

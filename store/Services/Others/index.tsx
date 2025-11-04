@@ -124,3 +124,16 @@ export const deleteAccountApi = ({ body }: any) =>
     uriEndPoint: allApi.deleteAccountApi.v1,
     body,
   });
+export const getAiChat = () =>
+  callApi({
+    uriEndPoint: allApi.getAiChat.v1,
+  });
+export const postAiChat = ({ body }: any) =>
+  callApi({
+    uriEndPoint: allApi.postAiChat.v1,
+    body,
+  });
+export const deleteAiChat = () =>
+  callApi({
+    uriEndPoint: allApi.deleteAiChat.v1,
+  });

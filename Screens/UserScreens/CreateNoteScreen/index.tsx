@@ -61,14 +61,15 @@ const reminderOptions = [
 const CreateNoteScreen: any = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
   const item = route?.params?.note ?? null;
-  const contact_name = route?.params?.note?.contact_full_name;
+  const contact_name =
+    route?.params?.note?.contact_full_name || route?.params?.contactName;
   const [contactNames, setContactNames]: any = useState([]);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isContactDropdownOpen, setContactDropdownOpen] = useState(false);
   const [globalNoteFlag, setGlobalNoteFlag]: any = useAtom(homeNoteEditGlobal);
   const [initialValues, setInitialValues]: any = useState({
-    contactId: null,
+    contactId: item?.contact_id || route?.params?.contactId || null,
     contactName: item?.contact_full_name || contact_name || "select contact",
     noteText: "",
     reminderOption: "None",
@@ -168,6 +169,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
     if (route?.params?.type === "AddNote") {
       setInitialValues({
         contactId: route?.params?.contactId,
+        contactName: route?.params?.contactName,
         noteText: "",
         reminderOption: "None",
         customReminderDate: undefined,

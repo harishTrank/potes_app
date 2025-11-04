@@ -1,5 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  Animated,
+  PanResponder,
+  TouchableOpacity,
+} from "react-native";
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,6 +28,40 @@ const HomeScreen = ({ navigation }: any) => {
   const [birthday, setBirthday]: any = useState({});
   const [memories, setMemories]: any = useState({});
   const [loading, setLoading]: any = useState(false);
+
+  const { width, height } = Dimensions.get("window");
+  const position: any = React.useRef(
+    new Animated.ValueXY({ x: width - 80, y: height - 120 })
+  ).current;
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        position.setOffset({
+          x: position.x._value,
+          y: position.y._value,
+        });
+      },
+      onPanResponderMove: (_, gestureState) => {
+        const newX = Math.min(
+          Math.max(gestureState.dx + position.x._offset, 0),
+          width - 60
+        );
+        const safeHeight = height - insets.bottom;
+        const newY = Math.min(
+          Math.max(gestureState.dy + position.y._offset, 0),
+          safeHeight - 60
+        );
+        position.setValue({
+          x: newX - position.x._offset,
+          y: newY - position.y._offset,
+        });
+      },
+      onPanResponderRelease: () => {
+        position.flattenOffset();
+      },
+    })
+  ).current;
 
   const handleProfilePress = () => console.log("Profile pressed");
 
@@ -63,6 +106,25 @@ const HomeScreen = ({ navigation }: any) => {
     <DefaultBackground>
       {loading && <FullScreenLoader />}
       <View style={styles.flexContainer}>
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={[
+            styles.aiButton,
+            {
+              transform: [
+                { translateX: position.x },
+                { translateY: position.y },
+              ],
+            },
+          ]}
+        >
+          <TouchableOpacity onPress={() => navigation.navigate("ChatAiScreen")}>
+            <View style={styles.aiButtonInner}>
+              <Text style={styles.aiButtonText}>AI</Text>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+
         <Header onProfilePress={handleProfilePress} />
         <ScrollView
           style={styles.scrollableContent}
@@ -194,6 +256,7 @@ const HomeScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   flexContainer: {
     flex: 1,
+    position: "relative",
   },
   scrollableContent: {
     flex: 1,
@@ -224,6 +287,39 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.grey, // Assuming 'grey' is a subtle separator in your theme
     borderBottomWidth: 0.5,
     paddingHorizontal: 15,
+  },
+  aiButton: {
+    position: "absolute",
+    height: 60,
+    width: 60,
+    borderRadius: 30,
+    backgroundColor: theme.colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 999,
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  aiButtonInner: {
+    height: 45,
+    width: 45,
+    borderRadius: 30,
+    backgroundColor: theme.colors.secondary,
+    borderWidth: 2,
+    borderColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  aiButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    ...theme.font.fontBold,
+    textAlign: "center",
   },
 });
 
