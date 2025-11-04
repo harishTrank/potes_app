@@ -22,6 +22,7 @@ import {
   yearsAgo,
 } from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
+import notifee from "@notifee/react-native";
 const HomeScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const [reminder, setReminer]: any = useState({});
@@ -101,6 +102,20 @@ const HomeScreen = ({ navigation }: any) => {
       homeScreenDataManager();
     });
   }, [navigation]);
+
+  const globalCount =
+    reminder?.today?.length +
+    reminder?.missed?.length +
+    birthday?.birthdays?.length +
+    birthday?.anniversary?.length +
+    birthday?.spouse_birthday?.length +
+    birthday?.child_birthday?.length;
+
+  const safeCount = Math.max(0, Number(globalCount) || 0);
+
+  useEffect(() => {
+    notifee.setBadgeCount(safeCount);
+  }, [safeCount]);
 
   return (
     <DefaultBackground>

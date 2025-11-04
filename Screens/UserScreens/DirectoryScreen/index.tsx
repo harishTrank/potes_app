@@ -32,7 +32,6 @@ interface DirectoryScreenProps {
   navigation: DirectoryScreenNavigationProp;
 }
 
-// --- Data Structures (Updated to match API response) ---
 interface ApiContact {
   id: number; // API returns number
   full_name: string;
@@ -47,7 +46,6 @@ interface SectionData {
   data: ApiContact[];
 }
 
-// --- processContactsForSectionList (Updated to use full_name) ---
 const processContactsForSectionList = (
   contacts: ApiContact[]
 ): SectionData[] => {
@@ -117,72 +115,85 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
       const processed = processContactsForSectionList(filteredContacts);
       setSections(processed);
     } else if (!apiIsLoading) {
-      // If not loading and no data, or error
       setSections([]);
     }
-  }, [apiResponse, apiIsLoading, searchQuery]); // Depend on API data, loading state, and search query
+  }, [apiResponse, apiIsLoading, searchQuery]);
 
-  // Effect to refetch data on screen focus
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
       if (apiRefetch) {
-        // Check if refetch function exists
         apiRefetch();
       }
     });
     return unsubscribe;
   }, [navigation, apiRefetch]);
 
-  // --- FIX: Implement the getItemLayout function ---
-  const getItemLayout = (
-    data: SectionData[] | null,
-    index: number
-  ): { length: number; offset: number; index: number } => {
-    if (!data) {
-      return { length: 0, offset: 0, index };
-    }
+  const ITEM_HEIGHT = 75;
+  const HEADER_HEIGHT = 30;
 
-    let offset = 0;
-    let i = 0;
+  const sectionOffsets = React.useMemo(() => {
+    const offsets: { [key: string]: number } = {};
+    let currentOffset = 0;
 
-    for (const section of data) {
-      // Account for the section header
-      if (i === index) {
-        return { length: SECTION_HEADER_HEIGHT, offset, index };
-      }
-      offset += SECTION_HEADER_HEIGHT;
-      i++;
+    sections.forEach((section) => {
+      offsets[section.title] = currentOffset;
+      currentOffset += HEADER_HEIGHT + section.data.length * ITEM_HEIGHT;
+    });
 
-      // Check if the index is for an item within this section
-      if (i + section.data.length > index) {
-        const itemOffsetInList = offset + (index - i) * ITEM_ESTIMATED_HEIGHT;
-        return {
-          length: ITEM_ESTIMATED_HEIGHT,
-          offset: itemOffsetInList,
-          index,
-        };
-      }
+    return offsets;
+  }, [sections]);
 
-      // Move to the next section
-      offset += section.data.length * ITEM_ESTIMATED_HEIGHT;
-      i += section.data.length;
-    }
+  const getItemLayout = (_: any, index: number) => ({
+    length: ITEM_HEIGHT,
+    offset: ITEM_HEIGHT * index,
+    index,
+  });
+  // const getItemLayout = (
+  //   data: SectionData[] | null,
+  //   index: number
+  // ): { length: number; offset: number; index: number } => {
+  //   if (!data) {
+  //     return { length: 0, offset: 0, index };
+  //   }
 
-    // Fallback
-    return { length: 0, offset, index };
-  };
+  //   let offset = 0;
+  //   let i = 0;
+
+  //   for (const section of data) {
+  //     // Account for the section header
+  //     if (i === index) {
+  //       return { length: SECTION_HEADER_HEIGHT, offset, index };
+  //     }
+  //     offset += SECTION_HEADER_HEIGHT;
+  //     i++;
+
+  //     // Check if the index is for an item within this section
+  //     if (i + section.data.length > index) {
+  //       const itemOffsetInList = offset + (index - i) * ITEM_ESTIMATED_HEIGHT;
+  //       return {
+  //         length: ITEM_ESTIMATED_HEIGHT,
+  //         offset: itemOffsetInList,
+  //         index,
+  //       };
+  //     }
+
+  //     // Move to the next section
+  //     offset += section.data.length * ITEM_ESTIMATED_HEIGHT;
+  //     i += section.data.length;
+  //   }
+
+  //   // Fallback
+  //   return { length: 0, offset, index };
+  // };
 
   const handleAlphabetPress = (letter: string) => {
     const sectionIndex = sections.findIndex(
       (section) => section.title === letter
     );
-    if (sectionListRef.current && sectionIndex !== -1) {
-      sectionListRef.current.scrollToLocation({
-        sectionIndex: sectionIndex,
-        itemIndex: 0,
-        animated: true,
-        viewOffset: 0,
-      });
+    if (sectionIndex !== -1 && sectionListRef.current) {
+      const offset = sectionOffsets[letter] ?? 0;
+      const scrollResponder = sectionListRef.current.getScrollResponder();
+      scrollResponder?.scrollTo({ y: offset, animated: true });
     } else if (letter === "#" && sectionListRef.current) {
       const lastSectionIndex = sections.length - 1;
       if (sections[lastSectionIndex]?.title === "#") {

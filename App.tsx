@@ -1,12 +1,13 @@
 import useCachedResources from "./hooks/useCachedResources";
 import Navigation from "./navigation";
-import React from "react";
+import React, { useEffect } from "react";
 import { LogBox } from "react-native";
 import { PaperProvider, DefaultTheme } from "react-native-paper";
 import { en, registerTranslation } from "react-native-paper-dates";
 import theme from "./utils/theme";
 import { Toast } from "react-native-toast-message/lib/src/Toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import notifee, { AuthorizationStatus } from "@notifee/react-native";
 
 registerTranslation("en", en);
 LogBox.ignoreAllLogs();
@@ -25,6 +26,36 @@ const customTheme = {
 };
 
 export default function App() {
+  async function checkAndRequestPermissions() {
+    const settings = await notifee.getNotificationSettings();
+
+    if (settings.authorizationStatus === AuthorizationStatus.DENIED) {
+      console.log("Permission denied previously — requesting again...");
+      const newSettings = await notifee.requestPermission();
+      if (newSettings.authorizationStatus >= AuthorizationStatus.AUTHORIZED) {
+        console.log("Notification permissions granted.");
+      } else {
+        console.log("Notification permissions not granted.");
+      }
+    } else if (settings.authorizationStatus >= AuthorizationStatus.AUTHORIZED) {
+      console.log(
+        "Notification permission already granted — skipping request."
+      );
+    } else {
+      // First-time ask
+      const newSettings = await notifee.requestPermission();
+      if (newSettings.authorizationStatus >= AuthorizationStatus.AUTHORIZED) {
+        console.log("Notification permissions granted.");
+      } else {
+        console.log("Notification permissions not granted.");
+      }
+    }
+  }
+
+  useEffect(() => {
+    checkAndRequestPermissions();
+  }, []);
+
   const isLoadingComplete = useCachedResources();
   if (!isLoadingComplete) {
     return null;
@@ -39,4 +70,3 @@ export default function App() {
     );
   }
 }
-// react-native bundle --platform android --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --dev false --reset-cache --assets-dest android/app/src/main/res/
