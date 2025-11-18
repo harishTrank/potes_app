@@ -121,7 +121,7 @@ const HomeScreen = ({ navigation }: any) => {
     <DefaultBackground>
       {loading && <FullScreenLoader />}
       <View style={styles.flexContainer}>
-        <Animated.View
+        {/* <Animated.View
           {...panResponder.panHandlers}
           style={[
             styles.aiButton,
@@ -138,7 +138,7 @@ const HomeScreen = ({ navigation }: any) => {
               <Text style={styles.aiButtonText}>AI</Text>
             </View>
           </TouchableOpacity>
-        </Animated.View>
+        </Animated.View> */}
 
         <Header onProfilePress={handleProfilePress} />
         <ScrollView

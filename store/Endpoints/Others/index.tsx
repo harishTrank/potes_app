@@ -190,4 +190,11 @@ export const allApi = {
       uri: "/aichat/",
     },
   },
+  importContactsAPI: {
+    v1: {
+      ...defaults.methods.POST,
+      ...defaults.versions.v1,
+      uri: "/import-contacts/",
+    },
+  },
 };

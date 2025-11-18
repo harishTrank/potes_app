@@ -137,3 +137,8 @@ export const deleteAiChat = () =>
   callApi({
     uriEndPoint: allApi.deleteAiChat.v1,
   });
+export const importContactsAPI = ({ body }: any) =>
+  callApi({
+    uriEndPoint: allApi.importContactsAPI.v1,
+    body,
+  });

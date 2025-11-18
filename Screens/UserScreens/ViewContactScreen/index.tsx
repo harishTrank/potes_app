@@ -25,6 +25,7 @@ import { useProfileContactApi } from "../../../hooks/Others/query";
 import FastImage from "react-native-fast-image";
 import { useNavigation } from "@react-navigation/native";
 import { formatPhoneNumber } from "../../../utils/ImagePicker";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 if (
   Platform.OS === "android" &&
@@ -120,10 +121,10 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
       apiResponse?.refetch();
     });
   }, [contactId, navigation]);
-const handleSearchPress = () => {
+  const handleSearchPress = () => {
     navigation.navigate("SearchResultScreen", { searchQuery: "" });
   };
-  
+
   const handleDelete = () =>
     Alert.alert(
       "Delete Contact",
@@ -220,31 +221,52 @@ const handleSearchPress = () => {
         </View>
 
         <View style={styles.actionBar}>
-          <TouchableOpacity style={styles.actionItem} onPress={handleDelete}>
-            <Feather name="trash-2" size={18} color={theme.colors.white} />
-            <Text style={styles.actionText}>Delete</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionItem} onPress={handleEdit}>
-            <Feather name="edit-2" size={18} color={theme.colors.white} />
-            <Text style={styles.actionText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionItem} onPress={handleAddNote}>
-            <Feather name="file-plus" size={18} color={theme.colors.white} />
-            <Text style={styles.actionText}>Add Note</Text>
-          </TouchableOpacity>
+          <View style={styles.sideGroup}>
+            <TouchableOpacity style={styles.actionItem} onPress={handleDelete}>
+              <Feather name="trash-2" size={18} color={theme.colors.white} />
+              <Text style={styles.actionText}>Delete</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionItem} onPress={handleEdit}>
+              <Feather name="edit-2" size={18} color={theme.colors.white} />
+              <Text style={styles.actionText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity
-            style={styles.actionItem}
-            onPress={toggleAllSections}
+            style={styles.aiCenterButton}
+            onPress={() =>
+              navigation.navigate("ChatAiScreen", { contactId: contactId })
+            }
           >
-            <Feather
-              name={areAllSectionsOpen ? "minimize-2" : "maximize-2"}
+            <MaterialCommunityIcons
+              name="star-four-points"
               size={18}
               color={theme.colors.white}
             />
-            <Text style={styles.actionText}>
-              {areAllSectionsOpen ? "Collapse -" : "Expand +"}
-            </Text>
+            <Text style={styles.actionText}>AI</Text>
           </TouchableOpacity>
+
+          <View style={styles.sideGroup}>
+            <TouchableOpacity style={styles.actionItem} onPress={handleAddNote}>
+              <Feather name="file-plus" size={18} color={theme.colors.white} />
+              <Text style={styles.actionText}>Add Note</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionItem}
+              onPress={toggleAllSections}
+            >
+              <Feather
+                name={areAllSectionsOpen ? "minimize-2" : "maximize-2"}
+                size={18}
+                color={theme.colors.white}
+              />
+              <Text style={styles.actionText}>
+                {areAllSectionsOpen ? "Collapse-" : "Expand+"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView
@@ -364,7 +386,11 @@ const handleSearchPress = () => {
                   <InfoDisplayField label="Name" value={child.name} />
                   <InfoDisplayField
                     label="Birthday"
-                    value={child.birthday? dayjs(child.birthday).format("MM-DD-YYYY"):'-'}
+                    value={
+                      child.birthday
+                        ? dayjs(child.birthday).format("MM-DD-YYYY")
+                        : "-"
+                    }
                   />
                   <InfoDisplayField label="Details" value={child.details} />
                 </View>
@@ -550,7 +576,6 @@ const styles = StyleSheet.create({
   },
   actionBar: {
     flexDirection: "row",
-    justifyContent: "space-around",
     alignItems: "center",
     backgroundColor: theme.colors.secondary,
     marginHorizontal: 15,
@@ -558,6 +583,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginTop: 5,
     marginBottom: 15,
+    justifyContent: "space-between",
   },
   actionItem: { alignItems: "center", paddingHorizontal: 5 },
   actionText: {
@@ -709,6 +735,17 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     paddingHorizontal: 5,
     marginTop: 5,
+  },
+  sideGroup: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
+
+  aiCenterButton: {
+    width: 60,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

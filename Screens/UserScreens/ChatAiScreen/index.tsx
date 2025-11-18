@@ -9,6 +9,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Animated,
 } from "react-native";
 import theme from "../../../utils/theme";
 import DefaultBackground from "../../Components/DefaultBackground";
@@ -20,8 +21,10 @@ import {
   postAiChat,
 } from "../../../store/Services/Others";
 import { useFocusEffect } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
 
-const ChatWithAI = ({ navigation }: any) => {
+const ChatWithAI = ({ navigation, route }: any) => {
+  const contactId = route?.params?.contactId || null;
   const [messages, setMessages] = useState([
     {
       id: "1",
@@ -29,9 +32,26 @@ const ChatWithAI = ({ navigation }: any) => {
       message: "",
     },
   ]);
+  const placeholders = [
+    "Ask something...",
+    "Chat with AI...",
+    "Create a contact named...",
+    "Create a note for...",
+    "who is spouse of...",
+    "Summarize recent notes...",
+  ];
+  const quickOptions = [
+    "Summarize recent notes",
+    "Provide talking points",
+    "Show full profile summary",
+    "List spouse & children info",
+  ];
   const [aiChats, setAiChats]: any = useState([]);
   const [input, setInput] = useState("");
   const flatListRef = useRef<FlatList>(null);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const translateY = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
@@ -45,12 +65,52 @@ const ChatWithAI = ({ navigation }: any) => {
 
   useEffect(() => {
     getChats();
+    const interval = setInterval(() => {
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(opacity, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+          Animated.timing(translateY, {
+            toValue: 30,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(translateY, {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacity, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+
+      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const handleSend = () => {
+  const handleSend = (text?: string) => {
+    if (!input.trim()) {
+      Toast.show({
+        type: "error",
+        text1: "Input cannot be empty",
+      });
+      return;
+    }
     postAiChat({
       body: {
-        message: input,
+        message: text || input,
+        contactId: contactId || null,
       },
     })
       .then((res: any) => {
@@ -64,7 +124,6 @@ const ChatWithAI = ({ navigation }: any) => {
 
   useFocusEffect(
     useCallback(() => {
-      console.log("Chat screen opened");
       return () => {
         deleteAiChat();
       };
@@ -88,6 +147,11 @@ const ChatWithAI = ({ navigation }: any) => {
       )}
     </>
   );
+
+  const handleQuickOptionPress = (text: string) => {
+    setInput(text);
+    handleSend(text);
+  };
 
   return (
     <DefaultBackground>
@@ -118,6 +182,7 @@ const ChatWithAI = ({ navigation }: any) => {
             <Feather name="search" size={24} color={theme.colors.white} />
           </TouchableOpacity>
         </View>
+
         <FlatList
           ref={flatListRef}
           style={{ marginBottom: 120 }}
@@ -128,15 +193,50 @@ const ChatWithAI = ({ navigation }: any) => {
           showsVerticalScrollIndicator={false}
         />
 
+        {contactId && aiChats.length === 0 && (
+          <View style={styles.quickOptionsContainer}>
+            {quickOptions.map((opt) => (
+              <TouchableOpacity
+                key={opt}
+                style={styles.quickOption}
+                onPress={() => handleQuickOptionPress(opt)}
+              >
+                <Text style={styles.quickOptionText}>{opt}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
         <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Type a message..."
-            placeholderTextColor="#ccc"
-            value={input}
-            onChangeText={setInput}
-          />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+          <View style={{ position: "relative", width: "80%" }}>
+            {!input && (
+              <Animated.Text
+                style={{
+                  position: "absolute",
+                  zIndex: 2,
+                  top: 18,
+                  left: 25,
+                  color: "#ccc",
+                  fontSize: 16,
+                  transform: [{ translateY }],
+                  opacity: opacity,
+                }}
+              >
+                {placeholders[placeholderIndex]}
+              </Animated.Text>
+            )}
+
+            <TextInput
+              style={styles.input}
+              value={input}
+              onChangeText={setInput}
+            />
+          </View>
+
+          <TouchableOpacity
+            style={styles.sendButton}
+            onPress={() => handleSend("")}
+          >
             <Text style={styles.sendText}>Send</Text>
           </TouchableOpacity>
         </View>
@@ -199,13 +299,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#333",
     paddingBottom: 50,
+    marginTop: 5,
   },
   input: {
     flex: 1,
     backgroundColor: "#1c1c1c",
     borderRadius: 30,
-    paddingHorizontal: 15,
-    paddingVertical: 20,
+    paddingHorizontal: 25,
+    paddingVertical: 18,
     color: "#fff",
     fontSize: 16,
   },
@@ -243,6 +344,27 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: "center",
     justifyContent: "center",
+  },
+  quickOptionsContainer: {
+    paddingHorizontal: 15,
+    paddingTop: 10,
+    paddingBottom: 5,
+    marginBottom: 120,
+  },
+  quickOption: {
+    backgroundColor: "#2c2c2c",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    marginRight: 8,
+    marginBottom: 8,
+    alignSelf: "flex-end",
+  },
+
+  quickOptionText: {
+    color: "#fff",
+    fontSize: 14,
+    ...theme.font.fontMedium,
   },
 });
 

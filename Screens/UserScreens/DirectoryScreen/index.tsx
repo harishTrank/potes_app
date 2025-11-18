@@ -23,6 +23,7 @@ import { formatPhoneNumber } from "../../../utils/ImagePicker";
 import FastImage from "react-native-fast-image";
 import dayjs from "dayjs";
 import * as Contacts from "expo-contacts";
+import { importContactsAPI } from "../../../store/Services/Others";
 // --- Navigation & Props ---
 type DirectoryScreenNavigationProp = {
   navigate: (screen: string, params?: object) => void;
@@ -239,8 +240,19 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
         });
 
         try {
-          console.log("first", { contacts: formattedContacts });
-          Alert.alert("Success", "Contacts imported successfully!");
+          importContactsAPI({
+            body: {
+              contacts: formattedContacts,
+            },
+          })
+            .then((res: any) => {
+              apiRefetch();
+              Alert.alert("Success", "Contacts imported successfully!");
+            })
+            .catch((err: any) => {
+              Alert.alert("Error", "Failed to import contacts.");
+              console.log("err.data.error", JSON.stringify(err));
+            });
         } catch (err) {
           console.log("Error uploading contacts:", err);
           Alert.alert("Error", "Failed to upload contacts.");
