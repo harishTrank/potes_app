@@ -311,7 +311,11 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     <View style={styles.inputGroup}>
       <View style={{ flexDirection: "row", gap: 3 }}>
         <Text style={styles.label}>{label}</Text>
-        {required && <Text style={{ color: "red", fontSize: 18 }}>*</Text>}
+        {required && (
+          <View style={styles.mandatoryView}>
+            <Text style={styles.mandatoryText}> * Mandatory</Text>
+          </View>
+        )}
       </View>
       <TextInput
         style={[styles.input, multiline && styles.textArea]}
@@ -1065,6 +1069,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginHorizontal: 15,
     width: "auto",
+  },
+  mandatoryView: {
+    justifyContent: "center",
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  mandatoryText: {
+    fontSize: 12,
+    color: "#BE5F41",
   },
   formTitle: {
     fontSize: 22,

@@ -51,9 +51,9 @@
     <key>NSCameraUsageDescription</key>
     <string>Allow access to the camera to take profile and contact photos.</string>
     <key>NSContactsUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your contacts</string>
+    <string>Allow Potes to access your contacts to import contacts</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+    <string>Allow Potes to access your microphone to record sound</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Allow access to your photo library to choose profile and contact photos.</string>
     <key>NSUserNotificationUsageDescription</key>

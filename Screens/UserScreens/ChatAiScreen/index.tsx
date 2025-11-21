@@ -28,7 +28,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
   const [messages, setMessages] = useState([
     {
       id: "1",
-      reply: "I'm Potes AI, how may I help you?",
+      reply: "How can I help you?",
       message: "",
     },
   ]);
@@ -43,8 +43,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
   const quickOptions = [
     "Summarize recent notes",
     "Provide talking points",
-    "Show full profile summary",
-    "List spouse & children info",
+    "Edit Contact Profile",
   ];
   const [aiChats, setAiChats]: any = useState([]);
   const [input, setInput] = useState("");

@@ -5,7 +5,7 @@ import { Alert } from "react-native";
 
 export const hostname = () => {
   // let hostUrl = "http://192.168.0.46:8000/api";
-  let hostUrl = "http://localhost:8000/api";
+  let hostUrl = "https://mypotes.com/api";
 
   return hostUrl;
 };
