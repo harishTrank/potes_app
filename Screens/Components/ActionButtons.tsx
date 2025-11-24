@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     ...theme.font.fontSemiBold,
     color: theme.colors.white,
-    marginLeft: 8,
+    // marginLeft: 2,
   },
 
   Aibutton: {

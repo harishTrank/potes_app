@@ -22,9 +22,11 @@ import {
 } from "../../../store/Services/Others";
 import { useFocusEffect } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
+import FullScreenLoader from "../../Components/FullScreenLoader";
 
 const ChatWithAI = ({ navigation, route }: any) => {
   const contactId = route?.params?.contactId || null;
+  const [loading, setLoading]: any = useState(false);
   const [messages, setMessages] = useState([
     {
       id: "1",
@@ -43,7 +45,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
   const quickOptions = [
     "Summarize recent notes",
     "Provide talking points",
-    "Edit Contact Profile",
+    "Update Contact Profile",
   ];
   const [aiChats, setAiChats]: any = useState([]);
   const [input, setInput] = useState("");
@@ -99,7 +101,8 @@ const ChatWithAI = ({ navigation, route }: any) => {
   }, []);
 
   const handleSend = (text?: string) => {
-    if (!input.trim()) {
+    setLoading(true);
+    if (!input.trim() && !text?.trim()) {
       Toast.show({
         type: "error",
         text1: "Input cannot be empty",
@@ -118,7 +121,8 @@ const ChatWithAI = ({ navigation, route }: any) => {
       })
       .catch((err: any) => {
         console.log("err", err);
-      });
+      })
+      .finally(() => setLoading(false));
   };
 
   useFocusEffect(
@@ -149,97 +153,111 @@ const ChatWithAI = ({ navigation, route }: any) => {
 
   const handleQuickOptionPress = (text: string) => {
     setInput(text);
+
     handleSend(text);
   };
 
   return (
     <DefaultBackground>
       <KeyboardAvoidingView
-        style={{ flex: 1, paddingTop: 60 }}
+        style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -150}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
       >
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.iconButton}
-          >
-            <Feather name="chevron-left" size={24} color={theme.colors.white} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnlogoImg}
-            onPress={() => navigation.navigate("DrawerNavigation")}
-          >
-            <Image source={ImageModule.logo} style={styles.logoImg} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate("SearchResultScreen", { searchQuery: "" })
-            }
-            style={styles.iconButton}
-          >
-            <Feather name="search" size={24} color={theme.colors.white} />
-          </TouchableOpacity>
-        </View>
+        {loading && <FullScreenLoader />}
+        <View style={{ flex: 1, paddingTop: 60 }}>
+          {/* Header */}
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.iconButton}
+            >
+              <Feather
+                name="chevron-left"
+                size={24}
+                color={theme.colors.white}
+              />
+            </TouchableOpacity>
 
-        <FlatList
-          ref={flatListRef}
-          style={{ marginBottom: 120 }}
-          data={aiChats.length > 0 ? aiChats : messages}
-          renderItem={renderItem}
-          keyExtractor={(item) => item?.id}
-          contentContainerStyle={styles.chatArea}
-          showsVerticalScrollIndicator={false}
-        />
+            <TouchableOpacity
+              style={styles.btnlogoImg}
+              onPress={() => navigation.navigate("DrawerNavigation")}
+            >
+              <Image source={ImageModule.logo} style={styles.logoImg} />
+            </TouchableOpacity>
 
-        {contactId && aiChats.length === 0 && (
-          <View style={styles.quickOptionsContainer}>
-            {quickOptions.map((opt) => (
-              <TouchableOpacity
-                key={opt}
-                style={styles.quickOption}
-                onPress={() => handleQuickOptionPress(opt)}
-              >
-                <Text style={styles.quickOptionText}>{opt}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        <View style={styles.inputContainer}>
-          <View style={{ position: "relative", width: "80%" }}>
-            {!input && (
-              <Animated.Text
-                style={{
-                  position: "absolute",
-                  zIndex: 2,
-                  top: 18,
-                  left: 25,
-                  color: "#ccc",
-                  fontSize: 16,
-                  transform: [{ translateY }],
-                  opacity: opacity,
-                }}
-              >
-                {placeholders[placeholderIndex]}
-              </Animated.Text>
-            )}
-
-            <TextInput
-              style={styles.input}
-              value={input}
-              onChangeText={setInput}
-            />
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("SearchResultScreen", { searchQuery: "" })
+              }
+              style={styles.iconButton}
+            >
+              <Feather name="search" size={24} color={theme.colors.white} />
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={styles.sendButton}
-            onPress={() => handleSend("")}
-          >
-            <Text style={styles.sendText}>Send</Text>
-          </TouchableOpacity>
+          {/* Messages List */}
+          <FlatList
+            ref={flatListRef}
+            style={{ marginBottom: 10 }}
+            data={aiChats.length > 0 ? aiChats : messages}
+            renderItem={renderItem}
+            keyExtractor={(item) => item?.id}
+            contentContainerStyle={styles.chatArea}
+            showsVerticalScrollIndicator={false}
+          />
+
+          {/* Quick Options */}
+          {contactId && aiChats.length === 0 && (
+            <View style={styles.quickOptionsContainer}>
+              {quickOptions.map((opt) => (
+                <TouchableOpacity
+                  key={opt}
+                  style={styles.quickOption}
+                  onPress={() => handleQuickOptionPress(opt)}
+                >
+                  <Text style={styles.quickOptionText}>{opt}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
+
+      {/* Input Bar - stays above keyboard */}
+      <View style={styles.inputContainer}>
+        <View style={{ position: "relative", width: "80%" }}>
+          {!input && (
+            <Animated.Text
+              style={{
+                position: "absolute",
+                zIndex: 2,
+                top: 18,
+                left: 25,
+                color: "#ccc",
+                fontSize: 16,
+                transform: [{ translateY }],
+                opacity: opacity,
+              }}
+            >
+              {placeholders[placeholderIndex]}
+            </Animated.Text>
+          )}
+
+          <TextInput
+            style={styles.input}
+            value={input}
+            onChangeText={setInput}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={styles.sendButton}
+          onPress={() => handleSend("")}
+        >
+          <Text style={styles.sendText}>Send</Text>
+        </TouchableOpacity>
+      </View>
     </DefaultBackground>
   );
 };
@@ -357,13 +375,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginRight: 8,
     marginBottom: 8,
-    alignSelf: "flex-end",
+    width: "100%",
   },
 
   quickOptionText: {
     color: "#fff",
     fontSize: 14,
     ...theme.font.fontMedium,
+    textAlign: "center",
   },
 });
 

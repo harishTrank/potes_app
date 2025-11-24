@@ -382,14 +382,12 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
           )}
         </View>
         <TouchableOpacity onPress={() => importContacts()}>
-          <View
-            style={{ alignItems: "center", marginBottom: 5, marginTop: -5 }}
-          >
+          <View style={{ alignItems: "center", marginTop: -5 }}>
             <Text
               style={{
                 color: theme.colors.secondary,
                 fontWeight: "700",
-                fontSize: 12,
+                fontSize: 16,
               }}
             >
               Import Contacts
