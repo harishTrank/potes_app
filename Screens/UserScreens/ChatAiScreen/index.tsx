@@ -53,6 +53,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const [isActive, setIsActive]: any = useState(false);
 
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
@@ -162,7 +163,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+        keyboardVerticalOffset={0}
       >
         {loading && <FullScreenLoader />}
         <View style={{ flex: 1, paddingTop: 60 }}>
@@ -208,7 +209,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
           />
 
           {/* Quick Options */}
-          {contactId && aiChats.length === 0 && (
+          {!isActive && contactId && aiChats.length === 0 && (
             <View style={styles.quickOptionsContainer}>
               {quickOptions.map((opt) => (
                 <TouchableOpacity
@@ -222,42 +223,44 @@ const ChatWithAI = ({ navigation, route }: any) => {
             </View>
           )}
         </View>
-      </KeyboardAvoidingView>
 
-      {/* Input Bar - stays above keyboard */}
-      <View style={styles.inputContainer}>
-        <View style={{ position: "relative", width: "80%" }}>
-          {!input && (
-            <Animated.Text
-              style={{
-                position: "absolute",
-                zIndex: 2,
-                top: 18,
-                left: 25,
-                color: "#ccc",
-                fontSize: 16,
-                transform: [{ translateY }],
-                opacity: opacity,
-              }}
-            >
-              {placeholders[placeholderIndex]}
-            </Animated.Text>
-          )}
+        {/* Input Bar - stays above keyboard */}
+        <View style={styles.inputContainer}>
+          <View style={{ position: "relative", width: "80%" }}>
+            {!input && (
+              <Animated.Text
+                style={{
+                  position: "absolute",
+                  zIndex: 2,
+                  top: 18,
+                  left: 25,
+                  color: "#ccc",
+                  fontSize: 16,
+                  transform: [{ translateY }],
+                  opacity: opacity,
+                }}
+              >
+                {placeholders[placeholderIndex]}
+              </Animated.Text>
+            )}
 
-          <TextInput
-            style={styles.input}
-            value={input}
-            onChangeText={setInput}
-          />
+            <TextInput
+              onFocus={() => setIsActive(true)}
+              onBlur={() => setIsActive(false)}
+              style={styles.input}
+              value={input}
+              onChangeText={setInput}
+            />
+          </View>
+
+          <TouchableOpacity
+            style={styles.sendButton}
+            onPress={() => handleSend("")}
+          >
+            <Text style={styles.sendText}>Send</Text>
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={styles.sendButton}
-          onPress={() => handleSend("")}
-        >
-          <Text style={styles.sendText}>Send</Text>
-        </TouchableOpacity>
-      </View>
+      </KeyboardAvoidingView>
     </DefaultBackground>
   );
 };
@@ -268,7 +271,7 @@ const styles = StyleSheet.create({
   },
   chatArea: {
     padding: 15,
-    paddingBottom: 80,
+    paddingBottom: 20,
   },
   messageContainer: {
     flexDirection: "row",
@@ -304,10 +307,6 @@ const styles = StyleSheet.create({
     ...theme.font.fontMedium,
   },
   inputContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: theme.colors.secondary,
@@ -315,8 +314,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderTopWidth: 1,
     borderTopColor: "#333",
-    paddingBottom: 50,
-    marginTop: 5,
   },
   input: {
     flex: 1,
@@ -366,7 +363,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingTop: 10,
     paddingBottom: 5,
-    marginBottom: 120,
   },
   quickOption: {
     backgroundColor: "#2c2c2c",

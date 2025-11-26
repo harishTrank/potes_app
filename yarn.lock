@@ -4053,6 +4053,11 @@ react-is@^19.1.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-19.1.0.tgz#805bce321546b7e14c084989c77022351bbdd11b"
   integrity sha512-Oe56aUPnkHyyDxxkvqtd7KkdQP5uIUfHxd5XTb3wE9d/kRnZLmKbDB0GWk919tdQ+mxxPtG6EAs6RMT6i1qtHg==
 
+react-native-action-sheet@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/react-native-action-sheet/-/react-native-action-sheet-2.2.0.tgz#309a87f53bf4e7b17fdd9d24b10b8dcbaebb7230"
+  integrity sha512-4lsuxH+Cn3/aUEs1VCwqvLhEFyXNqYTkT67CzgTwlifD9Ij4OPQAIs8D+HUD9zBvWc4NtT6cyG1lhArPVMQeVw==
+
 react-native-date-picker@^5.0.12:
   version "5.0.13"
   resolved "https://registry.yarnpkg.com/react-native-date-picker/-/react-native-date-picker-5.0.13.tgz#fe05f58652aaeee9e67f73cf7436c32a623ff3a4"
@@ -4147,6 +4152,13 @@ react-native-safe-area-context@5.4.0:
   version "5.4.0"
   resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-5.4.0.tgz#04b51940408c114f75628a12a93569d30c525454"
   integrity sha512-JaEThVyJcLhA+vU0NU8bZ0a1ih6GiF4faZ+ArZLqpYbL6j7R3caRqj+mE3lEtKCuHgwjLg3bCxLL1GPUJZVqUA==
+
+react-native-select-contact@^1.6.3:
+  version "1.6.3"
+  resolved "https://registry.yarnpkg.com/react-native-select-contact/-/react-native-select-contact-1.6.3.tgz#4aef99118f1feb862b7d3198740b011888db2b14"
+  integrity sha512-TI+mvioD86ZZcOaBmndJAsKla1QF0dlX7Oa2aw37uUDPp8HKAkSwUWl8q/AxYtdLJohasgsLVlUskXzLK4KEjA==
+  optionalDependencies:
+    react-native-action-sheet "^2.2.0"
 
 react-native-toast-message@^2.3.0:
   version "2.3.3"

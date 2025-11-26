@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.secondary,
     paddingVertical: 12,
     borderRadius: 12,
-    marginHorizontal: 5,
+    marginHorizontal: 2,
   },
 
   buttonText: {
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   },
 
   Aibutton: {
-    width: 50,
+    width: 40,
     height: 45,
     alignItems: "center",
     justifyContent: "center",

@@ -494,7 +494,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
           <View style={styles.notesCard}>
             <View style={styles.notesHeader}>
               <Text style={styles.notesTitle}>Notes</Text>
-              {apiResponse?.data.contact_notes?.length && (
+              {apiResponse?.data.contact_notes?.length > 0 && (
                 <TouchableOpacity onPress={handleViewAllNotes}>
                   <Text style={styles.allNotesLink}>
                     All notes{" "}

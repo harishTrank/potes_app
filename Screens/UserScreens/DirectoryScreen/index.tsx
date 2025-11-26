@@ -23,6 +23,7 @@ import { formatPhoneNumber } from "../../../utils/ImagePicker";
 import FastImage from "react-native-fast-image";
 import dayjs from "dayjs";
 import * as Contacts from "expo-contacts";
+import { selectContact } from "react-native-select-contact";
 import { importContactsAPI } from "../../../store/Services/Others";
 // --- Navigation & Props ---
 type DirectoryScreenNavigationProp = {
@@ -208,9 +209,49 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
   };
 
   const importContacts = async () => {
-    const { status } = await Contacts.requestPermissionsAsync();
+    try {
+      const selection: any = await selectContact();
 
-    if (status === "granted") {
+      if (!selection) {
+        Alert.alert("Cancelled", "No contact selected");
+        return;
+      }
+
+      const picked = selection.contact;
+
+      const birthday = picked.birthday
+        ? dayjs(
+            `${picked.birthday.year}-${picked.birthday.month}-${picked.birthday.day}`
+          ).format("YYYY-MM-DD")
+        : null;
+
+      const formattedContact = {
+        full_name: picked.name || "",
+        phone: picked.phoneNumbers?.[0]?.number || "",
+        email: picked.emails?.[0]?.email || "",
+        birthday: birthday,
+      };
+
+      await importContactsAPI({
+        body: { contacts: [formattedContact] },
+      });
+
+      apiRefetch();
+      Alert.alert("Success", "Contact imported successfully!");
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Error", "Failed to import contact.");
+    }
+  };
+
+  const importContacts2 = async () => {
+    const { status } = await Contacts.requestPermissionsAsync();
+    console.log("status", status);
+    if (status !== "granted") {
+      Alert.alert("Permission Denied", "Contacts access is required.");
+      return;
+    }
+    if (status == "granted") {
       const { data } = await Contacts.getContactsAsync({
         fields: [
           Contacts.Fields.PhoneNumbers,
@@ -218,6 +259,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
           Contacts.Fields.Birthday,
         ],
       });
+      console.log("data", data);
 
       if (data.length > 0) {
         const formattedContacts = data.map((c) => {
