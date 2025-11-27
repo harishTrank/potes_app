@@ -208,16 +208,14 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
     }
   };
 
-  const importContacts = async () => {
+  const importContacts2 = async () => {
     try {
-      const selection: any = await selectContact();
+      const picked: any = await selectContact();
 
-      if (!selection) {
+      if (!picked) {
         Alert.alert("Cancelled", "No contact selected");
         return;
       }
-
-      const picked = selection.contact;
 
       const birthday = picked.birthday
         ? dayjs(
@@ -227,8 +225,8 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
 
       const formattedContact = {
         full_name: picked.name || "",
-        phone: picked.phoneNumbers?.[0]?.number || "",
-        email: picked.emails?.[0]?.email || "",
+        phone: picked.phones?.[0]?.number || "",
+        email: picked.emails?.[0]?.address || "",
         birthday: birthday,
       };
 
@@ -244,67 +242,79 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
     }
   };
 
-  const importContacts2 = async () => {
-    const { status } = await Contacts.requestPermissionsAsync();
-    console.log("status", status);
-    if (status !== "granted") {
-      Alert.alert("Permission Denied", "Contacts access is required.");
-      return;
-    }
-    if (status == "granted") {
-      const { data } = await Contacts.getContactsAsync({
-        fields: [
-          Contacts.Fields.PhoneNumbers,
-          Contacts.Fields.Emails,
-          Contacts.Fields.Birthday,
-        ],
-      });
-      console.log("data", data);
-
-      if (data.length > 0) {
-        const formattedContacts = data.map((c) => {
-          let birthday = null;
-          if (c.birthday) {
-            const { day, month, year } = c.birthday;
-            if (day && month && year) {
-              birthday = dayjs(`${year}-${month}-${day}`).format("YYYY-MM-DD");
-            } else if (day && month) {
-              birthday = `1999-${month}-${day}`;
+  const importContacts = async () => {
+    Alert.alert(
+      "Potes will import only the contacts you grant access to",
+      Platform.OS === "ios"
+        ? "If you don’t allow access to all contacts now, you won’t be able to import the remaining ones later unless you reinstall the app. You can change this anytime from:\n\nSettings → Privacy & Security → Contacts → MyPotes → Allow Full Access or select limited contacts."
+        : "You can change this anytime from:\n\nSettings → Apps → App management→ MyPotes → Permissions → Contacts",
+      [
+        {
+          text: "OK",
+          onPress: async () => {
+            let permission = await Contacts.requestPermissionsAsync();
+            if (permission.status !== "granted" && permission.canAskAgain) {
+              permission = await Contacts.requestPermissionsAsync();
             }
-          }
+            if (permission.status == "granted") {
+              const { data } = await Contacts.getContactsAsync({
+                fields: [
+                  Contacts.Fields.PhoneNumbers,
+                  Contacts.Fields.Emails,
+                  Contacts.Fields.Birthday,
+                ],
+              });
 
-          return {
-            full_name: c.name || "",
-            phone: c.phoneNumbers?.[0]?.number || "",
-            email: c.emails?.[0]?.email || "",
-            birthday,
-          };
-        });
+              if (data.length > 0) {
+                const formattedContacts = data.map((c) => {
+                  let birthday = null;
+                  if (c.birthday) {
+                    const { day, month, year } = c.birthday;
+                    if (day && month && year) {
+                      birthday = dayjs(`${year}-${month}-${day}`).format(
+                        "YYYY-MM-DD"
+                      );
+                    } else if (day && month) {
+                      birthday = `1999-${month}-${day}`;
+                    }
+                  }
 
-        try {
-          importContactsAPI({
-            body: {
-              contacts: formattedContacts,
-            },
-          })
-            .then((res: any) => {
-              apiRefetch();
-              Alert.alert("Success", "Contacts imported successfully!");
-            })
-            .catch((err: any) => {
-              Alert.alert("Error", "Failed to import contacts.");
-              console.log("err.data.error", JSON.stringify(err));
-            });
-        } catch (err) {
-          console.log("Error uploading contacts:", err);
-          Alert.alert("Error", "Failed to upload contacts.");
-        }
-      } else {
-        Alert.alert("No contacts found");
-      }
-    } else {
-      Alert.alert("Permission denied", "Contacts access is required.");
-    }
+                  return {
+                    full_name: c.name || "",
+                    phone: c.phoneNumbers?.[0]?.number || "",
+                    email: c.emails?.[0]?.email || "",
+                    birthday,
+                  };
+                });
+
+                try {
+                  importContactsAPI({
+                    body: {
+                      contacts: formattedContacts,
+                    },
+                  })
+                    .then((res: any) => {
+                      apiRefetch();
+                      Alert.alert("Success", "Contacts imported successfully!");
+                    })
+                    .catch((err: any) => {
+                      Alert.alert("Error", "Failed to import contacts.");
+                      console.log("err.data.error", JSON.stringify(err));
+                    });
+                } catch (err) {
+                  console.log("Error uploading contacts:", err);
+                  Alert.alert("Error", "Failed to upload contacts.");
+                }
+              } else {
+                Alert.alert("No contacts found");
+              }
+            } else {
+              Alert.alert("Permission denied", "Contacts access is required.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleMenuPress = () => navigation.openDrawer();
@@ -404,7 +414,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
                 showsVerticalScrollIndicator={false}
                 stickySectionHeadersEnabled={false}
                 getItemLayout={getItemLayout}
-                initialNumToRender={20}
+                initialNumToRender={100}
                 windowSize={21}
               />
             )}
