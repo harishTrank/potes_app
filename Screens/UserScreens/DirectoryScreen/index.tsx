@@ -246,9 +246,13 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
     Alert.alert(
       "Potes will import only the contacts you grant access to",
       Platform.OS === "ios"
-        ? "If you don’t allow access to all contacts now, you won’t be able to import the remaining ones later unless you reinstall the app. You can change this anytime from:\n\nSettings → Privacy & Security → Contacts → MyPotes → Allow Full Access or select limited contacts."
+        ? "All contacts you allow access to will be imported. If you wish to change which contacts Potes can access later, you can do so anytime from:\n\nSettings → Privacy & Security → Contacts → MyPotes → Allow Full Access or Select Limited Contacts."
         : "You can change this anytime from:\n\nSettings → Apps → App management→ MyPotes → Permissions → Contacts",
       [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
         {
           text: "OK",
           onPress: async () => {
