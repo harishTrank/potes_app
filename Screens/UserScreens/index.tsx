@@ -17,6 +17,9 @@ import OTPScreenResgister from "./OTPScreenResgister";
 import ChangePasswordScreen from "./ChangePasswordScreen";
 import HomeScreen from "./HomeScreen";
 import ChatWithAI from "./ChatAiScreen";
+import AboutUsScreen from "./AboutUsScreen";
+import ContactUsScreen from "./ContactUsScreen";
+import TermAndCondition from "./TermAndCondition";
 
 const Stack = createStackNavigator<any>();
 
@@ -30,6 +33,9 @@ const UserScreens = () => {
     >
       <Stack.Screen name="SplashScreen" component={SplashScreen} />
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Screen name="AboutUsScreenLogin" component={AboutUsScreen} />
+      <Stack.Screen name="ContactUsScreenLogin" component={ContactUsScreen} />
+      <Stack.Screen name="TermAndCondition" component={TermAndCondition} />
       <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
       <Stack.Screen
         name="ForgotPasswordScreen"

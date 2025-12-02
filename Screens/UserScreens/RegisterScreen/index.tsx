@@ -317,6 +317,16 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }: any) => {
                     )}
                   </View>
 
+                  <Text style={styles.infoText}>
+                    By continuing, you agree to our{" "}
+                    <Text
+                      style={styles.linkTextBlue}
+                      onPress={() => navigation.navigate("TermAndCondition")}
+                    >
+                      Terms & Conditions
+                    </Text>
+                  </Text>
+
                   <TouchableOpacity
                     style={[
                       styles.registerButton,
@@ -440,6 +450,21 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     backgroundColor: theme.colors.grey,
     opacity: 0.7,
+  },
+  infoText: {
+    textAlign: "center",
+    color: theme.colors.secondary,
+    fontSize: 14,
+    marginTop: 25,
+    lineHeight: 18,
+    paddingHorizontal: 10,
+    ...theme.font.fontRegular,
+  },
+
+  linkTextBlue: {
+    color: "#1E90FF", // professional blue
+    textDecorationLine: "underline",
+    ...theme.font.fontSemiBold,
   },
 });
 

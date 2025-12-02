@@ -182,6 +182,26 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                     )}
                   </View>
 
+                  <Text style={styles.infoText}>
+                    For more information, please visit our{" "}
+                    <Text
+                      style={styles.linkTextBlue}
+                      onPress={() => navigation.navigate("AboutUsScreenLogin")}
+                    >
+                      About Us
+                    </Text>{" "}
+                    and{" "}
+                    <Text
+                      style={styles.linkTextBlue}
+                      onPress={() =>
+                        navigation.navigate("ContactUsScreenLogin")
+                      }
+                    >
+                      Contact Us
+                    </Text>{" "}
+                    pages.
+                  </Text>
+
                   <TouchableOpacity
                     style={[
                       styles.loginButton,
@@ -350,6 +370,21 @@ const styles = StyleSheet.create({
   registerLink: {
     ...theme.font.fontSemiBold,
     textDecorationLine: "underline",
+  },
+  infoText: {
+    textAlign: "center",
+    color: theme.colors.secondary,
+    fontSize: 14,
+    marginTop: 25,
+    lineHeight: 18,
+    paddingHorizontal: 10,
+    ...theme.font.fontRegular,
+  },
+
+  linkTextBlue: {
+    color: "#1E90FF", // professional blue
+    textDecorationLine: "underline",
+    ...theme.font.fontSemiBold,
   },
 });
 

@@ -16,17 +16,16 @@ import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule";
 import { staticDataApi } from "../../../store/Services/Others";
 
-type AboutUsScreenNavigationProp = {
+type TermAndConditionNavigationProp = {
   goBack: () => void;
 };
 
-interface AboutUsScreenProps {
-  navigation: AboutUsScreenNavigationProp;
+interface TermAndConditionProps {
+  navigation: TermAndConditionNavigationProp;
 }
 
-const AboutUsScreen: React.FC<AboutUsScreenProps> = ({
+const TermAndCondition: React.FC<TermAndConditionProps> = ({
   navigation,
-  route,
 }: any) => {
   const insets = useSafeAreaInsets();
   const [apiResponse, setApiResponse]: any = useState({});
@@ -34,7 +33,7 @@ const AboutUsScreen: React.FC<AboutUsScreenProps> = ({
   useEffect(() => {
     staticDataApi({
       query: {
-        topic: "about",
+        topic: "terms",
       },
     })
       ?.then((res: any) => {
@@ -56,47 +55,23 @@ const AboutUsScreen: React.FC<AboutUsScreenProps> = ({
           { paddingTop: Platform.OS === "android" ? insets.top : insets.top },
         ]}
       >
-        {route?.name != "AboutUsScreenLogin" && (
-          <View style={styles.headerRow}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.iconButton}
-            >
-              <Feather
-                name="chevron-left"
-                size={24}
-                color={theme.colors.white}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.btnlogoImg}
-              onPress={() => navigation.navigate("HomeScreen")}
-            >
-              <Image style={styles.logoImg} source={ImageModule.logo} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleSearchPress}
-              style={styles.iconButton}
-            >
-              <Feather name="search" size={24} color={theme.colors.white} />
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.iconButton}
+          >
+            <Feather name="chevron-left" size={24} color={theme.colors.white} />
+          </TouchableOpacity>
+        </View> */}
 
         <View style={styles.titleBar}>
-          {route?.name == "AboutUsScreenLogin" && (
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.iconButton}
-            >
-              <Feather
-                name="chevron-left"
-                size={24}
-                color={theme.colors.white}
-              />
-            </TouchableOpacity>
-          )}
-          <Text style={styles.titleText}>About Us</Text>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.iconButton}
+          >
+            <Feather name="chevron-left" size={24} color={theme.colors.white} />
+          </TouchableOpacity>
+          <Text style={styles.titleText}>Terms and Conditions</Text>
         </View>
 
         <ScrollView
@@ -136,9 +111,11 @@ const styles = StyleSheet.create({
   },
   titleBar: {
     flexDirection: "row",
+    // gap: 10,
     alignItems: "center",
     backgroundColor: theme.colors.secondary,
     paddingVertical: 15,
+    // paddingHorizontal: 20,
     marginHorizontal: 15,
     marginTop: 10,
     borderTopLeftRadius: 15,
@@ -181,4 +158,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AboutUsScreen;
+export default TermAndCondition;

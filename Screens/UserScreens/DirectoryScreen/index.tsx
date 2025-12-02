@@ -418,7 +418,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
                 showsVerticalScrollIndicator={false}
                 stickySectionHeadersEnabled={false}
                 getItemLayout={getItemLayout}
-                initialNumToRender={100}
+                initialNumToRender={500}
                 windowSize={21}
               />
             )}

@@ -50,6 +50,7 @@ const contactValidationSchema = Yup.object().shape({
 
 const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
   navigation,
+  route,
 }: any) => {
   const insets = useSafeAreaInsets();
   const [loading, setLoading]: any = useState(false);
@@ -122,32 +123,34 @@ const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -100} // Adjust as needed
       >
         <View style={[styles.container, { paddingTop: insets.top }]}>
-          <View style={styles.headerRow}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.iconButton}
-            >
-              <Feather
-                name="chevron-left"
-                size={24}
-                color={theme.colors.white}
-              />
-            </TouchableOpacity>
+          {route?.name != "ContactUsScreenLogin" && (
+            <View style={styles.headerRow}>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={styles.iconButton}
+              >
+                <Feather
+                  name="chevron-left"
+                  size={24}
+                  color={theme.colors.white}
+                />
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.btnlogoImg}
-              onPress={() => navigation.navigate("HomeScreen")}
-            >
-              <Image style={styles.logoImg} source={ImageModule.logo} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.btnlogoImg}
+                onPress={() => navigation.navigate("HomeScreen")}
+              >
+                <Image style={styles.logoImg} source={ImageModule.logo} />
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={handleSearchPress}
-              style={styles.iconButton}
-            >
-              <Feather name="search" size={24} color={theme.colors.white} />
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                onPress={handleSearchPress}
+                style={styles.iconButton}
+              >
+                <Feather name="search" size={24} color={theme.colors.white} />
+              </TouchableOpacity>
+            </View>
+          )}
 
           <ScrollView
             style={styles.formScrollView} // Use a ScrollView for the form area
@@ -158,7 +161,21 @@ const ContactUsScreen: React.FC<ContactUsScreenProps> = ({
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.formCard}>
-              <Text style={styles.formTitle}>Contact Us</Text>
+              <View style={styles.titleBar}>
+                {route?.name == "ContactUsScreenLogin" && (
+                  <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    style={styles.iconButton}
+                  >
+                    <Feather
+                      name="chevron-left"
+                      size={24}
+                      color={theme.colors.white}
+                    />
+                  </TouchableOpacity>
+                )}
+                <Text style={styles.formTitle}>Contact Us</Text>
+              </View>
 
               <Formik
                 initialValues={{ fullName: "", email: "", message: "" }}
@@ -310,6 +327,11 @@ const styles = StyleSheet.create({
   },
   inputGroup: {
     marginBottom: 15,
+  },
+  titleBar: {
+    flexDirection: "row",
+    marginVertical: 15,
+    marginLeft: -10,
   },
   label: {
     fontSize: 15,
