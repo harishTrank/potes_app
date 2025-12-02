@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Image, View } from "react-native";
 import theme from "../../utils/theme";
 import ImageModule from "../../ImageModule";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 
 const SplashScreen = ({ navigation }: any) => {
   const loginChecker = async () => {
@@ -13,11 +14,20 @@ const SplashScreen = ({ navigation }: any) => {
       navigation.navigate("LoginScreen");
     }
   };
-  useEffect(() => {
-    setTimeout(() => {
-      loginChecker();
-    }, 500);
-  }, []);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     loginChecker();
+  //   }, 500);
+  // }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setTimeout(() => {
+        loginChecker();
+      }, 500);
+    }, [])
+  );
+
   return (
     <View
       style={{
