@@ -84,8 +84,8 @@ const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
 // --- FIX: Add constants for estimated item and header heights ---
 // We estimate the height of items and headers to help SectionList calculate positions.
 // This is crucial for making scrollToLocation work reliably.
-const ITEM_ESTIMATED_HEIGHT = 85; // Average height for a contact item
-const SECTION_HEADER_HEIGHT = 38; // Height of a section letter (e.g., 'A', 'B')
+const ITEM_ESTIMATED_HEIGHT = 60; // Average height for a contact item
+const SECTION_HEADER_HEIGHT = 32; // Height of a section letter (e.g., 'A', 'B')
 
 // --- Main Screen Component ---
 const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
@@ -131,7 +131,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
   }, [navigation, apiRefetch]);
 
   const ITEM_HEIGHT = 75;
-  const HEADER_HEIGHT = 30;
+  const HEADER_HEIGHT = 28;
 
   const sectionOffsets = React.useMemo(() => {
     const offsets: { [key: string]: number } = {};
@@ -145,67 +145,47 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
     return offsets;
   }, [sections]);
 
-  const getItemLayout = (_: any, index: number) => ({
-    length: ITEM_HEIGHT,
-    offset: ITEM_HEIGHT * index,
-    index,
-  });
-  // const getItemLayout = (
-  //   data: SectionData[] | null,
-  //   index: number
-  // ): { length: number; offset: number; index: number } => {
-  //   if (!data) {
-  //     return { length: 0, offset: 0, index };
-  //   }
+  const getItemLayout = (_: any, index: number) => {
+    let offset = 0;
+    let i = 0;
 
-  //   let offset = 0;
-  //   let i = 0;
+    for (const section of sections) {
+      // Header
+      if (i === index) {
+        return { length: SECTION_HEADER_HEIGHT, offset, index };
+      }
+      offset += SECTION_HEADER_HEIGHT;
+      i++;
 
-  //   for (const section of data) {
-  //     // Account for the section header
-  //     if (i === index) {
-  //       return { length: SECTION_HEADER_HEIGHT, offset, index };
-  //     }
-  //     offset += SECTION_HEADER_HEIGHT;
-  //     i++;
+      // Items
+      if (index < i + section.data.length) {
+        const itemOffset = offset + (index - i) * ITEM_ESTIMATED_HEIGHT;
+        return {
+          length: ITEM_ESTIMATED_HEIGHT,
+          offset: itemOffset,
+          index,
+        };
+      }
 
-  //     // Check if the index is for an item within this section
-  //     if (i + section.data.length > index) {
-  //       const itemOffsetInList = offset + (index - i) * ITEM_ESTIMATED_HEIGHT;
-  //       return {
-  //         length: ITEM_ESTIMATED_HEIGHT,
-  //         offset: itemOffsetInList,
-  //         index,
-  //       };
-  //     }
+      offset += section.data.length * ITEM_ESTIMATED_HEIGHT;
+      i += section.data.length;
+    }
 
-  //     // Move to the next section
-  //     offset += section.data.length * ITEM_ESTIMATED_HEIGHT;
-  //     i += section.data.length;
-  //   }
-
-  //   // Fallback
-  //   return { length: 0, offset, index };
-  // };
+    return { length: 0, offset, index };
+  };
 
   const handleAlphabetPress = (letter: string) => {
     const sectionIndex = sections.findIndex(
       (section) => section.title === letter
     );
-    if (sectionIndex !== -1 && sectionListRef.current) {
-      const offset = sectionOffsets[letter] ?? 0;
-      const scrollResponder = sectionListRef.current.getScrollResponder();
-      scrollResponder?.scrollTo({ y: offset, animated: true });
-    } else if (letter === "#" && sectionListRef.current) {
-      const lastSectionIndex = sections.length - 1;
-      if (sections[lastSectionIndex]?.title === "#") {
-        sectionListRef.current.scrollToLocation({
-          sectionIndex: lastSectionIndex,
-          itemIndex: 0,
-          animated: true,
-        });
-      }
-    }
+    if (sectionIndex === -1) return;
+
+    sectionListRef.current?.scrollToLocation({
+      sectionIndex,
+      itemIndex: 0,
+      viewPosition: 0,
+      animated: true,
+    });
   };
 
   const importContacts2 = async () => {
@@ -411,15 +391,15 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
               <SectionList
                 ref={sectionListRef}
                 sections={sections}
-                keyExtractor={(item: ApiContact) => String(item.id)}
                 renderItem={renderContactItem}
                 renderSectionHeader={renderSectionHeader}
-                contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
-                showsVerticalScrollIndicator={false}
-                stickySectionHeadersEnabled={false}
+                keyExtractor={(item) => String(item.id)}
                 getItemLayout={getItemLayout}
-                initialNumToRender={500}
-                windowSize={21}
+                stickySectionHeadersEnabled={true}
+                removeClippedSubviews={false}
+                initialNumToRender={2000}
+                windowSize={10}
+                maxToRenderPerBatch={40}
               />
             )}
           </View>

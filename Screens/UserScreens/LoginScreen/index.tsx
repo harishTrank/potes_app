@@ -382,7 +382,8 @@ const styles = StyleSheet.create({
   },
 
   linkTextBlue: {
-    color: "#1E90FF", // professional blue
+    // color: "#1E90FF", // professional blue
+    color: theme.colors.black,
     textDecorationLine: "underline",
     ...theme.font.fontSemiBold,
   },
