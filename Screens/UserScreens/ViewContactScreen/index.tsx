@@ -154,7 +154,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
           },
           style: "destructive",
         },
-      ]
+      ],
     );
   const handleEdit = () =>
     navigation.navigate("CreateContantScreen", {
@@ -315,7 +315,9 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                   label="Birthday"
                   value={
                     apiResponse?.data.birthday
-                      ? dayjs(apiResponse?.data.birthday).format("MM-DD-YYYY")
+                      ? dayjs(apiResponse?.data.birthday, "YYYY-MM-DD").format(
+                          "MM-DD-YYYY",
+                        )
                       : "-"
                   }
                 />
@@ -331,9 +333,10 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                   label="Anniversary"
                   value={
                     apiResponse?.data.anniversary
-                      ? dayjs(apiResponse?.data.anniversary).format(
-                          "MM-DD-YYYY"
-                        )
+                      ? dayjs(
+                          apiResponse?.data.anniversary,
+                          "YYYY-MM-DD",
+                        ).format("MM-DD-YYYY")
                       : "-"
                   }
                 />
@@ -357,9 +360,10 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                     label="Spouse Birthday"
                     value={
                       apiResponse?.data.spouse_birthday
-                        ? dayjs(apiResponse?.data.spouse_birthday).format(
-                            "MM-DD-YYYY"
-                          )
+                        ? dayjs(
+                            apiResponse?.data.spouse_birthday,
+                            "YYYY-MM-DD",
+                          ).format("MM-DD-YYYY")
                         : "-"
                     }
                   />
@@ -415,7 +419,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                     <InfoDisplayField label="Employer" value={job.name} />
                     <InfoDisplayField label="Details" value={job.details} />
                   </View>
-                )
+                ),
               )}
               {(!apiResponse?.data.previous_employers ||
                 apiResponse?.data.previous_employers.length === 0) && (

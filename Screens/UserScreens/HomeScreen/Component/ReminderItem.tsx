@@ -14,12 +14,17 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
   const [flagManager, setFlagManager] = useState(item?.completed);
   const [, setGlobalNoteFlag]: any = useAtom(homeNoteEditGlobal);
   const navigation: any = useNavigation();
-
   const reminderClickHandler = (note_id: any) => {
     completeTaskApi({ query: { note_id } })
       ?.then(() => {
         if (name === "Today") {
           setFlagManager(true);
+          setReminer((oldVal: any) => ({
+            ...oldVal,
+            today: oldVal?.today?.map((item: any) =>
+              item?.id === note_id ? { ...item, completed: true } : item,
+            ),
+          }));
         } else if (name === "Missed") {
           setReminer((oldVal: any) => ({
             ...oldVal,
@@ -59,7 +64,11 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
         />
       ) : (
         <View style={styles.avatar}>
-          <FontAwesome name="user-circle" size={30} color={theme.colors.white} />
+          <FontAwesome
+            name="user-circle"
+            size={30}
+            color={theme.colors.white}
+          />
         </View>
       )}
 
@@ -74,7 +83,7 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
       </View>
 
       {/* 3. COMPLETION INDICATOR */}
-      {name === "Missed" && (
+      {(name === "Missed" || name === "Today") && (
         <View style={styles.indicatorContainer}>
           {flagManager ? (
             <Ionicons name="checkmark-circle" size={22} color={"#73f440"} />

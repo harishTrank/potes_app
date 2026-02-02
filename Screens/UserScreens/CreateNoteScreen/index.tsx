@@ -77,7 +77,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
   });
 
   const filteredContacts = contactNames.filter((contact: any) =>
-    contact.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+    contact.full_name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   useEffect(() => {
@@ -162,7 +162,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
         setFieldValue("customReminderDate", params.date);
       }
     },
-    []
+    [],
   );
 
   useEffect(() => {
@@ -321,7 +321,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                         multiline
                         numberOfLines={5}
                         blurOnSubmit={true}
-                        returnKeyType="done"
+                        // returnKeyType="done"
                       />
                     </View>
                     {touched.noteText && errors.noteText && (
@@ -384,7 +384,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                         >
                           {values?.customReminderDate
                             ? dayjs(values.customReminderDate).format(
-                                "MM-DD-YYYY"
+                                "MM-DD-YYYY",
                               )
                             : "MM-DD-YYYY"}
                         </Text>

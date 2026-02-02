@@ -32,7 +32,7 @@ const HomeScreen = ({ navigation }: any) => {
 
   const { width, height } = Dimensions.get("window");
   const position: any = React.useRef(
-    new Animated.ValueXY({ x: width - 80, y: height - 120 })
+    new Animated.ValueXY({ x: width - 80, y: height - 120 }),
   ).current;
   const panResponder = React.useRef(
     PanResponder.create({
@@ -46,12 +46,12 @@ const HomeScreen = ({ navigation }: any) => {
       onPanResponderMove: (_, gestureState) => {
         const newX = Math.min(
           Math.max(gestureState.dx + position.x._offset, 0),
-          width - 60
+          width - 60,
         );
         const safeHeight = height - insets.bottom;
         const newY = Math.min(
           Math.max(gestureState.dy + position.y._offset, 0),
-          safeHeight - 60
+          safeHeight - 60,
         );
         position.setValue({
           x: newX - position.x._offset,
@@ -61,7 +61,7 @@ const HomeScreen = ({ navigation }: any) => {
       onPanResponderRelease: () => {
         position.flattenOffset();
       },
-    })
+    }),
   ).current;
 
   const handleProfilePress = () => console.log("Profile pressed");
@@ -103,8 +103,15 @@ const HomeScreen = ({ navigation }: any) => {
     });
   }, [navigation]);
 
+  const todayCount = reminder?.today?.reduce((acc: number, curr: any) => {
+    if (curr.completed) {
+      return acc;
+    }
+    return acc + 1;
+  }, 0);
+
   const globalCount =
-    reminder?.today?.length +
+    todayCount +
     reminder?.missed?.length +
     birthday?.birthdays?.length +
     birthday?.anniversary?.length +
@@ -158,6 +165,7 @@ const HomeScreen = ({ navigation }: any) => {
                 count: reminder?.today?.length,
                 type: "Reminders",
               }}
+              setReminer={setReminer}
             />
             <ReminderCategory
               category={{

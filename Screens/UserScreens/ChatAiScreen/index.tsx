@@ -131,7 +131,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
       return () => {
         deleteAiChat();
       };
-    }, [])
+    }, []),
   );
   const renderItem = ({ item }: any) => (
     <>
@@ -187,14 +187,15 @@ const ChatWithAI = ({ navigation, route }: any) => {
               <Image source={ImageModule.logo} style={styles.logoImg} />
             </TouchableOpacity>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() =>
                 navigation.navigate("SearchResultScreen", { searchQuery: "" })
               }
               style={styles.iconButton}
             >
               <Feather name="search" size={24} color={theme.colors.white} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+            <View style={{ width: "12%" }}></View>
           </View>
 
           {/* Messages List */}

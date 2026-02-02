@@ -79,7 +79,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     index?: number;
   } | null>(null);
   const [currentDateValue, setCurrentDateValue] = useState<Date | undefined>(
-    undefined
+    undefined,
   );
   const [loading, setLoading]: any = useState(false);
   const [initialContactValues, setInitialContactValues]: any = useState({
@@ -108,12 +108,11 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
 
   const handleSearchPress = () =>
     navigation.navigate("SearchResultScreen", { searchQuery: "" });
-  const parseApiDate = (
-    dateString: string | null | undefined
-  ): Date | undefined => {
+  const parseApiDate = (dateString?: string | null): Date | undefined => {
     if (!dateString) return undefined;
-    const date = new Date(dateString);
-    return isNaN(date.getTime()) ? undefined : date;
+
+    const [year, month, day] = dateString.split("-");
+    return new Date(Number(year), Number(month) - 1, Number(day));
   };
   useEffect(() => {
     const contactToEdit = route.params?.contactData;
@@ -168,20 +167,19 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     }
   }, [route.params?.contactData, route.params?.type]);
 
-  const formatDateToYYYYMMDD = (
-    date: Date | undefined | null
-  ): string | undefined => {
+  const formatDateToYYYYMMDD = (date?: Date | null) => {
     if (!date) return undefined;
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = `0${d.getMonth() + 1}`.slice(-2);
-    const day = `0${d.getDate()}`.slice(-2);
-    return `${year}-${month}-${day}`;
+
+    const y = date.getFullYear();
+    const m = `${date.getMonth() + 1}`.padStart(2, "0");
+    const d = `${date.getDate()}`.padStart(2, "0");
+
+    return `${y}-${m}-${d}`;
   };
 
   const handleFormSubmit = async (
     values: any,
-    { setSubmitting, resetForm }: any
+    { setSubmitting, resetForm }: any,
   ) => {
     const formData = new FormData();
     setLoading(true);
@@ -195,7 +193,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     if (values.spouseBirthday) {
       formData.append(
         "spouse_birthday",
-        formatDateToYYYYMMDD(values.spouseBirthday)!
+        formatDateToYYYYMMDD(values.spouseBirthday)!,
       );
     }
     if (values.anniversary)
@@ -306,7 +304,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     required: any = false,
     keyboardType: any = "default",
     multiline = false,
-    numberOfLines = 1
+    numberOfLines = 1,
   ) => (
     <View style={styles.inputGroup}>
       <View style={{ flexDirection: "row", gap: 3 }}>
@@ -339,7 +337,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
       setCurrentDateValue(currentValue || new Date());
       setDatePickerVisible(true);
     },
-    []
+    [],
   );
   const onDismissDatePicker = useCallback(() => {
     setDatePickerVisible(false);
@@ -354,7 +352,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
           const fieldName = currentDateField.path.split(".")[1];
           setFieldValue(
             `${arrayName}[${currentDateField.index}].${fieldName}`,
-            params.date
+            params.date,
           );
         } else {
           setFieldValue(currentDateField.path, params.date);
@@ -362,7 +360,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
       }
       setCurrentDateField(null);
     },
-    [currentDateField]
+    [currentDateField],
   );
   const renderPaperDateInput = (
     formikValues: any,
@@ -370,7 +368,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     fieldPath: string,
     label: string,
     placeholder: string,
-    arrayIndex?: number
+    arrayIndex?: number,
   ) => {
     let displayValue: Date | undefined;
     if (arrayIndex !== undefined) {
@@ -502,21 +500,21 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         "nameOrDescription",
                         "Name or Description",
                         "Enter name or description",
-                        true
+                        true,
                       )}
                       {renderPaperDateInput(
                         values,
                         setFieldValue,
                         "birthday",
                         "Birthday",
-                        "Select Birthday"
+                        "Select Birthday",
                       )}
                       {renderPaperDateInput(
                         values,
                         setFieldValue,
                         "anniversary",
                         "Anniversary",
-                        "Select Anniversary"
+                        "Select Anniversary",
                       )}
                       {renderTextInput(
                         { values, handleChange, handleBlur },
@@ -524,7 +522,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         "Email",
                         "Enter email",
                         false,
-                        "email-address"
+                        "email-address",
                       )}
                       {renderTextInput(
                         { values, handleChange, handleBlur },
@@ -532,7 +530,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         "Number",
                         "Enter number",
                         false,
-                        "phone-pad"
+                        "phone-pad",
                       )}
                     </CollapsibleSection>
 
@@ -541,14 +539,14 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         { values, handleChange, handleBlur },
                         "spouseName",
                         "Spouse Name",
-                        "Enter spouse name"
+                        "Enter spouse name",
                       )}
                       {renderPaperDateInput(
                         values,
                         setFieldValue,
                         "spouseBirthday",
                         "Spouse Birthday",
-                        "Select Spouse Birthday"
+                        "Select Spouse Birthday",
                       )}
                       {renderTextInput(
                         { values, handleChange, handleBlur },
@@ -558,7 +556,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         false,
                         "default",
                         true,
-                        3
+                        3,
                       )}
                       <FieldArray name="children">
                         {(arrayHelpers: FieldArrayRenderProps) => (
@@ -589,13 +587,13 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                       (field: string) => (val: string) =>
                                         setFieldValue(
                                           `children[${index}].${field}`,
-                                          val
+                                          val,
                                         ),
                                     handleBlur,
                                   },
                                   "name",
                                   "Family Member Name",
-                                  "Enter Family Member name"
+                                  "Enter Family Member name",
                                 )}
                                 {renderPaperDateInput(
                                   values,
@@ -603,7 +601,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                   `children[index].birthday`,
                                   "Family Member Birthday",
                                   "Select Family Member Birthday",
-                                  index
+                                  index,
                                 )}
                                 {renderTextInput(
                                   {
@@ -612,7 +610,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                       (field: string) => (val: string) =>
                                         setFieldValue(
                                           `children[${index}].${field}`,
-                                          val
+                                          val,
                                         ),
                                     handleBlur,
                                   },
@@ -622,7 +620,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                   false,
                                   "default",
                                   true,
-                                  2
+                                  2,
                                 )}
                               </View>
                             ))}
@@ -677,13 +675,13 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                         (field: string) => (val: string) =>
                                           setFieldValue(
                                             `employmentHistory[${index}].${field}`,
-                                            val
+                                            val,
                                           ),
                                       handleBlur,
                                     },
                                     "name",
                                     "Employer Name",
-                                    "Enter employer name"
+                                    "Enter employer name",
                                   )}
                                   {renderTextInput(
                                     {
@@ -692,7 +690,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                         (field: string) => (val: string) =>
                                           setFieldValue(
                                             `employmentHistory[${index}].${field}`,
-                                            val
+                                            val,
                                           ),
                                       handleBlur,
                                     },
@@ -702,10 +700,10 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                     false,
                                     "default",
                                     true,
-                                    3
+                                    3,
                                   )}
                                 </View>
-                              )
+                              ),
                             )}
                             <TouchableOpacity
                               style={styles.addArrayEntryButton}
@@ -757,13 +755,13 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                         (field: string) => (val: string) =>
                                           setFieldValue(
                                             `educationHistory[${index}].${field}`,
-                                            val
+                                            val,
                                           ),
                                       handleBlur,
                                     },
                                     "name",
                                     "University Name",
-                                    "Enter University name"
+                                    "Enter University name",
                                   )}
                                   {renderTextInput(
                                     {
@@ -772,7 +770,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                         (field: string) => (val: string) =>
                                           setFieldValue(
                                             `educationHistory[${index}].${field}`,
-                                            val
+                                            val,
                                           ),
                                       handleBlur,
                                     },
@@ -782,10 +780,10 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                     false,
                                     "default",
                                     true,
-                                    3
+                                    3,
                                   )}
                                 </View>
-                              )
+                              ),
                             )}
                             <TouchableOpacity
                               style={styles.addArrayEntryButton}
@@ -822,10 +820,10 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                     placeholderTextColor={theme.colors.grey}
                                     value={interest.name}
                                     onChangeText={handleChange(
-                                      `interests[${index}].name`
+                                      `interests[${index}].name`,
                                     )}
                                     onBlur={handleBlur(
-                                      `interests[${index}].name`
+                                      `interests[${index}].name`,
                                     )}
                                   />
                                   <TouchableOpacity
@@ -839,7 +837,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                     />
                                   </TouchableOpacity>
                                 </View>
-                              )
+                              ),
                             )}
                             <TouchableOpacity
                               style={styles.addArrayEntryButton}
@@ -877,10 +875,10 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                     placeholder="Custom Field Title"
                                     value={customField.title}
                                     onChangeText={handleChange(
-                                      `customFields[${cfIndex}].title`
+                                      `customFields[${cfIndex}].title`,
                                     )}
                                     onBlur={handleBlur(
-                                      `customFields[${cfIndex}].title`
+                                      `customFields[${cfIndex}].title`,
                                     )}
                                     placeholderTextColor={theme.colors.grey}
                                   />
@@ -917,10 +915,10 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                               placeholder="Enter value"
                                               value={valueItem} // Direct string value
                                               onChangeText={handleChange(
-                                                `customFields[${cfIndex}].values[${valIndex}]`
+                                                `customFields[${cfIndex}].values[${valIndex}]`,
                                               )}
                                               onBlur={handleBlur(
-                                                `customFields[${cfIndex}].values[${valIndex}]`
+                                                `customFields[${cfIndex}].values[${valIndex}]`,
                                               )}
                                               placeholderTextColor={
                                                 theme.colors.grey
@@ -929,7 +927,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                             <TouchableOpacity
                                               onPress={() =>
                                                 valueArrayHelpers.remove(
-                                                  valIndex
+                                                  valIndex,
                                                 )
                                               }
                                               style={
@@ -943,7 +941,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                               />
                                             </TouchableOpacity>
                                           </View>
-                                        )
+                                        ),
                                       )}
                                       <TouchableOpacity
                                         style={styles.addValueButton}
@@ -959,7 +957,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                   )}
                                 </FieldArray>
                               </View>
-                            )
+                            ),
                           )}
                           <TouchableOpacity
                             style={styles.addCustomButton}
@@ -983,7 +981,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                               ]}
                               onPress={() =>
                                 customFieldArrayHelpers.remove(
-                                  values.customFields.length - 1
+                                  values.customFields.length - 1,
                                 )
                               }
                             >
