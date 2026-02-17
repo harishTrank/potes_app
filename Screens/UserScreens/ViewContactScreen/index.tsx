@@ -316,7 +316,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                   value={
                     apiResponse?.data.birthday
                       ? dayjs(apiResponse?.data.birthday, "YYYY-MM-DD").format(
-                          "MM-DD-YYYY",
+                          "MMMM DD",
                         )
                       : "-"
                   }
@@ -336,7 +336,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                       ? dayjs(
                           apiResponse?.data.anniversary,
                           "YYYY-MM-DD",
-                        ).format("MM-DD-YYYY")
+                        ).format("MMMM DD")
                       : "-"
                   }
                 />
@@ -363,7 +363,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                         ? dayjs(
                             apiResponse?.data.spouse_birthday,
                             "YYYY-MM-DD",
-                          ).format("MM-DD-YYYY")
+                          ).format("MMMM DD")
                         : "-"
                     }
                   />
@@ -392,7 +392,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                     label="Birthday"
                     value={
                       child.birthday
-                        ? dayjs(child.birthday).format("MM-DD-YYYY")
+                        ? dayjs(child.birthday).format("MMMM DD")
                         : "-"
                     }
                   />

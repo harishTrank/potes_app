@@ -49,7 +49,7 @@ interface SectionData {
 }
 
 const processContactsForSectionList = (
-  contacts: ApiContact[]
+  contacts: ApiContact[],
 ): SectionData[] => {
   if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
     return [];
@@ -74,7 +74,7 @@ const processContactsForSectionList = (
   return sortedLetters.map((letter) => ({
     title: letter,
     data: grouped[letter].sort((a, b) =>
-      a.full_name.localeCompare(b.full_name)
+      a.full_name.localeCompare(b.full_name),
     ),
   }));
 };
@@ -111,7 +111,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
           (contact) =>
             contact.full_name.toLowerCase().includes(lowerQuery) ||
             contact.email?.toLowerCase().includes(lowerQuery) ||
-            contact.phone?.includes(searchQuery)
+            contact.phone?.includes(searchQuery),
         );
       }
       const processed = processContactsForSectionList(filteredContacts);
@@ -176,7 +176,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
 
   const handleAlphabetPress = (letter: string) => {
     const sectionIndex = sections.findIndex(
-      (section) => section.title === letter
+      (section) => section.title === letter,
     );
     if (sectionIndex === -1) return;
 
@@ -199,7 +199,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
 
       const birthday = picked.birthday
         ? dayjs(
-            `${picked.birthday.year}-${picked.birthday.month}-${picked.birthday.day}`
+            `${picked.birthday.year}-${picked.birthday.month}-${picked.birthday.day}`,
           ).format("YYYY-MM-DD")
         : null;
 
@@ -256,7 +256,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
                     const { day, month, year } = c.birthday;
                     if (day && month && year) {
                       birthday = dayjs(`${year}-${month}-${day}`).format(
-                        "YYYY-MM-DD"
+                        "YYYY-MM-DD",
                       );
                     } else if (day && month) {
                       birthday = `1999-${month}-${day}`;
@@ -297,7 +297,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -350,7 +350,7 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
         {item.birthday && (
           <Text style={styles.contactDetail} numberOfLines={1}>
             <Feather name="gift" size={13} color={theme.colors.white} />
-            <Text> {dayjs(item.birthday).format("MM-DD-YYYY")}</Text>
+            <Text> {dayjs(item.birthday).format("MMMM DD")}</Text>
           </Text>
         )}
       </View>

@@ -144,9 +144,9 @@ const styles = StyleSheet.create({
     alignItems: "center", // Center the child horizontally
   },
   dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: theme.colors.white,
   },
 });

@@ -32,10 +32,10 @@ const EventListItem: any = ({ item, type }: any) => {
           {type === "Birthdays" || type === "Anniversary"
             ? item?.full_name
             : type === "spouse"
-            ? `${item?.spouse_name}\n(${item?.full_name}'s Spouse)`
-            : `${item?.name || ""}\n(${
-                item?.contact__full_name
-              }'s Family Member)`}
+              ? `${item?.spouse_name}\n(${item?.full_name}'s Spouse)`
+              : `${item?.name || ""}\n(${
+                  item?.contact__full_name
+                }'s Family Member)`}
         </Text>
       </View>
       <Text style={styles.eventDate}>
@@ -43,11 +43,11 @@ const EventListItem: any = ({ item, type }: any) => {
           type === "Birthdays"
             ? item.birthday
             : type === "Anniversary"
-            ? item?.anniversary
-            : type === "spouse"
-            ? item?.spouse_birthday
-            : item?.birthday
-        ).format("MM-DD-YYYY")}
+              ? item?.anniversary
+              : type === "spouse"
+                ? item?.spouse_birthday
+                : item?.birthday,
+        ).format("MMMM DD")}
       </Text>
     </TouchableOpacity>
   );

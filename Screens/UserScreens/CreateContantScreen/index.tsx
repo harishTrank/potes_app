@@ -21,8 +21,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import ImageModule from "../../../ImageModule";
 import { Formik, FieldArray, FieldArrayRenderProps } from "formik";
-import { DatePickerModal } from "react-native-paper-dates";
-import { en, registerTranslation } from "react-native-paper-dates";
 import { getImage, getfileobj, takePicture } from "../../../utils/ImagePicker"; // Assuming these are correct
 import Toast from "react-native-toast-message";
 import {
@@ -33,8 +31,7 @@ import FullScreenLoader from "../../Components/FullScreenLoader";
 // import { createContactApi } from "../../../store/Services/Others"; // Assuming this is correct
 import FastImage from "react-native-fast-image";
 import dayjs from "dayjs";
-
-registerTranslation("en", en);
+import MonthDayPicker from "./Component/MonthDayPicker";
 
 if (
   Platform.OS === "android" &&
@@ -73,14 +70,12 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
   const [selectedAvatarFileUri, setSelectedAvatarFileUri] = useState<
     string | null
   >(null); // Store file URI
-  const [datePickerVisible, setDatePickerVisible] = useState(false);
-  const [currentDateField, setCurrentDateField] = useState<{
+  const [monthDayVisible, setMonthDayVisible] = useState(false);
+  const [activeDateField, setActiveDateField] = useState<{
     path: string;
     index?: number;
   } | null>(null);
-  const [currentDateValue, setCurrentDateValue] = useState<Date | undefined>(
-    undefined,
-  );
+
   const [loading, setLoading]: any = useState(false);
   const [initialContactValues, setInitialContactValues]: any = useState({
     avatarUri: null,
@@ -332,36 +327,13 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     </View>
   );
   const openDatePicker = useCallback(
-    (path: string, currentValue: Date | undefined, index?: number) => {
-      setCurrentDateField({ path, index });
-      setCurrentDateValue(currentValue || new Date());
-      setDatePickerVisible(true);
+    (path: string, _currentValue: Date | undefined, index?: number) => {
+      setActiveDateField({ path, index });
+      setMonthDayVisible(true);
     },
     [],
   );
-  const onDismissDatePicker = useCallback(() => {
-    setDatePickerVisible(false);
-    setCurrentDateField(null);
-  }, []);
-  const onConfirmDatePicker = useCallback(
-    (params: { date: Date | undefined }, setFieldValue: Function) => {
-      setDatePickerVisible(false);
-      if (currentDateField && params.date) {
-        if (currentDateField.index !== undefined) {
-          const arrayName = currentDateField.path.split("[index]")[0];
-          const fieldName = currentDateField.path.split(".")[1];
-          setFieldValue(
-            `${arrayName}[${currentDateField.index}].${fieldName}`,
-            params.date,
-          );
-        } else {
-          setFieldValue(currentDateField.path, params.date);
-        }
-      }
-      setCurrentDateField(null);
-    },
-    [currentDateField],
-  );
+
   const renderPaperDateInput = (
     formikValues: any,
     setFieldValue: Function,
@@ -390,9 +362,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
               displayValue ? styles.dateInputText : styles.dateInputPlaceholder
             }
           >
-            {displayValue
-              ? dayjs(displayValue).format("MM-DD-YYYY")
-              : placeholder}
+            {displayValue ? dayjs(displayValue).format("MMMM DD") : placeholder}
           </Text>
           <Feather name="calendar" size={20} color={theme.colors.grey} />
         </TouchableOpacity>
@@ -1011,17 +981,46 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         </Text>
                       )}
                     </TouchableOpacity>
+                    {monthDayVisible && (
+                      <MonthDayPicker
+                        visible={monthDayVisible}
+                        initialDate={
+                          activeDateField
+                            ? activeDateField.index !== undefined
+                              ? values[
+                                  activeDateField.path.split("[index]")[0]
+                                ]?.[activeDateField.index]?.[
+                                  activeDateField.path.split(".")[1]
+                                ]
+                              : values[activeDateField.path]
+                            : undefined
+                        }
+                        onClose={() => {
+                          setMonthDayVisible(false);
+                          setActiveDateField(null);
+                        }}
+                        onConfirm={(date: Date) => {
+                          if (!activeDateField) return;
 
-                    <DatePickerModal
-                      locale="en"
-                      mode="single"
-                      visible={datePickerVisible}
-                      onDismiss={onDismissDatePicker}
-                      date={currentDateValue}
-                      onConfirm={(params) =>
-                        onConfirmDatePicker(params, setFieldValue)
-                      }
-                    />
+                          if (activeDateField.index !== undefined) {
+                            const arrayName =
+                              activeDateField.path.split("[index]")[0];
+                            const fieldName =
+                              activeDateField.path.split(".")[1];
+
+                            setFieldValue(
+                              `${arrayName}[${activeDateField.index}].${fieldName}`,
+                              date,
+                            );
+                          } else {
+                            setFieldValue(activeDateField.path, date);
+                          }
+
+                          setMonthDayVisible(false);
+                          setActiveDateField(null);
+                        }}
+                      />
+                    )}
                   </>
                 )}
               </Formik>
