@@ -121,7 +121,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
     postAiChat({
       body: {
         message: userMessage,
-        contactId: contactId || null,
+        contact_id: contactId || null,
         query: userMessage,
         conversation_id: conversationId || null,
       },
