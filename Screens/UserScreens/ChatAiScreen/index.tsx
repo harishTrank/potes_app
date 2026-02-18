@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -15,18 +15,14 @@ import theme from "../../../utils/theme";
 import DefaultBackground from "../../Components/DefaultBackground";
 import Feather from "@expo/vector-icons/Feather";
 import ImageModule from "../../../ImageModule";
-import {
-  deleteAiChat,
-  getAiChat,
-  postAiChat,
-} from "../../../store/Services/Others";
-import { useFocusEffect } from "@react-navigation/native";
+import { postAiChat } from "../../../store/Services/Others";
 import Toast from "react-native-toast-message";
-import FullScreenLoader from "../../Components/FullScreenLoader";
+import TypingIndicator from "./Components/TypingIndicator";
 
 const ChatWithAI = ({ navigation, route }: any) => {
   const contactId = route?.params?.contactId || null;
   const [loading, setLoading]: any = useState(false);
+  const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([
     {
       id: "1",
@@ -57,16 +53,10 @@ const ChatWithAI = ({ navigation, route }: any) => {
 
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
-
-  const getChats = () => {
-    getAiChat().then((res: any) => {
-      setAiChats(res);
-    });
-  };
+  }, [messages, aiChats]);
 
   useEffect(() => {
-    getChats();
+    // getChats();
     const interval = setInterval(() => {
       Animated.sequence([
         Animated.parallel([
@@ -102,61 +92,108 @@ const ChatWithAI = ({ navigation, route }: any) => {
   }, []);
 
   const handleSend = (text?: string) => {
-    setLoading(true);
-    if (!input.trim() && !text?.trim()) {
+    const userMessage = text || input;
+
+    if (!userMessage.trim()) {
       Toast.show({
         type: "error",
         text1: "Input cannot be empty",
       });
       return;
     }
+
+    setInput("");
+
+    const tempId = Date.now().toString();
+
+    // 1️⃣ Add user message immediately
+    setAiChats((prev: any) => [
+      ...prev,
+      {
+        id: tempId,
+        message: userMessage,
+        reply: null,
+      },
+    ]);
+
+    setLoading(true);
+
     postAiChat({
       body: {
-        message: text || input,
+        message: userMessage,
         contactId: contactId || null,
+        query: userMessage,
+        conversation_id: conversationId || null,
       },
     })
       .then((res: any) => {
-        setInput("");
-        getChats();
+        // 2️⃣ Add AI reply
+        setAiChats((prev: any) => [
+          ...prev,
+          {
+            id: res?.id || Date.now().toString(),
+            message: null,
+            reply: res?.ui?.message || res?.response,
+          },
+        ]);
+
+        setConversationId(res?.meta?.conversation_id);
       })
       .catch((err: any) => {
         console.log("err", err);
+
+        // 3️⃣ Remove the failed user message
+        setAiChats((prev: any) =>
+          prev.filter((chat: any) => chat.id !== tempId),
+        );
+
+        Toast.show({
+          type: "error",
+          text1: "Something went wrong. Please try again.",
+        });
       })
       .finally(() => setLoading(false));
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        deleteAiChat();
-      };
-    }, []),
-  );
-  const renderItem = ({ item }: any) => (
-    <>
-      {item?.message && (
-        <View style={[styles.messageContainer, styles.userMessageContainer]}>
-          <View style={[styles.bubble, styles.userBubble]}>
-            <Text style={styles.messageText}>{item?.message}</Text>
+  const renderItem = ({ item }: any) => {
+    if (item.typing) {
+      return <TypingIndicator />;
+    }
+
+    return (
+      <>
+        {item?.message && (
+          <View style={[styles.messageContainer, styles.userMessageContainer]}>
+            <View style={[styles.bubble, styles.userBubble]}>
+              <Text style={styles.messageText}>{item?.message}</Text>
+            </View>
           </View>
-        </View>
-      )}
-      {item?.reply && (
-        <View style={[styles.messageContainer, styles.aiMessageContainer]}>
-          <View style={[styles.bubble, styles.aiBubble]}>
-            <Text style={styles.messageText}>{item?.reply}</Text>
+        )}
+        {item?.reply && (
+          <View style={[styles.messageContainer, styles.aiMessageContainer]}>
+            <View style={[styles.bubble, styles.aiBubble]}>
+              <Text style={styles.messageText}>{item?.reply}</Text>
+            </View>
           </View>
-        </View>
-      )}
-    </>
-  );
+        )}
+      </>
+    );
+  };
 
   const handleQuickOptionPress = (text: string) => {
     setInput(text);
 
     handleSend(text);
   };
+
+  const chatData = loading
+    ? [
+        ...(aiChats.length > 0 ? aiChats : messages),
+        { id: "typing-indicator", typing: true },
+      ]
+    : aiChats.length > 0
+      ? aiChats
+      : messages;
 
   return (
     <DefaultBackground>
@@ -165,7 +202,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
-        {loading && <FullScreenLoader />}
+        {/* {loading && <FullScreenLoader />} */}
         <View style={{ flex: 1, paddingTop: 60 }}>
           {/* Header */}
           <View style={styles.headerRow}>
@@ -202,7 +239,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
           <FlatList
             ref={flatListRef}
             style={{ marginBottom: 10 }}
-            data={aiChats.length > 0 ? aiChats : messages}
+            data={chatData}
             renderItem={renderItem}
             keyExtractor={(item) => item?.id}
             contentContainerStyle={styles.chatArea}

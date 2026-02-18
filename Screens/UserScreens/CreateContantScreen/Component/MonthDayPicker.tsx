@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Modal, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import dayjs from "dayjs";
 import theme from "../../../../utils/theme";
@@ -58,7 +65,7 @@ const MonthDayPicker = ({
               ))}
             </Picker>
 
-            {/* <View style={styles.divider} /> */}
+            {Platform.OS === "android" && <View style={styles.divider} />}
 
             <Picker
               selectedValue={day}
