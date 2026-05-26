@@ -48,8 +48,10 @@ const styles = StyleSheet.create({
   },
   bubble: {
     flexDirection: "row",
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: theme.colors.white,
     borderRadius: 15,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     padding: 15,
     width: 70,
     justifyContent: "space-between",
@@ -58,6 +60,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#fff",
+    backgroundColor: theme.colors.primary,
   },
 });

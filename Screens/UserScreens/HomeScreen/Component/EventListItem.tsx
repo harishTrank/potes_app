@@ -1,10 +1,15 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import theme from "../../../../utils/theme";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Feather from "@expo/vector-icons/Feather";
 import { useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
 import FastImage from "react-native-fast-image";
+
+const getInitials = (name: string) => {
+  if (!name) return "?";
+  return name.split(" ").slice(0, 2).map((p) => p[0]).join("").toUpperCase();
+};
 
 const EventListItem: any = ({ item, type }: any) => {
   const navigation: any = useNavigation();
@@ -14,41 +19,40 @@ const EventListItem: any = ({ item, type }: any) => {
       contactName: item?.full_name || item?.contact__full_name,
     });
   };
+
+  const name =
+    type === "Birthdays" || type === "Anniversary"
+      ? item?.full_name
+      : type === "spouse"
+      ? `${item?.spouse_name} (${item?.full_name}'s Spouse)`
+      : `${item?.name || ""} (${item?.contact__full_name}'s Family)`;
+
+  const date = dayjs(
+    type === "Birthdays"
+      ? item.birthday
+      : type === "Anniversary"
+      ? item?.anniversary
+      : type === "spouse"
+      ? item?.spouse_birthday
+      : item?.birthday
+  ).format("MMM D");
+
   return (
     <TouchableOpacity style={styles.container} onPress={cardClickHandler}>
       {item?.photo || item?.contact__photo ? (
         <FastImage
-          source={{
-            uri: item?.photo || item?.contact__photo,
-            priority: FastImage.priority.normal,
-          }}
-          style={styles.profilePic}
+          source={{ uri: item?.photo || item?.contact__photo, priority: FastImage.priority.normal }}
+          style={styles.avatar}
         />
       ) : (
-        <FontAwesome name="user-circle" size={30} color={theme.colors.white} />
+        <View style={styles.avatarPlaceholder}>
+          <Text style={styles.avatarInitials}>{getInitials(item?.full_name || item?.name || "")}</Text>
+        </View>
       )}
-      <View style={styles.textContainer}>
-        <Text style={styles.eventText}>
-          {type === "Birthdays" || type === "Anniversary"
-            ? item?.full_name
-            : type === "spouse"
-              ? `${item?.spouse_name}\n(${item?.full_name}'s Spouse)`
-              : `${item?.name || ""}\n(${
-                  item?.contact__full_name
-                }'s Family Member)`}
-        </Text>
-      </View>
-      <Text style={styles.eventDate}>
-        {dayjs(
-          type === "Birthdays"
-            ? item.birthday
-            : type === "Anniversary"
-              ? item?.anniversary
-              : type === "spouse"
-                ? item?.spouse_birthday
-                : item?.birthday,
-        ).format("MMMM DD")}
+      <Text style={styles.eventName} numberOfLines={2}>
+        {name}
       </Text>
+      <Text style={styles.eventDate}>{date}</Text>
     </TouchableOpacity>
   );
 };
@@ -57,29 +61,44 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12, // Adjusted padding
-    // paddingHorizontal: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: theme.colors.white,
+    borderRadius: 8,
+    marginBottom: 6,
+    ...theme.elevationLight,
   },
-  profilePic: {
-    height: 30,
-    width: 30,
-    borderRadius: 15,
-  },
-  textContainer: {
-    flex: 1, // Allow primary text to take available space and truncate if needed
+  avatar: {
+    height: 36,
+    width: 36,
+    borderRadius: 18,
     marginRight: 10,
   },
-  eventText: {
-    ...theme.font.fontBold,
-    fontSize: 15,
-    color: theme.colors.white,
-    marginBottom: 2,
-    marginLeft: 12,
+  avatarPlaceholder: {
+    height: 36,
+    width: 36,
+    borderRadius: 18,
+    backgroundColor: theme.colors.primaryLight,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  avatarInitials: {
+    fontSize: 13,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.primary,
+  },
+  eventName: {
+    flex: 1,
+    fontFamily: "Poppins-Medium",
+    fontSize: 13,
+    color: theme.colors.text,
   },
   eventDate: {
-    fontSize: 14,
-    ...theme.font.fontRegular, // Assuming fontRegular
-    color: theme.colors.grey, // Assuming lightGrey or a similar color for dates
+    fontSize: 12,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.greyText,
+    marginLeft: 8,
   },
 });
 

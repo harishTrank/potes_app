@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Image,
   TextInput,
   ActivityIndicator,
   Platform,
@@ -13,14 +12,13 @@ import {
   FlatList,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import ImageModule from "../../../ImageModule";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import DropDownComponent from "../../Components/DropDownComponent";
 import {
   allContactOptionApi,
   createNotesApi,
@@ -33,36 +31,25 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useAtom } from "jotai";
 import { homeNoteEditGlobal } from "../../../jotaiStore";
+
 dayjs.extend(utc);
 registerTranslation("en", en);
 
 const createNoteValidationSchema = Yup.object().shape({
   contactId: Yup.mixed().nullable().required("Contact name is required"),
-  noteText: Yup.string()
-    .required("Note text is required")
-    .min(5, "Note must be at least 5 characters"),
+  noteText: Yup.string().required("Note text is required").min(5, "Note must be at least 5 characters"),
   reminderOption: Yup.string().required("Reminder option is required"),
   customReminderDate: Yup.date().when("reminderOption", {
     is: "Custom",
-    then: (schema) =>
-      schema.required("Custom reminder date is required").nullable(),
+    then: (schema) => schema.required("Custom reminder date is required").nullable(),
     otherwise: (schema) => schema.nullable(),
   }),
 });
 
-const reminderOptions = [
-  { label: "None", value: "none" },
-  { label: "Monthly", value: "Monthly" },
-  { label: "Quarterly", value: "Quarterly" },
-  { label: "Yearly", value: "Yearly" },
-  { label: "Custom", value: "Custom" },
-];
-
 const CreateNoteScreen: any = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
   const item = route?.params?.note ?? null;
-  const contact_name =
-    route?.params?.note?.contact_full_name || route?.params?.contactName;
+  const contact_name = route?.params?.note?.contact_full_name || route?.params?.contactName;
   const [contactNames, setContactNames]: any = useState([]);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,27 +57,20 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
   const [globalNoteFlag, setGlobalNoteFlag]: any = useAtom(homeNoteEditGlobal);
   const [initialValues, setInitialValues]: any = useState({
     contactId: item?.contact_id || route?.params?.contactId || null,
-    contactName: item?.contact_full_name || contact_name || "select contact",
+    contactName: item?.contact_full_name || contact_name || "Select contact",
     noteText: "",
     reminderOption: "None",
     customReminderDate: undefined,
   });
 
-  const filteredContacts = contactNames.filter((contact: any) =>
-    contact.full_name.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredContacts = contactNames.filter((c: any) =>
+    c.full_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   useEffect(() => {
     allContactOptionApi()
-      .then((res: any) => {
-        setContactNames(res?.contacts);
-      })
-      .catch((err: any) => {
-        Toast.show({
-          type: "error",
-          text1: err?.data?.details,
-        });
-      });
+      .then((res: any) => setContactNames(res?.contacts))
+      .catch((err: any) => Toast.show({ type: "error", text1: err?.data?.details }));
   }, []);
 
   useEffect(() => {
@@ -99,7 +79,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
         contactId: route?.params?.note?.contact,
         contactName: route?.params?.note?.contact_full_name,
         noteText: route?.params?.note?.note,
-        reminderOption: route?.params?.note?.reminder_type,
+        reminderOption: route?.params?.note?.reminder_type || "None",
         customReminderDate:
           route?.params?.note?.reminder === null
             ? new Date()
@@ -107,63 +87,6 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
       });
     }
   }, [route?.params?.note?.id]);
-
-  const handleSearchPress = () => {
-    navigation.navigate("SearchResultScreen", { searchQuery: "" });
-  };
-
-  const handleFormSubmit = (values: any) => {
-    const payload = {
-      contact: values.contactId,
-      note: values.noteText,
-      reminder_type:
-        values.reminderOption === "None" ? null : values.reminderOption,
-      reminder:
-        values.reminderOption === "Custom"
-          ? dayjs(values.customReminderDate).format("YYYY-MM-DD")
-          : null,
-    };
-    if (route?.params?.type === "edit") {
-      editNote({
-        query: { id: route?.params?.note?.id },
-        body: payload,
-      })
-        ?.then(() => {
-          Toast.show({ type: "success", text1: "Note edit successfully." });
-          if (globalNoteFlag) {
-            setGlobalNoteFlag(false);
-            navigation.navigate("DrawerNavigation");
-          } else {
-            navigation.goBack();
-          }
-        })
-        ?.catch(() => {
-          Toast.show({ type: "error", text1: "All fields are required." });
-        });
-    } else {
-      createNotesApi({ body: payload })
-        ?.then((res: any) => {
-          Toast.show({ type: "success", text1: res.msg });
-          navigation.goBack();
-        })
-        ?.catch((err: any) => {
-          Toast.show({ type: "error", text1: err.data.error });
-        });
-    }
-  };
-
-  const onDismissDatePicker = useCallback(() => {
-    setDatePickerVisible(false);
-  }, []);
-  const onConfirmCustomDate = useCallback(
-    (params: { date: Date | undefined }, setFieldValue: Function) => {
-      setDatePickerVisible(false);
-      if (params.date) {
-        setFieldValue("customReminderDate", params.date);
-      }
-    },
-    [],
-  );
 
   useEffect(() => {
     if (route?.params?.type === "AddNote") {
@@ -177,262 +100,236 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
     }
   }, [route?.params?.type]);
 
+  const handleFormSubmit = (values: any) => {
+    const payload = {
+      contact: values.contactId,
+      note: values.noteText,
+      reminder_type: values.reminderOption === "None" ? null : values.reminderOption,
+      reminder:
+        values.reminderOption === "Custom"
+          ? dayjs(values.customReminderDate).format("YYYY-MM-DD")
+          : null,
+    };
+    if (route?.params?.type === "edit") {
+      editNote({ query: { id: route?.params?.note?.id }, body: payload })
+        ?.then(() => {
+          Toast.show({ type: "success", text1: "Note edited successfully." });
+          if (globalNoteFlag) {
+            setGlobalNoteFlag(false);
+            navigation.navigate("DrawerNavigation");
+          } else {
+            navigation.goBack();
+          }
+        })
+        ?.catch(() => Toast.show({ type: "error", text1: "All fields are required." }));
+    } else {
+      createNotesApi({ body: payload })
+        ?.then((res: any) => {
+          Toast.show({ type: "success", text1: res.msg });
+          navigation.goBack();
+        })
+        ?.catch((err: any) => Toast.show({ type: "error", text1: err?.data?.error }));
+    }
+  };
+
+  const onDismissDatePicker = useCallback(() => setDatePickerVisible(false), []);
+  const onConfirmCustomDate = useCallback((params: { date: Date | undefined }, setFieldValue: Function) => {
+    setDatePickerVisible(false);
+    if (params.date) setFieldValue("customReminderDate", params.date);
+  }, []);
+
+  const isEdit = route?.params?.type === "edit";
+
   return (
     <DefaultBackground>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -100}
+        keyboardVerticalOffset={0}
       >
-        {/* Header */}
-        <View style={[styles.headerRow, { paddingTop: insets.top }]}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.iconButton}
-          >
-            <Feather name="chevron-left" size={24} color={theme.colors.white} />
+        <View style={[styles.headerRow, { paddingTop: insets.top + 6 }]}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Feather name="arrow-left" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnlogoImg}
-            onPress={() => navigation.navigate("DrawerNavigation")}
-          >
-            <Image source={ImageModule.logo} style={styles.logoImg} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleSearchPress}
-            style={styles.iconButton}
-          >
-            <Feather name="search" size={24} color={theme.colors.white} />
-          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{isEdit ? "Edit Note" : "Create Note"}</Text>
+          <View style={styles.headerRight} />
         </View>
+
         <ScrollView
-          style={[styles.container]}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          style={styles.scroll}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 30 }}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {/* Form */}
-          <View style={styles.formCard}>
-            <Text style={styles.formTitle}>{`${
-              route?.params?.type === "edit" ? "Edit" : "Create"
-            } a Note`}</Text>
+          <Formik
+            initialValues={initialValues}
+            validationSchema={createNoteValidationSchema}
+            onSubmit={handleFormSubmit}
+            enableReinitialize
+          >
+            {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting, setFieldValue }: any) => (
+              <View style={{ paddingHorizontal: 16 }}>
 
-            <Formik
-              initialValues={initialValues}
-              validationSchema={createNoteValidationSchema}
-              onSubmit={handleFormSubmit}
-              enableReinitialize
-            >
-              {({
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                values,
-                errors,
-                touched,
-                isSubmitting,
-                setFieldValue,
-              }: any) => (
-                <>
-                  {/* Contact Dropdown */}
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Contact Name</Text>
-                    <TouchableOpacity
-                      style={styles.dropdownSelector}
-                      onPress={() =>
-                        setContactDropdownOpen(!isContactDropdownOpen)
-                      }
-                    >
-                      <Text style={styles.dropdownSelectorText}>
-                        {initialValues.contactName}
-                      </Text>
-                      <Feather
-                        name={
-                          isContactDropdownOpen ? "chevron-up" : "chevron-down"
-                        }
-                        size={20}
-                        color="#333"
-                      />
-                    </TouchableOpacity>
-
-                    {touched.contactId && errors.contactId && (
-                      <Text style={styles.errorText}>
-                        {errors.contactId as string}
-                      </Text>
-                    )}
-
-                    {isContactDropdownOpen && (
-                      <View style={styles.dropdownArea}>
-                        <TextInput
-                          style={styles.searchInput}
-                          placeholder="Search contacts..."
-                          placeholderTextColor="#888"
-                          value={searchTerm}
-                          onChangeText={setSearchTerm}
-                        />
-                        <FlatList
-                          data={filteredContacts}
-                          keyExtractor={(item) => item.id.toString()}
-                          renderItem={({ item }) => (
-                            <TouchableOpacity
-                              style={styles.dropdownItem}
-                              onPress={() => {
-                                setInitialValues({
-                                  ...initialValues,
-                                  contactName: item?.full_name,
-                                  contactId: item?.id,
-                                });
-                                setContactDropdownOpen(false);
-                                setSearchTerm("");
-                              }}
-                            >
-                              <Text style={{ color: "#000" }}>
-                                {item.full_name}
-                              </Text>
-                            </TouchableOpacity>
-                          )}
-                          style={{ maxHeight: 200 }}
-                          keyboardShouldPersistTaps="handled"
-                          nestedScrollEnabled
-                          showsVerticalScrollIndicator={true}
-                        />
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Note Text */}
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Enter the Note</Text>
-                    <View
-                      style={[
-                        styles.textAreaContainer,
-                        touched.noteText &&
-                          errors.noteText &&
-                          styles.inputErrorContainer,
-                      ]}
-                    >
-                      <TextInput
-                        style={[styles.input, styles.textArea]}
-                        placeholder="Enter your note"
-                        placeholderTextColor={theme.colors.grey}
-                        value={values.noteText}
-                        onChangeText={handleChange("noteText")}
-                        onBlur={handleBlur("noteText")}
-                        multiline
-                        numberOfLines={5}
-                        blurOnSubmit={true}
-                        // returnKeyType="done"
-                      />
-                    </View>
-                    {touched.noteText && errors.noteText && (
-                      <Text style={styles.errorText}>
-                        {errors.noteText as string}
-                      </Text>
-                    )}
-                  </View>
-
-                  {/* Reminder Dropdown */}
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Note reminder</Text>
-                    <DropDownComponent
-                      data={reminderOptions}
-                      value={values.reminderOption}
-                      mode={"modal"}
-                      setValue={(selectedValue: string) => {
-                        setFieldValue("reminderOption", selectedValue);
-                        if (selectedValue !== "Custom") {
-                          setFieldValue("customReminderDate", undefined);
-                        }
-                      }}
-                      placeholder="Select reminder type"
-                      fieldKey="label"
-                      objectSave={false}
-                      search={false}
-                      style={[
-                        styles.dropdownStyle,
-                        touched.reminderOption &&
-                          errors.reminderOption &&
-                          styles.inputError,
-                      ]}
-                    />
-                    {touched.reminderOption && errors.reminderOption && (
-                      <Text style={styles.errorText}>
-                        {errors.reminderOption as string}
-                      </Text>
-                    )}
-                  </View>
-
-                  {/* Custom Reminder Date */}
-                  {values.reminderOption === "Custom" && (
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.label}>Set a Reminder</Text>
-                      <TouchableOpacity
-                        style={[
-                          styles.dateInputDisplay,
-                          touched.customReminderDate &&
-                            errors.customReminderDate &&
-                            styles.inputError,
-                        ]}
-                        onPress={() => setDatePickerVisible(true)}
-                      >
-                        <Text
-                          style={
-                            values.customReminderDate
-                              ? styles.dateInputText
-                              : styles.dateInputPlaceholder
-                          }
-                        >
-                          {values?.customReminderDate
-                            ? dayjs(values.customReminderDate).format(
-                                "MM-DD-YYYY",
-                              )
-                            : "MM-DD-YYYY"}
+                {/* ASSOCIATE CONTACT */}
+                <View style={styles.card}>
+                  <Text style={styles.cardLabel}>ASSOCIATE CONTACT</Text>
+                  <TouchableOpacity
+                    style={styles.contactSelector}
+                    onPress={() => setContactDropdownOpen(!isContactDropdownOpen)}
+                  >
+                    <View style={styles.contactSelectorInner}>
+                      <View style={styles.contactAvatarSmall}>
+                        <Text style={styles.contactAvatarText}>
+                          {initialValues.contactName?.[0]?.toUpperCase() || "?"}
                         </Text>
-                        <Feather
-                          name="calendar"
-                          size={20}
-                          color={theme.colors.grey}
-                        />
-                      </TouchableOpacity>
-                      {touched.customReminderDate &&
-                        errors.customReminderDate && (
-                          <Text style={styles.errorText}>
-                            {errors.customReminderDate as string}
-                          </Text>
+                      </View>
+                      <View>
+                        <Text style={styles.contactSelectorName}>{initialValues.contactName}</Text>
+                      </View>
+                    </View>
+                    <Feather name={isContactDropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={theme.colors.greyText} />
+                  </TouchableOpacity>
+                  {touched.contactId && errors.contactId && (
+                    <Text style={styles.errorText}>{errors.contactId as string}</Text>
+                  )}
+                  {isContactDropdownOpen && (
+                    <View style={styles.dropdownArea}>
+                      <TextInput
+                        style={styles.dropdownSearch}
+                        placeholder="Search contacts..."
+                        placeholderTextColor={theme.colors.greyText}
+                        value={searchTerm}
+                        onChangeText={setSearchTerm}
+                      />
+                      <FlatList
+                        data={filteredContacts}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            style={styles.dropdownItem}
+                            onPress={() => {
+                              setInitialValues({ ...initialValues, contactName: item?.full_name, contactId: item?.id });
+                              setFieldValue("contactId", item?.id);
+                              setContactDropdownOpen(false);
+                              setSearchTerm("");
+                            }}
+                          >
+                            <Text style={styles.dropdownItemText}>{item.full_name}</Text>
+                          </TouchableOpacity>
                         )}
+                        style={{ maxHeight: 180 }}
+                        keyboardShouldPersistTaps="handled"
+                        nestedScrollEnabled
+                      />
                     </View>
                   )}
+                </View>
 
-                  {/* Submit */}
-                  <TouchableOpacity
-                    style={[
-                      styles.submitButton,
-                      isSubmitting && styles.buttonDisabled,
-                    ]}
-                    onPress={() => handleSubmit()}
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <ActivityIndicator color={theme.colors.black} />
-                    ) : (
-                      <Text style={styles.submitButtonText}>Submit</Text>
-                    )}
-                  </TouchableOpacity>
-
-                  <DatePickerModal
-                    locale="en"
-                    mode="single"
-                    visible={datePickerVisible}
-                    onDismiss={onDismissDatePicker}
-                    date={values?.customReminderDate}
-                    onConfirm={(params) =>
-                      onConfirmCustomDate(params, setFieldValue)
-                    }
+                {/* NOTE */}
+                <View style={styles.card}>
+                  <View style={styles.noteLabelRow}>
+                    <Text style={styles.cardLabel}>ENTER THE NOTE</Text>
+                  </View>
+                  <TextInput
+                    style={[styles.noteInput, touched.noteText && errors.noteText && styles.inputError]}
+                    placeholder="Start typing your note here..."
+                    placeholderTextColor={theme.colors.grey}
+                    value={values.noteText}
+                    onChangeText={handleChange("noteText")}
+                    onBlur={handleBlur("noteText")}
+                    multiline
+                    numberOfLines={6}
+                    blurOnSubmit={false}
+                    textAlignVertical="top"
                   />
-                </>
-              )}
-            </Formik>
-          </View>
+                  {touched.noteText && errors.noteText && (
+                    <Text style={styles.errorText}>{errors.noteText as string}</Text>
+                  )}
+                </View>
+
+                {/* SET REMINDER */}
+                <View style={styles.card}>
+                  <View style={styles.reminderLabelRow}>
+                    <Text style={styles.cardLabel}>SET REMINDER</Text>
+                    <Feather name="bell" size={16} color={theme.colors.greyText} />
+                  </View>
+                  <View style={styles.reminderToggleRow}>
+                    <TouchableOpacity
+                      style={[styles.reminderToggle, values.reminderOption === "None" && styles.reminderToggleActive]}
+                      onPress={() => { setFieldValue("reminderOption", "None"); setFieldValue("customReminderDate", undefined); }}
+                    >
+                      <Feather name="calendar" size={14} color={values.reminderOption === "None" ? theme.colors.white : theme.colors.primary} />
+                      <Text style={[styles.reminderToggleText, values.reminderOption === "None" && styles.reminderToggleTextActive]}>None</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.reminderToggle, values.reminderOption === "Custom" && styles.reminderToggleActive]}
+                      onPress={() => setFieldValue("reminderOption", "Custom")}
+                    >
+                      <Feather name="calendar" size={14} color={values.reminderOption === "Custom" ? theme.colors.white : theme.colors.primary} />
+                      <Text style={[styles.reminderToggleText, values.reminderOption === "Custom" && styles.reminderToggleTextActive]}>Custom</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {values.reminderOption === "Custom" && (
+                    <TouchableOpacity
+                      style={[styles.dateDisplay, touched.customReminderDate && errors.customReminderDate && styles.inputError]}
+                      onPress={() => setDatePickerVisible(true)}
+                    >
+                      <Text style={values.customReminderDate ? styles.dateText : styles.datePlaceholder}>
+                        {values.customReminderDate ? dayjs(values.customReminderDate).format("MM-DD-YYYY") : "MM-DD-YYYY"}
+                      </Text>
+                      <Feather name="calendar" size={18} color={theme.colors.greyText} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* AI ASSIST */}
+                <View style={styles.card}>
+                  <View style={styles.aiAssistHeader}>
+                    <MaterialCommunityIcons name="star-four-points" size={16} color={theme.colors.primary} />
+                    <Text style={styles.aiAssistLabel}> AI ASSIST</Text>
+                  </View>
+                  <Text style={styles.aiAssistSub}>After saving your raw note, ask AI to refine it.</Text>
+                  <View style={styles.aiChipsRow}>
+                    <View style={styles.aiChip}>
+                      <MaterialCommunityIcons name="star-four-points" size={13} color={theme.colors.primary} />
+                      <Text style={styles.aiChipText}> Clean up</Text>
+                    </View>
+                    <View style={styles.aiChip}>
+                      <Feather name="align-left" size={13} color={theme.colors.primary} />
+                      <Text style={styles.aiChipText}> Summarize</Text>
+                    </View>
+                    <View style={styles.aiChip}>
+                      <Feather name="check-square" size={13} color={theme.colors.primary} />
+                      <Text style={styles.aiChipText}> Commitments</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* SAVE BUTTON */}
+                <TouchableOpacity
+                  style={[styles.saveBtn, isSubmitting && styles.btnDisabled]}
+                  onPress={() => handleSubmit()}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator color={theme.colors.white} />
+                  ) : (
+                    <Text style={styles.saveBtnText}>SAVE NOTE</Text>
+                  )}
+                </TouchableOpacity>
+
+                <DatePickerModal
+                  locale="en"
+                  mode="single"
+                  visible={datePickerVisible}
+                  onDismiss={onDismissDatePicker}
+                  date={values?.customReminderDate}
+                  onConfirm={(params) => onConfirmCustomDate(params, setFieldValue)}
+                />
+              </View>
+            )}
+          </Formik>
         </ScrollView>
       </KeyboardAvoidingView>
     </DefaultBackground>
@@ -440,142 +337,120 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, margin: 15 },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: theme.colors.lightBackground,
   },
-  logoImg: { width: "100%", height: 40, resizeMode: "contain" },
-  btnlogoImg: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "50%",
-    height: 40,
-  },
-  iconButton: {
-    backgroundColor: theme.colors.secondary,
-    padding: 8,
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  formCard: {
-    backgroundColor: theme.colors.secondary,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+  backBtn: { width: 40, height: 40, justifyContent: "center" },
+  headerTitle: { fontSize: 18, fontFamily: "Poppins-Bold", color: theme.colors.text },
+  headerRight: { width: 40 },
+  scroll: { flex: 1 },
+  card: {
+    backgroundColor: theme.colors.white,
     borderRadius: 12,
-    width: "100%",
+    padding: 14,
+    marginBottom: 14,
+    ...theme.elevationLight,
   },
-  formTitle: {
-    fontSize: 22,
-    ...theme.font.fontBold,
-    color: theme.colors.white,
-    marginBottom: 20,
+  cardLabel: {
+    fontSize: 11,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.greyText,
+    letterSpacing: 0.8,
+    marginBottom: 10,
   },
-  inputGroup: { marginBottom: 20 },
-  label: {
-    fontSize: 15,
-    ...theme.font.fontMedium,
-    color: theme.colors.white,
-    marginBottom: 8,
-  },
-  input: {
-    paddingHorizontal: 15,
-    fontSize: 16,
-    ...theme.font.fontRegular,
-    color: theme.colors.black,
-  },
-  dropdownStyle: {
-    height: 50,
-    backgroundColor: theme.colors.white,
-    borderRadius: 8,
-    borderWidth: 0,
-  },
-  textAreaContainer: {
+  contactSelector: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: theme.colors.white,
-    borderRadius: 8,
-  },
-  textArea: {
-    flex: 1,
-    height: 140,
-    textAlignVertical: "top",
-    paddingTop: 12,
-    paddingHorizontal: 15,
-    backgroundColor: "transparent",
-  },
-  inputError: { borderColor: theme.colors.red, borderWidth: 1.5 },
-  inputErrorContainer: { borderColor: theme.colors.red, borderWidth: 1.5 },
-  errorText: { fontSize: 13, color: theme.colors.red, marginTop: 5 },
-  submitButton: {
-    backgroundColor: theme.colors.white,
-    borderRadius: 8,
-    paddingVertical: 15,
     alignItems: "center",
-    marginTop: 10,
-  },
-  submitButtonText: {
-    fontSize: 18,
-    ...theme.font.fontBold,
-    color: theme.colors.black,
-  },
-  buttonDisabled: { backgroundColor: theme.colors.grey, opacity: 0.7 },
-  dateInputDisplay: {
-    flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: theme.colors.white,
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    height: 50,
-  },
-  dateInputText: {
-    fontSize: 16,
-    ...theme.font.fontRegular,
-    color: theme.colors.black,
-  },
-  dateInputPlaceholder: {
-    fontSize: 16,
-    ...theme.font.fontRegular,
-    color: theme.colors.grey,
-  },
-  dropdownSelector: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    zIndex: 10,
-  },
-  dropdownSelectorText: {
-    fontSize: 16,
-    color: "#333",
-  },
-  dropdownArea: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    marginTop: 5,
-    maxHeight: 200,
-  },
-  searchInput: {
+    backgroundColor: theme.colors.lightCard,
+    borderRadius: 10,
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-    color: "#000",
   },
-  dropdownItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+  contactSelectorInner: { flexDirection: "row", alignItems: "center", gap: 10 },
+  contactAvatarSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.colors.avatarBg,
+    justifyContent: "center",
+    alignItems: "center",
   },
+  contactAvatarText: { fontSize: 14, fontFamily: "Poppins-Bold", color: theme.colors.white },
+  contactSelectorName: { fontSize: 15, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
+  dropdownArea: { backgroundColor: theme.colors.white, borderRadius: 8, marginTop: 8, borderWidth: 1, borderColor: theme.colors.border },
+  dropdownSearch: { padding: 10, borderBottomWidth: 1, borderBottomColor: theme.colors.border, fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.text },
+  dropdownItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  dropdownItemText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.text },
+  noteLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  noteInput: {
+    minHeight: 130,
+    fontSize: 14,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.text,
+    backgroundColor: theme.colors.lightCard,
+    borderRadius: 8,
+    padding: 12,
+    textAlignVertical: "top",
+  },
+  inputError: { borderWidth: 1.5, borderColor: theme.colors.red },
+  errorText: { fontSize: 12, color: theme.colors.red, marginTop: 4 },
+  reminderLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
+  reminderToggleRow: { flexDirection: "row", gap: 10 },
+  reminderToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: theme.colors.primary,
+    gap: 6,
+  },
+  reminderToggleActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  reminderToggleText: { fontSize: 13, fontFamily: "Poppins-SemiBold", color: theme.colors.primary },
+  reminderToggleTextActive: { color: theme.colors.white },
+  dateDisplay: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: theme.colors.lightCard,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 48,
+    marginTop: 12,
+  },
+  dateText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.text },
+  datePlaceholder: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.grey },
+  aiAssistHeader: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+  aiAssistLabel: { fontSize: 13, fontFamily: "Poppins-SemiBold", color: theme.colors.primary },
+  aiAssistSub: { fontSize: 12, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginBottom: 10 },
+  aiChipsRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
+  aiChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.lightCard,
+  },
+  aiChipText: { fontSize: 12, fontFamily: "Poppins-Medium", color: theme.colors.primary },
+  saveBtn: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 4,
+    marginBottom: 10,
+  },
+  saveBtnText: { fontSize: 16, fontFamily: "Poppins-Bold", color: theme.colors.white, letterSpacing: 1 },
+  btnDisabled: { opacity: 0.6 },
 });
 
 export default CreateNoteScreen;

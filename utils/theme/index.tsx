@@ -2,21 +2,29 @@ import { Platform } from "react-native";
 
 const theme = {
   colors: {
-    primary: "#5dd7d1",
-    primaryLight: "#aeebe8",
-    secondary: "#38423f",
+    primary: "#3d8b6e",
+    primaryLight: "#e8f5f0",
+    secondary: "#1a3a2e",
     secondaryLight: "#727272",
     red: "#C70039",
     text: "#10181E",
     greyText: "#888C94",
     white: "#fff",
-    lightBackground: "#272F35",
+    lightBackground: "#f5f7f5",
+    lightCard: "#f0f5f2",
     black: "#000",
     grey: "#bdbdbd",
     searchPlaceholder: "#A0A0A0",
     searchText: "#333333",
-    reminderMessageText: "#E0E0E0",
-    categoryCountBadgeBackground: "#404040",
+    reminderMessageText: "#555555",
+    categoryCountBadgeBackground: "#e0ede8",
+    border: "#e0e8e4",
+    tabBar: "#ffffff",
+    tabBarActive: "#3d8b6e",
+    tabBarInactive: "#9aada7",
+    sectionHeader: "#1a3a2e",
+    cardBorder: "#dce8e2",
+    avatarBg: "#3d8b6e",
   },
   font: {
     fontBold: {
@@ -55,26 +63,18 @@ const theme = {
 
   elevationLight: {
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 3.84,
-
-    elevation: 5,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 3,
   },
 
   elevationHeavy: {
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-
-    elevation: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 8,
   },
 };
 

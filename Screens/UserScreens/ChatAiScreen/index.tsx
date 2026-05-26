@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Animated,
@@ -14,108 +13,50 @@ import {
 import theme from "../../../utils/theme";
 import DefaultBackground from "../../Components/DefaultBackground";
 import Feather from "@expo/vector-icons/Feather";
-import ImageModule from "../../../ImageModule";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { postAiChat } from "../../../store/Services/Others";
 import Toast from "react-native-toast-message";
 import TypingIndicator from "./Components/TypingIndicator";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAtom } from "jotai";
+import { userProfileGlobal } from "../../../jotaiStore";
+import { SideMenuModal } from "../../Components/SideMenuModal";
+
+const QUICK_ACTIONS = [
+  { label: "Who to follow up?", icon: "people-outline" },
+  { label: "Birthdays this week", icon: "gift-outline" },
+  { label: "Summarize notes", icon: "document-text-outline" },
+  { label: "Neglected contacts", icon: "person-remove-outline" },
+];
 
 const ChatWithAI = ({ navigation, route }: any) => {
   const contactId = route?.params?.contactId || null;
+  const insets = useSafeAreaInsets();
   const [loading, setLoading]: any = useState(false);
   const [conversationId, setConversationId] = useState(null);
-  const [messages, setMessages] = useState([
-    {
-      id: "1",
-      reply: "How can I help you?",
-      message: "",
-    },
-  ]);
-  const placeholders = [
-    "Ask something...",
-    "Chat with AI...",
-    "Create a contact named...",
-    "Create a note for...",
-    "who is spouse of...",
-    "Summarize recent notes...",
-  ];
-  const quickOptions = [
-    "Summarize recent notes",
-    "Provide talking points",
-    "Update Contact Profile",
-  ];
   const [aiChats, setAiChats]: any = useState([]);
   const [input, setInput] = useState("");
+  const [menuVisible, setMenuVisible] = useState(false);
   const flatListRef = useRef<FlatList>(null);
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const translateY = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-  const [isActive, setIsActive]: any = useState(false);
+  const [userProfile]: any = useAtom(userProfileGlobal);
+  const [hasStartedChat, setHasStartedChat] = useState(false);
 
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
-  }, [messages, aiChats]);
-
-  useEffect(() => {
-    // getChats();
-    const interval = setInterval(() => {
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(opacity, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateY, {
-            toValue: 30,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.parallel([
-          Animated.timing(translateY, {
-            toValue: 0,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacity, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start();
-
-      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
+  }, [aiChats]);
 
   const handleSend = (text?: string) => {
     const userMessage = text || input;
-
     if (!userMessage.trim()) {
-      Toast.show({
-        type: "error",
-        text1: "Input cannot be empty",
-      });
+      Toast.show({ type: "error", text1: "Message cannot be empty" });
       return;
     }
-
     setInput("");
+    setHasStartedChat(true);
 
     const tempId = Date.now().toString();
-
-    // 1️⃣ Add user message immediately
-    setAiChats((prev: any) => [
-      ...prev,
-      {
-        id: tempId,
-        message: userMessage,
-        reply: null,
-      },
-    ]);
-
+    setAiChats((prev: any) => [...prev, { id: tempId, message: userMessage, reply: null }]);
     setLoading(true);
 
     postAiChat({
@@ -127,7 +68,6 @@ const ChatWithAI = ({ navigation, route }: any) => {
       },
     })
       .then((res: any) => {
-        // 2️⃣ Add AI reply
         setAiChats((prev: any) => [
           ...prev,
           {
@@ -136,43 +76,33 @@ const ChatWithAI = ({ navigation, route }: any) => {
             reply: res?.ui?.message || res?.response,
           },
         ]);
-
         setConversationId(res?.meta?.conversation_id);
       })
-      .catch((err: any) => {
-        console.log("err", err);
-
-        // 3️⃣ Remove the failed user message
-        setAiChats((prev: any) =>
-          prev.filter((chat: any) => chat.id !== tempId),
-        );
-
-        Toast.show({
-          type: "error",
-          text1: "Something went wrong. Please try again.",
-        });
+      .catch(() => {
+        setAiChats((prev: any) => prev.filter((c: any) => c.id !== tempId));
+        Toast.show({ type: "error", text1: "Something went wrong. Please try again." });
       })
       .finally(() => setLoading(false));
   };
 
   const renderItem = ({ item }: any) => {
-    if (item.typing) {
-      return <TypingIndicator />;
-    }
-
+    if (item.typing) return <TypingIndicator />;
     return (
       <>
         {item?.message && (
-          <View style={[styles.messageContainer, styles.userMessageContainer]}>
+          <View style={[styles.messageRow, styles.userRow]}>
             <View style={[styles.bubble, styles.userBubble]}>
-              <Text style={styles.messageText}>{item?.message}</Text>
+              <Text style={styles.userBubbleText}>{item.message}</Text>
             </View>
           </View>
         )}
         {item?.reply && (
-          <View style={[styles.messageContainer, styles.aiMessageContainer]}>
+          <View style={[styles.messageRow, styles.aiRow]}>
+            <View style={styles.aiAvatarDot}>
+              <MaterialCommunityIcons name="star-four-points" size={12} color={theme.colors.primary} />
+            </View>
             <View style={[styles.bubble, styles.aiBubble]}>
-              <Text style={styles.messageText}>{item?.reply}</Text>
+              <Text style={styles.aiBubbleText}>{item.reply}</Text>
             </View>
           </View>
         )}
@@ -180,122 +110,88 @@ const ChatWithAI = ({ navigation, route }: any) => {
     );
   };
 
-  const handleQuickOptionPress = (text: string) => {
-    setInput(text);
-
-    handleSend(text);
-  };
-
   const chatData = loading
-    ? [
-        ...(aiChats.length > 0 ? aiChats : messages),
-        { id: "typing-indicator", typing: true },
-      ]
-    : aiChats.length > 0
-      ? aiChats
-      : messages;
+    ? [...aiChats, { id: "typing-indicator", typing: true }]
+    : aiChats;
+
+  const firstName = userProfile?.first_name || "there";
 
   return (
     <DefaultBackground>
+      <SideMenuModal visible={menuVisible} onClose={() => setMenuVisible(false)} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
-        {/* {loading && <FullScreenLoader />} */}
-        <View style={{ flex: 1, paddingTop: 60 }}>
+        <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
           {/* Header */}
           <View style={styles.headerRow}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.iconButton}
-            >
-              <Feather
-                name="chevron-left"
-                size={24}
-                color={theme.colors.white}
-              />
+            <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuBtn}>
+              <Feather name="menu" size={22} color={theme.colors.primary} />
             </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.btnlogoImg}
-              onPress={() => navigation.navigate("DrawerNavigation")}
-            >
-              <Image source={ImageModule.logo} style={styles.logoImg} />
-            </TouchableOpacity>
-
-            {/* <TouchableOpacity
-              onPress={() =>
-                navigation.navigate("SearchResultScreen", { searchQuery: "" })
-              }
-              style={styles.iconButton}
-            >
-              <Feather name="search" size={24} color={theme.colors.white} />
-            </TouchableOpacity> */}
-            <View style={{ width: "12%" }}></View>
+            <View style={styles.aiHeaderCenter}>
+              <View style={styles.aiDot} />
+              <Text style={styles.aiHeaderTitle}>AI Assistant</Text>
+            </View>
+            {hasStartedChat ? (
+              <TouchableOpacity onPress={() => { setAiChats([]); setHasStartedChat(false); setConversationId(null); }} style={styles.menuBtn}>
+                <Feather name="refresh-ccw" size={18} color={theme.colors.greyText} />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.menuBtn} />
+            )}
           </View>
 
-          {/* Messages List */}
-          <FlatList
-            ref={flatListRef}
-            style={{ marginBottom: 10 }}
-            data={chatData}
-            renderItem={renderItem}
-            keyExtractor={(item) => item?.id}
-            contentContainerStyle={styles.chatArea}
-            showsVerticalScrollIndicator={false}
-          />
+          {!hasStartedChat && aiChats.length === 0 ? (
+            // Greeting Screen
+            <View style={styles.greetingSection}>
+              <Text style={styles.greetingTitle}>Hello, {firstName}.</Text>
+              <Text style={styles.greetingSubtitle}>How can I help you manage your connections today?</Text>
 
-          {/* Quick Options */}
-          {!isActive && contactId && aiChats.length === 0 && (
-            <View style={styles.quickOptionsContainer}>
-              {quickOptions.map((opt) => (
-                <TouchableOpacity
-                  key={opt}
-                  style={styles.quickOption}
-                  onPress={() => handleQuickOptionPress(opt)}
-                >
-                  <Text style={styles.quickOptionText}>{opt}</Text>
-                </TouchableOpacity>
-              ))}
+              <View style={styles.quickActionsGrid}>
+                {QUICK_ACTIONS.map((action) => (
+                  <TouchableOpacity
+                    key={action.label}
+                    style={styles.quickActionCard}
+                    onPress={() => handleSend(action.label)}
+                  >
+                    <Ionicons name={action.icon as any} size={18} color={theme.colors.primary} />
+                    <Text style={styles.quickActionText}>{action.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
+          ) : (
+            // Chat View
+            <FlatList
+              ref={flatListRef}
+              data={chatData}
+              renderItem={renderItem}
+              keyExtractor={(item) => item?.id}
+              contentContainerStyle={styles.chatArea}
+              showsVerticalScrollIndicator={false}
+            />
           )}
         </View>
 
-        {/* Input Bar - stays above keyboard */}
-        <View style={styles.inputContainer}>
-          <View style={{ position: "relative", width: "80%" }}>
-            {!input && (
-              <Animated.Text
-                style={{
-                  position: "absolute",
-                  zIndex: 2,
-                  top: 18,
-                  left: 25,
-                  color: "#ccc",
-                  fontSize: 16,
-                  transform: [{ translateY }],
-                  opacity: opacity,
-                }}
-              >
-                {placeholders[placeholderIndex]}
-              </Animated.Text>
-            )}
-
-            <TextInput
-              onFocus={() => setIsActive(true)}
-              onBlur={() => setIsActive(false)}
-              style={styles.input}
-              value={input}
-              onChangeText={setInput}
-            />
-          </View>
-
+        {/* Input Bar */}
+        <View style={[styles.inputBar, { paddingBottom: insets.bottom + 10 }]}>
+          <TextInput
+            style={styles.textInput}
+            placeholder='Ask me anything... (e.g., "Draft an'
+            placeholderTextColor={theme.colors.searchPlaceholder}
+            value={input}
+            onChangeText={setInput}
+            onSubmitEditing={() => handleSend()}
+            returnKeyType="send"
+            multiline={false}
+          />
           <TouchableOpacity
-            style={styles.sendButton}
-            onPress={() => handleSend("")}
+            style={[styles.sendBtn, !input.trim() && styles.sendBtnDisabled]}
+            onPress={() => handleSend()}
           >
-            <Text style={styles.sendText}>Send</Text>
+            <Feather name="arrow-up" size={20} color={theme.colors.white} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -304,121 +200,132 @@ const ChatWithAI = ({ navigation, route }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  chatArea: {
-    padding: 15,
-    paddingBottom: 20,
-  },
-  messageContainer: {
-    flexDirection: "row",
-    marginVertical: 6,
-    alignItems: "flex-end",
-  },
-  aiMessageContainer: {
-    justifyContent: "flex-start",
-  },
-  userMessageContainer: {
-    justifyContent: "flex-end",
-  },
-  dp: {
-    width: 35,
-    height: 35,
-    borderRadius: 18,
-    marginHorizontal: 6,
-  },
-  bubble: {
-    maxWidth: "70%",
-    borderRadius: 15,
-    padding: 10,
-  },
-  aiBubble: {
-    backgroundColor: theme.colors.secondary,
-  },
-  userBubble: {
-    backgroundColor: theme.colors.primary,
-  },
-  messageText: {
-    color: "#fff",
-    fontSize: 15,
-    ...theme.font.fontMedium,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.secondary,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    paddingBottom: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#333",
-  },
-  input: {
-    flex: 1,
-    backgroundColor: "#1c1c1c",
-    borderRadius: 30,
-    paddingHorizontal: 25,
-    // paddingVertical: 5,
-    color: "#fff",
-    fontSize: 16,
-  },
-  sendButton: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    borderRadius: 25,
-    marginLeft: 8,
-  },
-  sendText: {
-    color: "#fff",
-    fontSize: 14,
-    ...theme.font.fontSemiBold,
-  },
+  container: { flex: 1 },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
-  logoImg: { width: "100%", height: 40, objectFit: "contain" },
-  btnlogoImg: {
+  menuBtn: { width: 36, height: 36, justifyContent: "center", alignItems: "center" },
+  aiHeaderCenter: { flexDirection: "row", alignItems: "center", gap: 8 },
+  aiDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: theme.colors.primary,
+  },
+  aiHeaderTitle: { fontSize: 16, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
+  greetingSection: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 30,
+  },
+  greetingTitle: {
+    fontSize: 28,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.text,
+    marginBottom: 6,
+  },
+  greetingSubtitle: {
+    fontSize: 15,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.greyText,
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  quickActionsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  quickActionCard: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    width: "50%",
-    height: 40,
-  },
-  iconButton: {
-    backgroundColor: theme.colors.secondary,
-    padding: 8,
+    gap: 8,
+    backgroundColor: theme.colors.white,
     borderRadius: 20,
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  quickOptionsContainer: {
-    paddingHorizontal: 15,
-    paddingTop: 10,
-    paddingBottom: 5,
-  },
-  quickOption: {
-    backgroundColor: "#2c2c2c",
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginRight: 8,
-    marginBottom: 8,
-    width: "100%",
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    ...theme.elevationLight,
   },
-
-  quickOptionText: {
-    color: "#fff",
+  quickActionText: {
+    fontSize: 13,
+    fontFamily: "Poppins-Medium",
+    color: theme.colors.text,
+  },
+  chatArea: {
+    padding: 16,
+    paddingBottom: 20,
+  },
+  messageRow: {
+    flexDirection: "row",
+    marginVertical: 5,
+    alignItems: "flex-end",
+  },
+  userRow: { justifyContent: "flex-end" },
+  aiRow: { justifyContent: "flex-start", gap: 8 },
+  aiAvatarDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: theme.colors.primaryLight,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  bubble: {
+    maxWidth: "75%",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  aiBubble: {
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderBottomLeftRadius: 4,
+  },
+  userBubble: {
+    backgroundColor: theme.colors.primary,
+    borderBottomRightRadius: 4,
+  },
+  aiBubbleText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.text, lineHeight: 20 },
+  userBubbleText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.white, lineHeight: 20 },
+  inputBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    backgroundColor: theme.colors.white,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    gap: 10,
+  },
+  textInput: {
+    flex: 1,
+    backgroundColor: theme.colors.lightCard,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     fontSize: 14,
-    ...theme.font.fontMedium,
-    textAlign: "center",
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.text,
+    maxHeight: 100,
   },
+  sendBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: theme.colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sendBtnDisabled: { opacity: 0.5 },
 });
 
 export default ChatWithAI;

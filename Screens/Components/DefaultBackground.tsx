@@ -1,28 +1,19 @@
 import React from "react";
-import { ImageBackground, StyleSheet } from "react-native";
-import ImageModule from "../../ImageModule";
+import { View, StyleSheet } from "react-native";
+import theme from "../../utils/theme";
 
-const DefaultBackground: any = ({
-  children,
-  imageSource = ImageModule.backGroundImg,
-  resizeMode = "cover",
-  style,
-}: any) => {
+const DefaultBackground: any = ({ children, style }: any) => {
   return (
-    <ImageBackground
-      source={imageSource}
-      style={[styles.background, style]}
-      resizeMode={resizeMode}
-      accessibilityIgnoresInvertColors
-    >
+    <View style={[styles.background, style]}>
       {children}
-    </ImageBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   background: {
     flex: 1,
+    backgroundColor: theme.colors.lightBackground,
   },
 });
 

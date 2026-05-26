@@ -1,19 +1,30 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import theme from "../../../../utils/theme";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Feather from "@expo/vector-icons/Feather";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { completeTaskApi } from "../../../../store/Services/Others";
 import Toast from "react-native-toast-message";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import FastImage from "react-native-fast-image";
 import { useAtom } from "jotai";
 import { homeNoteEditGlobal } from "../../../../jotaiStore";
 
-const ReminderItem = ({ item, name, setReminer, type }: any) => {
+const getInitials = (name: string) => {
+  if (!name) return "?";
+  const parts = name.split(" ");
+  return parts
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase();
+};
+
+const ReminderItem = ({ item, name, setReminer, type, accentColor }: any) => {
   const [flagManager, setFlagManager] = useState(item?.completed);
   const [, setGlobalNoteFlag]: any = useAtom(homeNoteEditGlobal);
   const navigation: any = useNavigation();
+
   const reminderClickHandler = (note_id: any) => {
     completeTaskApi({ query: { note_id } })
       ?.then(() => {
@@ -21,14 +32,14 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
           setFlagManager(true);
           setReminer((oldVal: any) => ({
             ...oldVal,
-            today: oldVal?.today?.map((item: any) =>
-              item?.id === note_id ? { ...item, completed: true } : item,
+            today: oldVal?.today?.map((i: any) =>
+              i?.id === note_id ? { ...i, completed: true } : i
             ),
           }));
         } else if (name === "Missed") {
           setReminer((oldVal: any) => ({
             ...oldVal,
-            missed: oldVal.missed.filter((item: any) => item.id !== note_id),
+            missed: oldVal.missed.filter((i: any) => i.id !== note_id),
           }));
         }
         Toast.show({ type: "success", text1: "Done" });
@@ -51,30 +62,25 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
     }
   };
 
+  const color = accentColor || theme.colors.primary;
+
   return (
-    <TouchableOpacity style={styles.container} onPress={clickCompleteComponent}>
-      {/* 1. RENDER AVATAR (Image or Placeholder) */}
+    <TouchableOpacity style={[styles.container, { borderLeftColor: color }]} onPress={clickCompleteComponent}>
       {item?.contact_photo ? (
         <FastImage
-          source={{
-            uri: item?.contact_photo,
-            priority: FastImage.priority.normal,
-          }}
+          source={{ uri: item?.contact_photo, priority: FastImage.priority.normal }}
           style={styles.avatar}
         />
       ) : (
-        <View style={styles.avatar}>
-          <FontAwesome
-            name="user-circle"
-            size={30}
-            color={theme.colors.white}
-          />
+        <View style={[styles.avatarPlaceholder, { backgroundColor: color + "33" }]}>
+          <Text style={[styles.avatarInitials, { color }]}>
+            {getInitials(item.contact_full_name)}
+          </Text>
         </View>
       )}
 
-      {/* 2. TEXT CONTAINER */}
       <View style={styles.textContainer}>
-        <Text style={styles.userText} numberOfLines={1}>
+        <Text style={styles.userName} numberOfLines={1}>
           {item.contact_full_name}
         </Text>
         <Text style={styles.messageText} numberOfLines={2}>
@@ -82,21 +88,17 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
         </Text>
       </View>
 
-      {/* 3. COMPLETION INDICATOR */}
       {(name === "Missed" || name === "Today") && (
         <View style={styles.indicatorContainer}>
           {flagManager ? (
-            <Ionicons name="checkmark-circle" size={22} color={"#73f440"} />
+            <Ionicons name="checkmark-circle" size={22} color={theme.colors.primary} />
           ) : (
-            // --- CHANGE IS HERE ---
             <TouchableOpacity
               onPress={() => reminderClickHandler(item?.id)}
-              // Add hitSlop to increase the touchable area around the dot
               hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
             >
-              <View style={styles.dot} />
+              <View style={[styles.dot, { borderColor: color }]} />
             </TouchableOpacity>
-            // --- END OF CHANGE ---
           )}
         </View>
       )}
@@ -104,50 +106,64 @@ const ReminderItem = ({ item, name, setReminer, type }: any) => {
   );
 };
 
-// --- STYLES ARE UNCHANGED ---
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 15,
+    borderLeftWidth: 3,
+    backgroundColor: theme.colors.white,
+    marginHorizontal: 12,
+    marginBottom: 6,
+    borderRadius: 8,
+    ...theme.elevationLight,
   },
   avatar: {
-    height: 30,
-    width: 30,
-    borderRadius: 15, // This should be half of height/width for a perfect circle
-    backgroundColor: "#555",
+    height: 36,
+    width: 36,
+    borderRadius: 18,
+  },
+  avatarPlaceholder: {
+    height: 36,
+    width: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
   },
+  avatarInitials: {
+    fontSize: 13,
+    fontFamily: "Poppins-Bold",
+  },
   textContainer: {
     flex: 1,
-    marginLeft: 12,
-    marginRight: 10,
+    marginLeft: 10,
+    marginRight: 8,
   },
-  userText: {
-    ...theme.font.fontBold,
-    fontSize: 15,
-    color: theme.colors.white,
+  userName: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 13,
+    color: theme.colors.text,
     marginBottom: 2,
   },
   messageText: {
-    fontSize: 14,
-    ...theme.font.fontRegular,
-    color: theme.colors.reminderMessageText,
-    lineHeight: 18,
+    fontSize: 12,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.greyText,
+    lineHeight: 16,
   },
   indicatorContainer: {
     width: 24,
-    height: 24, // Explicitly set height to help center the touchable
-    justifyContent: "center", // Center the child vertically
-    alignItems: "center", // Center the child horizontally
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
   },
   dot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: theme.colors.white,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    backgroundColor: "transparent",
   },
 });
 

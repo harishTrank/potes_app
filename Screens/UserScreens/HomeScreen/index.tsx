@@ -4,112 +4,91 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Dimensions,
-  Animated,
-  PanResponder,
   TouchableOpacity,
+  TextInput,
 } from "react-native";
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ReminderCategory from "./Component/ReminderCategory";
 import ActionButtons from "../../Components/ActionButtons";
-import Header from "../../Components/Header";
 import EventListItem from "./Component/EventListItem";
-import {
-  showBirthdays,
-  showReminders,
-  yearsAgo,
-} from "../../../store/Services/Others";
+import { showBirthdays, showReminders, yearsAgo } from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
 import notifee from "@notifee/react-native";
+import Feather from "@expo/vector-icons/Feather";
+import { useAtom } from "jotai";
+import {
+  apiCallBackGlobal,
+  searchValueGlobal,
+  userProfileGlobal,
+} from "../../../jotaiStore";
+import { viewProfileApi } from "../../../store/Services/Others";
+import FastImage from "react-native-fast-image";
+import { useNavigation } from "@react-navigation/native";
+import { SideMenuModal } from "../../Components/SideMenuModal";
+
+const UserAvatar = ({ userProfile }: any) => {
+  if (userProfile?.profile_pic) {
+    return (
+      <FastImage
+        style={styles.avatarImage}
+        source={{ uri: userProfile.profile_pic, priority: FastImage.priority.normal }}
+      />
+    );
+  }
+  const initials = [userProfile?.first_name?.[0], userProfile?.last_name?.[0]]
+    .filter(Boolean).join("").toUpperCase() || "U";
+  return (
+    <View style={styles.avatarCircle}>
+      <Text style={styles.avatarInitials}>{initials}</Text>
+    </View>
+  );
+};
+
 const HomeScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
-  const [reminder, setReminer]: any = useState({});
+  const [reminder, setReminder]: any = useState({});
   const [birthday, setBirthday]: any = useState({});
   const [memories, setMemories]: any = useState({});
   const [loading, setLoading]: any = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [searchVal, setSearchVal]: any = useAtom(searchValueGlobal);
+  const [userProfile, setUserProfile]: any = useAtom(userProfileGlobal);
+  const [globalCall]: any = useAtom(apiCallBackGlobal);
+  const nav: any = useNavigation();
 
-  const { width, height } = Dimensions.get("window");
-  const position: any = React.useRef(
-    new Animated.ValueXY({ x: width - 80, y: height - 120 }),
-  ).current;
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        position.setOffset({
-          x: position.x._value,
-          y: position.y._value,
-        });
-      },
-      onPanResponderMove: (_, gestureState) => {
-        const newX = Math.min(
-          Math.max(gestureState.dx + position.x._offset, 0),
-          width - 60,
-        );
-        const safeHeight = height - insets.bottom;
-        const newY = Math.min(
-          Math.max(gestureState.dy + position.y._offset, 0),
-          safeHeight - 60,
-        );
-        position.setValue({
-          x: newX - position.x._offset,
-          y: newY - position.y._offset,
-        });
-      },
-      onPanResponderRelease: () => {
-        position.flattenOffset();
-      },
-    }),
-  ).current;
-
-  const handleProfilePress = () => console.log("Profile pressed");
+  useEffect(() => {
+    viewProfileApi()
+      .then((res: any) => setUserProfile(res))
+      .catch(() => {});
+  }, [globalCall]);
 
   const homeScreenDataManager = useCallback(async () => {
     setLoading(true);
-
     try {
       const results: any = await Promise.allSettled([
         showReminders(),
         showBirthdays(),
         yearsAgo(),
       ]);
-      if (results[0].status === "fulfilled") {
-        setReminer(results[0].value?.reminders);
-      } else {
-        console.error("Error fetching reminders:", results[0].reason);
-      }
-      if (results[1].status === "fulfilled") {
-        setBirthday(results[1].value);
-      } else {
-        console.error("Error fetching birthdays:", results[1].reason);
-      }
-      if (results[2].status === "fulfilled") {
-        setMemories(results[2].value);
-      } else {
-        console.error("Error fetching memories:", results[2].reason);
-      }
+      if (results[0].status === "fulfilled") setReminder(results[0].value?.reminders);
+      if (results[1].status === "fulfilled") setBirthday(results[1].value);
+      if (results[2].status === "fulfilled") setMemories(results[2].value);
     } catch (error) {
-      console.error("A critical error occurred during data fetching:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    return navigation.addListener("focus", () => {
-      homeScreenDataManager();
-    });
+    return navigation.addListener("focus", () => homeScreenDataManager());
   }, [navigation]);
 
   const todayCount = reminder?.today?.reduce((acc: number, curr: any) => {
-    if (curr.completed) {
-      return acc;
-    }
-    return acc + 1;
+    return curr.completed ? acc : acc + 1;
   }, 0);
-
   const globalCount =
     todayCount +
     reminder?.missed?.length +
@@ -117,232 +96,262 @@ const HomeScreen = ({ navigation }: any) => {
     birthday?.anniversary?.length +
     birthday?.spouse_birthday?.length +
     birthday?.child_birthday?.length;
-
   const safeCount = Math.max(0, Number(globalCount) || 0);
 
   useEffect(() => {
     notifee.setBadgeCount(safeCount);
   }, [safeCount]);
 
+  const onPressSearch = () => {
+    if (searchVal?.length > 0) {
+      nav.navigate("SearchResultScreen", { searchQuery: searchVal });
+      setSearchVal("");
+    }
+  };
+
+  const hasEvents =
+    (birthday?.birthdays?.length || 0) +
+      (birthday?.anniversary?.length || 0) +
+      (birthday?.spouse_birthday?.length || 0) +
+      (birthday?.child_birthday?.length || 0) >
+    0;
+
   return (
     <DefaultBackground>
       {loading && <FullScreenLoader />}
-      <View style={styles.flexContainer}>
-        {/* <Animated.View
-          {...panResponder.panHandlers}
-          style={[
-            styles.aiButton,
-            {
-              transform: [
-                { translateX: position.x },
-                { translateY: position.y },
-              ],
-            },
-          ]}
-        >
-          <TouchableOpacity onPress={() => navigation.navigate("ChatAiScreen")}>
-            <View style={styles.aiButtonInner}>
-              <Text style={styles.aiButtonText}>AI</Text>
-            </View>
-          </TouchableOpacity>
-        </Animated.View> */}
-
-        <Header onProfilePress={handleProfilePress} />
-        <ScrollView
-          style={styles.scrollableContent}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <ActionButtons />
-
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Reminders</Text>
-            <ReminderCategory
-              category={{
-                items: reminder?.today,
-                initiallyOpen: true,
-                name: "Today",
-                count: reminder?.today?.length,
-                type: "Reminders",
-              }}
-              setReminer={setReminer}
-            />
-            <ReminderCategory
-              category={{
-                items: reminder?.tomorrow,
-                initiallyOpen: false,
-                name: "Tomorrow",
-                count: reminder?.tomorrow?.length,
-                type: "Reminders",
-              }}
-            />
-            <ReminderCategory
-              category={{
-                items: reminder?.upcoming,
-                initiallyOpen: false,
-                name: "Upcoming",
-                count: reminder?.upcoming?.length,
-                type: "Reminders",
-              }}
-            />
-            <ReminderCategory
-              category={{
-                items: reminder?.missed,
-                initiallyOpen: false,
-                name: "Missed",
-                count: reminder?.missed?.length,
-                type: "Reminders",
-              }}
-              setReminer={setReminer}
-            />
-          </View>
-
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Memories</Text>
-            <ReminderCategory
-              category={{
-                items: memories?.year,
-                initiallyOpen: true,
-                name: "One Year Ago",
-                count: memories?.year?.length,
-                type: "memories",
-              }}
-            />
-            <ReminderCategory
-              category={{
-                items: memories?.six_month,
-                initiallyOpen: false,
-                name: "Six Months Ago",
-                count: memories?.six_month?.length,
-                type: "memories",
-              }}
-            />
-            <ReminderCategory
-              category={{
-                items: memories?.one_month,
-                initiallyOpen: false,
-                name: "One Month Ago",
-                count: memories?.one_month?.length,
-                type: "memories",
-              }}
-            />
-          </View>
-
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Events</Text>
-            <View style={styles.eventData}>
-              <Text style={styles.smallHead}>{`${
-                birthday?.birthdays?.length === 0 ? "No " : ""
-              }Birthdays`}</Text>
-              {birthday?.birthdays?.map((item: any) => (
-                <EventListItem item={item} key={item?.id} type={"Birthdays"} />
-              ))}
-            </View>
-
-            <View style={styles.eventData}>
-              <Text style={styles.smallHead}>{`${
-                birthday?.anniversary?.length === 0 ? "No " : ""
-              }Anniversary`}</Text>
-              {birthday?.anniversary?.map((item: any) => (
-                <EventListItem
-                  item={item}
-                  key={item?.id}
-                  type={"Anniversary"}
-                />
-              ))}
-            </View>
-
-            <View style={styles.eventData}>
-              <Text style={styles.smallHead}>{`${
-                birthday?.spouse_birthday?.length === 0 ? "No " : ""
-              }Spouse's Birthdays`}</Text>
-              {birthday?.spouse_birthday?.map((item: any) => (
-                <EventListItem item={item} key={item?.id} type={"spouse"} />
-              ))}
-            </View>
-
-            <View style={styles.eventData}>
-              <Text style={styles.smallHead}>{`${
-                birthday?.child_birthday?.length === 0 ? "No " : ""
-              }Family Member's Birthdays`}</Text>
-              {birthday?.child_birthday?.map((item: any) => (
-                <EventListItem item={item} key={item?.id} type={"child"} />
-              ))}
-            </View>
-          </View>
-        </ScrollView>
+      <SideMenuModal visible={menuVisible} onClose={() => setMenuVisible(false)} />
+      <View style={[styles.topBar, { paddingTop: insets.top + 6 }]}>
+        <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuBtn}>
+          <Feather name="menu" size={22} color={theme.colors.primary} />
+        </TouchableOpacity>
+        <View style={styles.logoBlock}>
+          <Text style={styles.logoText}>POTES</Text>
+          <Text style={styles.logoSub}>people notes</Text>
+        </View>
+        <TouchableOpacity onPress={() => nav.navigate("UserProfileScreen")}>
+          <UserAvatar userProfile={userProfile} />
+        </TouchableOpacity>
       </View>
+
+      <ScrollView
+        style={styles.scrollableContent}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 30 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Search */}
+        <View style={styles.searchRow}>
+          <Feather name="search" size={16} color={theme.colors.searchPlaceholder} style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search contacts or notes..."
+            placeholderTextColor={theme.colors.searchPlaceholder}
+            value={searchVal}
+            onChangeText={setSearchVal}
+            onSubmitEditing={onPressSearch}
+            returnKeyType="search"
+          />
+        </View>
+
+        <ActionButtons />
+
+        {/* Reminders Section */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={styles.sectionAccent} />
+            <Text style={styles.sectionTitle}>Reminders</Text>
+            {safeCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{safeCount} active</Text>
+              </View>
+            )}
+          </View>
+          <ReminderCategory
+            category={{ items: reminder?.today, initiallyOpen: true, name: "Today", count: reminder?.today?.length, type: "Reminders" }}
+            setReminer={setReminder}
+          />
+          <ReminderCategory
+            category={{ items: reminder?.upcoming, initiallyOpen: false, name: "Upcoming", count: reminder?.upcoming?.length, type: "Reminders" }}
+          />
+          <ReminderCategory
+            category={{ items: reminder?.missed, initiallyOpen: false, name: "Missed", count: reminder?.missed?.length, type: "Reminders" }}
+            setReminer={setReminder}
+          />
+        </View>
+
+        {/* Memories Section */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={[styles.sectionAccent, { backgroundColor: "#9a6eb0" }]} />
+            <Text style={styles.sectionTitle}>Memories</Text>
+          </View>
+          <ReminderCategory
+            category={{ items: memories?.year, initiallyOpen: true, name: "One Year Ago", count: memories?.year?.length, type: "memories" }}
+          />
+          <ReminderCategory
+            category={{ items: memories?.six_month, initiallyOpen: false, name: "Six Months Ago", count: memories?.six_month?.length, type: "memories" }}
+          />
+          <ReminderCategory
+            category={{ items: memories?.one_month, initiallyOpen: false, name: "One Month Ago", count: memories?.one_month?.length, type: "memories" }}
+          />
+        </View>
+
+        {/* Events Section */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={[styles.sectionAccent, { backgroundColor: "#c0623a" }]} />
+            <Text style={styles.sectionTitle}>Events</Text>
+          </View>
+          {!hasEvents ? (
+            <Text style={styles.nothingText}>NOTHING TODAY</Text>
+          ) : (
+            <View style={{ padding: 12 }}>
+              {birthday?.birthdays?.length > 0 && (
+                <View style={styles.eventGroup}>
+                  <Text style={styles.eventGroupLabel}>Birthday</Text>
+                  {birthday.birthdays.map((item: any) => (
+                    <EventListItem item={item} key={item?.id} type={"Birthdays"} />
+                  ))}
+                </View>
+              )}
+              {birthday?.anniversary?.length > 0 && (
+                <View style={styles.eventGroup}>
+                  <Text style={styles.eventGroupLabel}>Anniversary</Text>
+                  {birthday.anniversary.map((item: any) => (
+                    <EventListItem item={item} key={item?.id} type={"Anniversary"} />
+                  ))}
+                </View>
+              )}
+              {birthday?.spouse_birthday?.length > 0 && (
+                <View style={styles.eventGroup}>
+                  <Text style={styles.eventGroupLabel}>Spouse Birthday</Text>
+                  {birthday.spouse_birthday.map((item: any) => (
+                    <EventListItem item={item} key={item?.id} type={"spouse"} />
+                  ))}
+                </View>
+              )}
+              {birthday?.child_birthday?.length > 0 && (
+                <View style={styles.eventGroup}>
+                  <Text style={styles.eventGroupLabel}>Family Birthday</Text>
+                  {birthday.child_birthday.map((item: any) => (
+                    <EventListItem item={item} key={item?.id} type={"child"} />
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      </ScrollView>
     </DefaultBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  flexContainer: {
-    flex: 1,
-    position: "relative",
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+    backgroundColor: theme.colors.lightBackground,
   },
-  scrollableContent: {
+  menuBtn: { width: 36, height: 36, justifyContent: "center", alignItems: "center" },
+  logoBlock: { alignItems: "center" },
+  logoText: {
+    fontSize: 20,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.primary,
+    letterSpacing: 1,
+  },
+  logoSub: {
+    fontSize: 10,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.greyText,
+    marginTop: -4,
+  },
+  avatarCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.colors.avatarBg,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarInitials: {
+    fontSize: 13,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.white,
+  },
+  avatarImage: { width: 36, height: 36, borderRadius: 18 },
+  scrollableContent: { flex: 1 },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.white,
+    borderRadius: 25,
+    marginHorizontal: 16,
+    marginTop: 8,
+    paddingHorizontal: 14,
+    height: 44,
+    ...theme.elevationLight,
+  },
+  searchInput: {
     flex: 1,
+    fontSize: 14,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.searchText,
   },
   sectionCard: {
-    backgroundColor: theme.colors.secondary,
-    borderRadius: 15,
-    marginHorizontal: 15,
-    marginBottom: 20,
+    backgroundColor: theme.colors.white,
+    borderRadius: 14,
+    marginHorizontal: 16,
+    marginBottom: 16,
     overflow: "hidden",
+    ...theme.elevationLight,
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    paddingBottom: 6,
+    gap: 8,
+  },
+  sectionAccent: {
+    width: 4,
+    height: 20,
+    borderRadius: 2,
+    backgroundColor: theme.colors.primary,
   },
   sectionTitle: {
-    fontSize: 22,
-    ...theme.font.fontBold,
-    color: theme.colors.white,
-    paddingHorizontal: 15,
-    paddingTop: 15,
-  },
-  smallHead: {
     flex: 1,
-    fontSize: 16,
-    ...theme.font.fontSemiBold,
-    color: theme.colors.reminderMessageText,
-    paddingTop: 12,
-    paddingBottom: 10,
+    fontSize: 17,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.text,
   },
-  eventData: {
-    borderBottomColor: theme.colors.grey, // Assuming 'grey' is a subtle separator in your theme
-    borderBottomWidth: 0.5,
-    paddingHorizontal: 15,
+  badge: {
+    backgroundColor: theme.colors.primaryLight,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
-  aiButton: {
-    position: "absolute",
-    height: 60,
-    width: 60,
-    borderRadius: 30,
-    backgroundColor: theme.colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    zIndex: 999,
-    borderWidth: 2,
-    borderColor: "#fff",
+  badgeText: {
+    fontSize: 11,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.primary,
   },
-  aiButtonInner: {
-    height: 45,
-    width: 45,
-    borderRadius: 30,
-    backgroundColor: theme.colors.secondary,
-    borderWidth: 2,
-    borderColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  aiButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    ...theme.font.fontBold,
+  nothingText: {
     textAlign: "center",
+    color: theme.colors.greyText,
+    fontSize: 13,
+    fontFamily: "Poppins-SemiBold",
+    letterSpacing: 1,
+    paddingVertical: 18,
+  },
+  eventGroup: { marginBottom: 10 },
+  eventGroupLabel: {
+    fontSize: 13,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.greyText,
+    marginBottom: 6,
   },
 });
 

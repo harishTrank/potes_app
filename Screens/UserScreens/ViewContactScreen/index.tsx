@@ -5,534 +5,273 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Image,
   Platform,
   LayoutAnimation,
   UIManager,
   Alert,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import ImageModule from "../../../ImageModule";
 import { deleteContactApi } from "../../../store/Services/Others";
-import FullScreenLoader from "../../Components/FullScreenLoader"; // Assuming you have this
+import FullScreenLoader from "../../Components/FullScreenLoader";
 import dayjs from "dayjs";
 import Toast from "react-native-toast-message";
 import { useProfileContactApi } from "../../../hooks/Others/query";
 import FastImage from "react-native-fast-image";
-import { useNavigation } from "@react-navigation/native";
 import { formatPhoneNumber } from "../../../utils/ImagePicker";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
-if (
-  Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const CollapsibleSection: any = ({ title, children, isOpen, onPress }: any) => {
+const CollapsibleSection: any = ({ title, children, isOpen, onPress }: any) => (
+  <View style={styles.collapsibleSection}>
+    <TouchableOpacity onPress={onPress} style={styles.sectionHeader}>
+      <Text style={styles.sectionHeaderText}>{title}</Text>
+      <Feather name={isOpen ? "chevron-up" : "chevron-down"} size={18} color={theme.colors.greyText} />
+    </TouchableOpacity>
+    {isOpen && <View style={styles.sectionContent}>{children}</View>}
+  </View>
+);
+
+const InfoRow = ({ label, value }: { label: string; value?: string | null }) => {
+  if (!value || value.trim() === "" || value === "-") return null;
   return (
-    <View style={styles.collapsibleSection}>
-      <TouchableOpacity onPress={onPress} style={styles.sectionHeader}>
-        <Text style={styles.sectionHeaderText}>{title}</Text>
-        <Feather
-          name={isOpen ? "minus" : "plus"}
-          size={20}
-          color={theme.colors.white}
-        />
-      </TouchableOpacity>
-      {isOpen && <View style={styles.sectionContent}>{children}</View>}
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
 };
 
-// --- Display Field Component ---
-interface InfoDisplayFieldProps {
-  label: string;
-  value?: string | null;
-  children?: React.ReactNode;
-}
-const InfoDisplayField: React.FC<InfoDisplayFieldProps> = ({
-  label,
-  value,
-  children,
-}) => {
-  const hasValue = value !== null && value !== undefined && value.trim() !== "";
-  if (!hasValue && !children) return null;
-  return (
-    <View style={styles.infoField}>
-      <Text style={styles.infoLabel}>{label}:</Text>
-      {hasValue && <Text style={styles.infoValue}>{value}</Text>}
-      {children}
-    </View>
-  );
-};
-
-// --- Main Screen Component ---
 const ViewContactScreen: any = ({ navigation, route }: any) => {
-  const { contactId, contactName: nameFromRoute } = route?.params || {};
+  const { contactId } = route?.params || {};
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
-  const [areAllSectionsOpen, setAreAllSectionsOpen] = useState(false);
   const apiResponse: any = useProfileContactApi({ query: { id: contactId } });
   const scrollViewRef: any = useRef(null);
 
-  const initialSectionStates = {
+  const [sectionOpenState, setSectionOpenState] = useState({
     personal: true,
-    spouse: false,
-    children: false,
+    family: false,
     employment: false,
     education: false,
     interests: false,
     others: false,
-  };
-  const [sectionOpenState, setSectionOpenState] =
-    useState(initialSectionStates);
+  });
 
-  const toggleSection = (sectionName: keyof typeof initialSectionStates) => {
+  const toggleSection = (key: keyof typeof sectionOpenState) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setSectionOpenState((prev) => ({
-      ...prev,
-      [sectionName]: !prev[sectionName],
-    }));
-  };
-  const toggleAllSections = () => {
-    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    const newState = !areAllSectionsOpen;
-    setSectionOpenState({
-      personal: newState,
-      spouse: newState,
-      children: newState,
-      employment: newState,
-      education: newState,
-      interests: newState,
-      others: newState,
-    });
-    setAreAllSectionsOpen(newState);
+    setSectionOpenState((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   useEffect(() => {
-    return navigation.addListener("focus", () => {
-      apiResponse?.refetch();
-    });
+    return navigation.addListener("focus", () => apiResponse?.refetch());
   }, [contactId, navigation]);
-  const handleSearchPress = () => {
-    navigation.navigate("SearchResultScreen", { searchQuery: "" });
-  };
 
   const handleDelete = () =>
-    Alert.alert(
-      "Delete Contact",
-      `Are you sure you want to delete ${
-        apiResponse?.data?.full_name || "this contact"
-      }?`,
-      [
-        { text: "Cancel" },
-        {
-          text: "Delete",
-          onPress: () => {
-            setLoading(true);
-            deleteContactApi({
-              query: {
-                id: apiResponse?.data?.id,
-              },
+    Alert.alert("Delete Contact", `Delete ${apiResponse?.data?.full_name || "this contact"}?`, [
+      { text: "Cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          setLoading(true);
+          deleteContactApi({ query: { id: apiResponse?.data?.id } })
+            ?.then((res: any) => {
+              Toast.show({ type: "success", text1: res?.msg });
+              setLoading(false);
+              navigation.goBack();
             })
-              ?.then((res: any) => {
-                Toast.show({
-                  type: "success",
-                  text1: res?.msg,
-                });
-                setLoading(false);
-                navigation.goBack();
-              })
-              ?.catch(() => setLoading(false));
-          },
-          style: "destructive",
+            ?.catch(() => setLoading(false));
         },
-      ],
-    );
-  const handleEdit = () =>
-    navigation.navigate("CreateContantScreen", {
-      contactData: apiResponse?.data,
-      type: "edit",
-    });
-  const handleAddNote = () =>
-    navigation.navigate("CreateNoteScreen", {
-      contactId: apiResponse?.data?.id,
-      contactName: apiResponse?.data?.full_name,
-      type: "AddNote",
-    });
-  const handleViewAllNotes = () =>
-    navigation.navigate("AllNotesScreen", {
-      contactId: apiResponse?.data?.id,
-    });
+      },
+    ]);
 
-  if (loading || apiResponse?.isLoading) {
-    return <FullScreenLoader />;
-  }
+  const handleEdit = () =>
+    navigation.navigate("CreateContantScreen", { contactData: apiResponse?.data, type: "edit" });
+  const handleAddNote = () =>
+    navigation.navigate("CreateNoteScreen", { contactId: apiResponse?.data?.id, contactName: apiResponse?.data?.full_name, type: "AddNote" });
+  const handleViewAllNotes = () =>
+    navigation.navigate("AllNotesScreen", { contactId: apiResponse?.data?.id });
+
+  if (loading || apiResponse?.isLoading) return <FullScreenLoader />;
+
   if (!apiResponse?.data) {
     return (
       <DefaultBackground>
-        <View style={styles.loadingContainer}>
+        <View style={styles.centerContainer}>
           <Text style={styles.errorText}>Contact not found.</Text>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.allNotesLink}>Go Back</Text>
+            <Text style={styles.linkText}>Go Back</Text>
           </TouchableOpacity>
         </View>
       </DefaultBackground>
     );
   }
 
+  const contact = apiResponse.data;
+  const initials = contact.full_name?.split(" ").slice(0, 2).map((p: string) => p[0]).join("").toUpperCase() || "?";
+  const lastNoteDate = contact.contact_notes?.[0]?.created_date;
+  const employer = contact.previous_employers?.[0];
+
   return (
     <DefaultBackground>
-      <StatusBar style="light" />
-      <View
-        style={[
-          styles.container,
-          { paddingTop: Platform.OS === "android" ? insets.top : insets.top },
-        ]}
-      >
+      <StatusBar style="dark" />
+      <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
+        {/* Header */}
         <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.iconButtonSmall}
-          >
-            <Feather name="chevron-left" size={24} color={theme.colors.white} />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Feather name="arrow-left" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <TouchableOpacity
-              style={styles.btnlogoImg}
-              onPress={() => navigation.navigate("DrawerNavigation")}
-            >
-              <Image source={ImageModule.logo} style={styles.logoImgSmall} />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            onPress={handleSearchPress}
-            style={styles.iconButtonSmall}
-          >
-            <Feather name="search" size={22} color={theme.colors.white} />
+          <TouchableOpacity onPress={handleDelete} style={styles.deleteBtn}>
+            <Feather name="trash-2" size={16} color={theme.colors.red} />
+            <Text style={styles.deleteBtnText}>Delete</Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.actionBar}>
-          <View style={styles.sideGroup}>
-            <TouchableOpacity style={styles.actionItem} onPress={handleDelete}>
-              <Feather name="trash-2" size={18} color={theme.colors.white} />
-              <Text style={styles.actionText}>Delete</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionItem} onPress={handleEdit}>
-              <Feather name="edit-2" size={18} color={theme.colors.white} />
-              <Text style={styles.actionText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={styles.aiCenterButton}
-            onPress={() =>
-              navigation.navigate("ChatAiScreen", { contactId: contactId })
-            }
-          >
-            <MaterialCommunityIcons
-              name="star-four-points"
-              size={18}
-              color={theme.colors.white}
-            />
-            <Text style={styles.actionText}>AI</Text>
-          </TouchableOpacity>
-
-          <View style={styles.sideGroup}>
-            <TouchableOpacity style={styles.actionItem} onPress={handleAddNote}>
-              <Feather name="file-plus" size={18} color={theme.colors.white} />
-              <Text style={styles.actionText}>Add Note</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionItem}
-              onPress={toggleAllSections}
-            >
-              <Feather
-                name={areAllSectionsOpen ? "minimize-2" : "maximize-2"}
-                size={18}
-                color={theme.colors.white}
-              />
-              <Text style={styles.actionText}>
-                {areAllSectionsOpen ? "Collapse-" : "Expand+"}
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         <ScrollView
-          style={styles.contentScrollView}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
-          showsVerticalScrollIndicator={false}
           ref={scrollViewRef}
+          style={styles.scroll}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 30 }}
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.mainInfoCard}>
-            <View style={styles.avatarDisplaySection}>
-              {apiResponse?.data.photo ? (
-                <FastImage
-                  source={{
-                    uri: apiResponse?.data.photo,
-                    priority: FastImage.priority.normal,
-                  }}
-                  style={styles.avatarImage}
-                />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Feather
-                    name="user"
-                    size={50}
-                    color={theme.colors.secondary}
-                  />
-                </View>
-              )}
-              <Text style={styles.userName}>{apiResponse?.data.full_name}</Text>
-            </View>
-
-            <CollapsibleSection
-              title="Personal Information"
-              isOpen={sectionOpenState.personal}
-              onPress={() => toggleSection("personal")}
-            >
-              <View style={styles.arrayItemCard}>
-                <InfoDisplayField
-                  label="Name"
-                  value={apiResponse?.data.full_name}
-                />
-                <InfoDisplayField
-                  label="Description"
-                  value={apiResponse?.data.description}
-                />
-                <InfoDisplayField
-                  label="Birthday"
-                  value={
-                    apiResponse?.data.birthday
-                      ? dayjs(apiResponse?.data.birthday, "YYYY-MM-DD").format(
-                          "MMMM DD",
-                        )
-                      : "-"
-                  }
-                />
-                <InfoDisplayField
-                  label="Email"
-                  value={apiResponse?.data.email || "-"}
-                />
-                <InfoDisplayField
-                  label="Number"
-                  value={formatPhoneNumber(apiResponse?.data.phone)}
-                />
-                <InfoDisplayField
-                  label="Anniversary"
-                  value={
-                    apiResponse?.data.anniversary
-                      ? dayjs(
-                          apiResponse?.data.anniversary,
-                          "YYYY-MM-DD",
-                        ).format("MMMM DD")
-                      : "-"
-                  }
-                />
+          {/* Profile Hero */}
+          <View style={styles.heroSection}>
+            {contact.photo ? (
+              <FastImage source={{ uri: contact.photo, priority: FastImage.priority.normal }} style={styles.heroAvatar} />
+            ) : (
+              <View style={styles.heroAvatarPlaceholder}>
+                <Text style={styles.heroAvatarInitials}>{initials}</Text>
               </View>
-            </CollapsibleSection>
+            )}
+            <Text style={styles.heroName}>{contact.full_name}</Text>
+            {lastNoteDate && (
+              <Text style={styles.heroSubtitle}>
+                Last note {dayjs().diff(dayjs(lastNoteDate), "month") > 0
+                  ? `${dayjs().diff(dayjs(lastNoteDate), "month")} months ago`
+                  : `${dayjs().diff(dayjs(lastNoteDate), "day")} days ago`}
+              </Text>
+            )}
+            {employer && (
+              <Text style={styles.heroEmployer}>{employer.name}{employer.details ? ` · ${employer.details}` : ""}</Text>
+            )}
 
-            <CollapsibleSection
-              title="Spouse Details"
-              isOpen={sectionOpenState.spouse}
-              onPress={() => toggleSection("spouse")}
-            >
-              {apiResponse?.data?.spouse_name ||
-              apiResponse?.data?.spouse_birthday ||
-              apiResponse?.data?.spouse_details ? (
-                <View style={styles.arrayItemCard}>
-                  <InfoDisplayField
-                    label="Spouse Name"
-                    value={apiResponse?.data.spouse_name || "-"}
-                  />
-                  <InfoDisplayField
-                    label="Spouse Birthday"
-                    value={
-                      apiResponse?.data.spouse_birthday
-                        ? dayjs(
-                            apiResponse?.data.spouse_birthday,
-                            "YYYY-MM-DD",
-                          ).format("MMMM DD")
-                        : "-"
-                    }
-                  />
-                  <InfoDisplayField
-                    label="Spouse Details"
-                    value={apiResponse?.data.spouse_details || "-"}
-                  />
-                </View>
-              ) : (
-                <Text style={styles.noArrayItemsText}>
-                  No spouse details added.
-                </Text>
-              )}
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Family Member Details"
-              isOpen={sectionOpenState.children}
-              onPress={() => toggleSection("children")}
-            >
-              {apiResponse?.data.children?.map((child: any, index: any) => (
-                <View key={child.id} style={styles.arrayItemCard}>
-                  <Text style={styles.arrayItemTitle}>Family Member</Text>
-                  <InfoDisplayField label="Name" value={child.name} />
-                  <InfoDisplayField
-                    label="Birthday"
-                    value={
-                      child.birthday
-                        ? dayjs(child.birthday).format("MMMM DD")
-                        : "-"
-                    }
-                  />
-                  <InfoDisplayField label="Details" value={child.details} />
-                </View>
-              ))}
-              {(!apiResponse?.data.children ||
-                apiResponse?.data.children.length === 0) && (
-                <Text style={styles.noArrayItemsText}>
-                  No children details added.
-                </Text>
-              )}
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Employment Details"
-              isOpen={sectionOpenState.employment}
-              onPress={() => toggleSection("employment")}
-            >
-              {apiResponse?.data.previous_employers?.map(
-                (job: any, index: any) => (
-                  <View key={job.id} style={styles.arrayItemCard}>
-                    <Text style={styles.arrayItemTitle}>Employment</Text>
-                    <InfoDisplayField label="Employer" value={job.name} />
-                    <InfoDisplayField label="Details" value={job.details} />
-                  </View>
-                ),
-              )}
-              {(!apiResponse?.data.previous_employers ||
-                apiResponse?.data.previous_employers.length === 0) && (
-                <Text style={styles.noArrayItemsText}>
-                  No employment details added.
-                </Text>
-              )}
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Education Details"
-              isOpen={sectionOpenState.education}
-              onPress={() => toggleSection("education")}
-            >
-              {apiResponse?.data.universities?.map((edu: any, index: any) => (
-                <View key={edu.id} style={styles.arrayItemCard}>
-                  <Text style={styles.arrayItemTitle}>Education</Text>
-                  <InfoDisplayField label="Institution" value={edu.name} />
-                  <InfoDisplayField label="Details" value={edu.details} />
-                </View>
-              ))}
-              {(!apiResponse?.data.universities ||
-                apiResponse?.data.universities.length === 0) && (
-                <Text style={styles.noArrayItemsText}>
-                  No education details added.
-                </Text>
-              )}
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Interests"
-              isOpen={sectionOpenState.interests}
-              onPress={() => toggleSection("interests")}
-            >
-              {apiResponse?.data.interests?.map((interest: any) => (
-                <View style={styles.arrayItemCard}>
-                  <Text key={interest.id} style={styles.interestItemValue}>
-                    • {interest.name}
-                  </Text>
-                </View>
-              ))}
-              {(!apiResponse?.data.interests ||
-                apiResponse?.data.interests.length === 0) && (
-                <Text style={styles.noArrayItemsText}>No interests added.</Text>
-              )}
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Others (Custom Fields)"
-              isOpen={sectionOpenState.others}
-              onPress={() => toggleSection("others")}
-            >
-              {apiResponse?.data.custom_fields?.map((field: any) => (
-                <View style={styles.arrayItemCard}>
-                  <InfoDisplayField
-                    key={field.id || field.title}
-                    label={field.title}
-                  >
-                    {field.values.map((val: any, idx: any) => (
-                      <Text key={idx} style={styles.infoValue}>
-                        • {val}
-                      </Text>
-                    ))}
-                  </InfoDisplayField>
-                </View>
-              ))}
-              {(!apiResponse?.data.custom_fields ||
-                apiResponse?.data.custom_fields.length === 0) && (
-                <Text style={styles.noArrayItemsText}>
-                  No custom fields added.
-                </Text>
-              )}
-            </CollapsibleSection>
+            {/* Action Buttons */}
+            <View style={styles.actionBtnsRow}>
+              <TouchableOpacity style={styles.actionBtn} onPress={handleEdit}>
+                <Feather name="edit-2" size={16} color={theme.colors.primary} />
+                <Text style={styles.actionBtnText}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.actionBtnActive]}
+                onPress={() => navigation.navigate("ChatAiScreen", { contactId })}
+              >
+                <MaterialCommunityIcons name="star-four-points" size={16} color={theme.colors.white} />
+                <Text style={[styles.actionBtnText, { color: theme.colors.white }]}>AI</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionBtn} onPress={handleAddNote}>
+                <Feather name="file-plus" size={16} color={theme.colors.primary} />
+                <Text style={styles.actionBtnText}>Note</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
+          {/* Info Card */}
+          <View style={styles.infoCard}>
+            <CollapsibleSection title="PERSONAL INFO" isOpen={sectionOpenState.personal} onPress={() => toggleSection("personal")}>
+              <InfoRow label="Birthday" value={contact.birthday ? dayjs(contact.birthday, "YYYY-MM-DD").format("D MMMM") : null} />
+              <InfoRow label="Anniversary" value={contact.anniversary ? dayjs(contact.anniversary, "YYYY-MM-DD").format("D MMMM") : null} />
+              <InfoRow label="Email" value={contact.email} />
+              <InfoRow label="Phone" value={formatPhoneNumber(contact.phone)} />
+            </CollapsibleSection>
+
+            {(contact.spouse_name || contact.spouse_birthday || contact.children?.length > 0) && (
+              <CollapsibleSection title="FAMILY DETAILS" isOpen={sectionOpenState.family} onPress={() => toggleSection("family")}>
+                <InfoRow label="Spouse" value={contact.spouse_name} />
+                <InfoRow label="Spouse Birthday" value={contact.spouse_birthday ? dayjs(contact.spouse_birthday, "YYYY-MM-DD").format("D MMMM") : null} />
+                {contact.children?.map((child: any) => (
+                  <InfoRow key={child.id} label={`Family Member`} value={`${child.name}${child.birthday ? " · " + dayjs(child.birthday).format("D MMMM") : ""}`} />
+                ))}
+              </CollapsibleSection>
+            )}
+
+            {contact.previous_employers?.length > 0 && (
+              <CollapsibleSection title="EMPLOYMENT" isOpen={sectionOpenState.employment} onPress={() => toggleSection("employment")}>
+                {contact.previous_employers.map((job: any) => (
+                  <View key={job.id} style={styles.subCard}>
+                    <InfoRow label="Employer" value={job.name} />
+                    <InfoRow label="Details" value={job.details} />
+                  </View>
+                ))}
+              </CollapsibleSection>
+            )}
+
+            {contact.universities?.length > 0 && (
+              <CollapsibleSection title="EDUCATION" isOpen={sectionOpenState.education} onPress={() => toggleSection("education")}>
+                {contact.universities.map((edu: any) => (
+                  <View key={edu.id} style={styles.subCard}>
+                    <InfoRow label="Institution" value={edu.name} />
+                    <InfoRow label="Details" value={edu.details} />
+                  </View>
+                ))}
+              </CollapsibleSection>
+            )}
+
+            {contact.interests?.length > 0 && (
+              <CollapsibleSection title="INTERESTS" isOpen={sectionOpenState.interests} onPress={() => toggleSection("interests")}>
+                <View style={styles.interestPillsRow}>
+                  {contact.interests.map((interest: any) => (
+                    <View key={interest.id} style={styles.interestPill}>
+                      <Text style={styles.interestPillText}>{interest.name}</Text>
+                    </View>
+                  ))}
+                </View>
+              </CollapsibleSection>
+            )}
+
+            {contact.custom_fields?.length > 0 && (
+              <CollapsibleSection title="MORE DETAILS" isOpen={sectionOpenState.others} onPress={() => toggleSection("others")}>
+                {contact.custom_fields.map((field: any) => (
+                  <View key={field.id || field.title} style={styles.subCard}>
+                    <Text style={styles.infoLabel}>{field.title}</Text>
+                    {field.values?.map((val: any, idx: number) => (
+                      <Text key={idx} style={styles.infoValue}>• {val}</Text>
+                    ))}
+                  </View>
+                ))}
+              </CollapsibleSection>
+            )}
+          </View>
+
+          {/* Notes Card */}
           <View style={styles.notesCard}>
-            <View style={styles.notesHeader}>
-              <Text style={styles.notesTitle}>Notes</Text>
-              {apiResponse?.data.contact_notes?.length > 0 && (
+            <View style={styles.notesHeaderRow}>
+              <Text style={styles.notesTitle}>NOTES</Text>
+              {contact.contact_notes?.length > 0 && (
                 <TouchableOpacity onPress={handleViewAllNotes}>
-                  <Text style={styles.allNotesLink}>
-                    All notes{" "}
-                    <Feather
-                      name="arrow-right-circle"
-                      size={14}
-                      color={theme.colors.primary}
-                    />
-                  </Text>
+                  <Text style={styles.viewAllLink}>VIEW ALL</Text>
                 </TouchableOpacity>
               )}
             </View>
-            {apiResponse?.data.contact_notes?.map((note: any) => (
-              <View key={note.id} style={styles.noteItem}>
-                <Text style={styles.noteDate}>
-                  {note?.reminder && <Feather name="bell" size={13} />}
-                  {note.reminder
-                    ? ` ${dayjs(note.reminder).format("MM-DD-YYYY")}`
-                    : ""}
-                </Text>
-                <Text style={styles.noteContent} numberOfLines={2}>
-                  {note.note}
-                </Text>
-                <Text style={styles.noteCreationDate}>
-                  Note created at <Feather name="clock" size={13} />{" "}
-                  {dayjs(note?.created_date).format("MM-DD-YYYY")}
-                </Text>
-              </View>
-            ))}
-            {(!apiResponse?.data.contact_notes ||
-              apiResponse?.data.contact_notes.length === 0) && (
-              <Text style={styles.noNotesText}>
-                No notes yet for this contact.
-              </Text>
+            {contact.contact_notes?.length > 0 ? (
+              contact.contact_notes.slice(0, 2).map((note: any) => (
+                <View key={note.id} style={styles.noteItem}>
+                  <View style={styles.noteAccent} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.noteDate}>
+                      {dayjs(note?.created_date).format("MMM D, YYYY").toUpperCase()}
+                    </Text>
+                    <Text style={styles.noteContent} numberOfLines={3}>{note.note}</Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noNotesText}>No notes yet for this contact.</Text>
             )}
           </View>
         </ScrollView>
@@ -542,215 +281,110 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
 };
 
 const styles = StyleSheet.create({
-  // ... (Most styles remain the same, check for consistency with new data)
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: theme.colors.lightBackground },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
-  iconButtonSmall: {
-    backgroundColor: theme.colors.secondary,
-    padding: 8,
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+  backBtn: { width: 40, height: 40, justifyContent: "center" },
+  deleteBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
+  deleteBtnText: { fontSize: 14, fontFamily: "Poppins-Medium", color: theme.colors.red },
+  scroll: { flex: 1 },
+  heroSection: {
     alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    backgroundColor: theme.colors.white,
+    marginHorizontal: 16,
+    borderRadius: 16,
+    marginBottom: 14,
+    ...theme.elevationLight,
+  },
+  heroAvatar: { width: 90, height: 90, borderRadius: 45, marginBottom: 12 },
+  heroAvatarPlaceholder: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: theme.colors.avatarBg,
     justifyContent: "center",
-  },
-  headerTitleContainer: { alignItems: "center", flex: 1, marginHorizontal: 10 },
-  headerContactName: {
-    fontSize: 20,
-    ...theme.font.fontBold,
-    color: theme.colors.white,
-    textAlign: "center",
-  },
-  logoImgSmall: {
-    width: "100%",
-    height: 40,
-    resizeMode: "contain",
-  },
-  btnlogoImg: {
     alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    height: 40,
+    marginBottom: 12,
   },
-  actionBar: {
+  heroAvatarInitials: { fontSize: 32, fontFamily: "Poppins-Bold", color: theme.colors.white },
+  heroName: { fontSize: 22, fontFamily: "Poppins-Bold", color: theme.colors.text },
+  heroSubtitle: { fontSize: 13, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginTop: 2 },
+  heroEmployer: { fontSize: 13, fontFamily: "Poppins-Medium", color: theme.colors.primary, marginTop: 2 },
+  actionBtnsRow: { flexDirection: "row", gap: 10, marginTop: 16 },
+  actionBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.secondary,
-    marginHorizontal: 15,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
     borderRadius: 10,
-    paddingVertical: 8,
-    marginTop: 5,
-    marginBottom: 15,
-    justifyContent: "space-between",
+    borderWidth: 1.5,
+    borderColor: theme.colors.primary,
+    gap: 6,
   },
-  actionItem: { alignItems: "center", paddingHorizontal: 5 },
-  actionText: {
-    color: theme.colors.white,
-    fontSize: 11,
-    ...theme.font.fontMedium,
-    marginTop: 3,
-  },
-  contentScrollView: { flex: 1 },
-  mainInfoCard: {
-    backgroundColor: theme.colors.secondary,
-    borderRadius: 15,
-    marginHorizontal: 15,
-    marginBottom: 20,
-    overflow: "hidden",
-  },
-  avatarDisplaySection: { alignItems: "center", paddingVertical: 20 },
-  avatarImage: { width: 100, height: 100, borderRadius: 50 },
-  avatarPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  actionBtnActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  actionBtnText: { fontSize: 14, fontFamily: "Poppins-SemiBold", color: theme.colors.primary },
+  infoCard: {
     backgroundColor: theme.colors.white,
-    justifyContent: "center",
-    alignItems: "center",
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginBottom: 14,
+    overflow: "hidden",
+    ...theme.elevationLight,
   },
-  // userName under avatar was removed as name is in header
-  collapsibleSection: { borderTopWidth: 1, borderTopColor: theme.colors.grey },
+  collapsibleSection: { borderBottomWidth: 1, borderBottomColor: theme.colors.border },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
-  sectionHeaderText: {
-    fontSize: 16,
-    ...theme.font.fontSemiBold,
-    color: theme.colors.white,
-  },
-  sectionContent: { paddingBottom: 15, paddingHorizontal: 20 },
-  infoField: { marginBottom: 12 },
-  infoLabel: {
-    fontSize: 13,
-    ...theme.font.fontMedium,
-    color: theme.colors.grey /* Changed to grey */,
-    marginBottom: 3,
-  },
-  infoValue: {
-    fontSize: 15,
-    ...theme.font.fontRegular,
-    color: theme.colors.white,
-  },
-  arrayItemCard: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 8,
-  },
-  arrayItemTitle: {
-    fontSize: 14,
-    ...theme.font.fontSemiBold,
-    color: theme.colors.white,
-    marginBottom: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.grey,
-    paddingBottom: 3,
-  },
-  interestItemValue: {
-    fontSize: 15,
-    ...theme.font.fontRegular,
-    color: theme.colors.white,
-    marginLeft: 5,
-    marginBottom: 5,
-  },
-  notesCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: 15,
-    marginHorizontal: 15,
-    marginBottom: 20,
-    padding: 15,
-  },
-  notesHeader: {
+  sectionHeaderText: { fontSize: 12, fontFamily: "Poppins-Bold", color: theme.colors.greyText, letterSpacing: 0.8 },
+  sectionContent: { paddingHorizontal: 16, paddingBottom: 14 },
+  infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  notesTitle: {
-    fontSize: 18,
-    ...theme.font.fontBold,
-    color: theme.colors.black,
-  },
-  allNotesLink: {
-    fontSize: 14,
-    ...theme.font.fontSemiBold,
-    color: theme.colors.primary,
-  },
-  noteItem: {
-    marginBottom: 12,
-    paddingBottom: 10,
+    alignItems: "flex-start",
+    paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.grey,
-  }, // Changed separator to grey
-  noteDate: {
-    fontSize: 12,
-    ...theme.font.fontSemiBold,
-    color: theme.colors.secondary,
-    marginBottom: 3,
+    borderBottomColor: theme.colors.border,
   },
-  noteContent: {
-    fontSize: 14,
-    ...theme.font.fontRegular,
-    color: theme.colors.text,
-    marginBottom: 4,
-  },
-  noteCreationDate: {
-    fontSize: 11,
-    ...theme.font.fontRegular,
-    color: theme.colors.grey,
-    textAlign: "right",
-  },
-  noNotesText: {
-    textAlign: "center",
-    color: theme.colors.grey,
-    paddingVertical: 10,
-  },
-  noArrayItemsText: {
-    color: theme.colors.grey,
-    fontStyle: "italic",
-    textAlign: "center",
+  infoLabel: { fontSize: 13, fontFamily: "Poppins-Regular", color: theme.colors.greyText, flex: 1 },
+  infoValue: { fontSize: 13, fontFamily: "Poppins-Medium", color: theme.colors.text, flex: 2, textAlign: "right" },
+  subCard: { backgroundColor: theme.colors.lightCard, borderRadius: 8, padding: 10, marginBottom: 8 },
+  interestPillsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  interestPill: {
+    backgroundColor: theme.colors.primaryLight,
+    borderRadius: 16,
+    paddingHorizontal: 12,
     paddingVertical: 5,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.colors.primary,
-  }, // Ensure primary is defined
-  errorText: {
-    color: theme.colors.white,
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 10,
+  interestPillText: { fontSize: 13, fontFamily: "Poppins-Medium", color: theme.colors.primary },
+  notesCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: 16,
+    marginHorizontal: 16,
+    padding: 16,
+    ...theme.elevationLight,
   },
-  userName: {
-    ...theme.font.fontBold,
-    fontSize: 15,
-    color: theme.colors.white,
-    paddingHorizontal: 5,
-    marginTop: 5,
-  },
-  sideGroup: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-
-  aiCenterButton: {
-    width: 60,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  notesHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  notesTitle: { fontSize: 12, fontFamily: "Poppins-Bold", color: theme.colors.greyText, letterSpacing: 0.8 },
+  viewAllLink: { fontSize: 12, fontFamily: "Poppins-SemiBold", color: theme.colors.primary, letterSpacing: 0.5 },
+  noteItem: { flexDirection: "row", gap: 10, marginBottom: 12 },
+  noteAccent: { width: 3, borderRadius: 2, backgroundColor: theme.colors.primary, minHeight: 40 },
+  noteDate: { fontSize: 11, fontFamily: "Poppins-SemiBold", color: theme.colors.greyText, marginBottom: 3 },
+  noteContent: { fontSize: 13, fontFamily: "Poppins-Regular", color: theme.colors.text, lineHeight: 18 },
+  noNotesText: { color: theme.colors.greyText, textAlign: "center", fontSize: 13, paddingVertical: 8 },
+  centerContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  errorText: { fontSize: 16, color: theme.colors.text, marginBottom: 10 },
+  linkText: { fontSize: 14, color: theme.colors.primary, fontFamily: "Poppins-SemiBold" },
 });
 
 export default ViewContactScreen;

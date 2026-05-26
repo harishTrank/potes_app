@@ -5,90 +5,43 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Image,
-  Platform,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import ImageModule from "../../../ImageModule";
 import { staticDataApi } from "../../../store/Services/Others";
 
-type AboutUsScreenNavigationProp = {
-  goBack: () => void;
-};
-
-interface AboutUsScreenProps {
-  navigation: AboutUsScreenNavigationProp;
-}
-
-const PrivacyPolicyScreen: React.FC<AboutUsScreenProps> = ({
-  navigation,
-}: any) => {
+const PrivacyPolicyScreen: React.FC<any> = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const [apiResponse, setApiResponse]: any = useState({});
 
   useEffect(() => {
-    staticDataApi({
-      query: {
-        topic: "privacy-policy",
-      },
-    })
-      ?.then((res: any) => {
-        setApiResponse(res?.data);
-      })
+    staticDataApi({ query: { topic: "privacy-policy" } })
+      ?.then((res: any) => setApiResponse(res?.data))
       ?.catch((err: any) => console.log("err", err));
   }, []);
 
-  const handleSearchPress = () => {
-    navigation.navigate("SearchResultScreen", { searchQuery: "" });
-  };
-
   return (
     <DefaultBackground>
-      <StatusBar style="light" />
-      <View
-        style={[
-          styles.container,
-          { paddingTop: Platform.OS === "android" ? insets.top : insets.top },
-        ]}
-      >
+      <StatusBar style="dark" />
+      <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
         <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.iconButton}
-          >
-            <Feather name="chevron-left" size={24} color={theme.colors.white} />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
+            <Feather name="arrow-left" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnlogoImg}
-            onPress={() => navigation.navigate("HomeScreen")}
-          >
-            <Image style={styles.logoImg} source={ImageModule.logo} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleSearchPress}
-            style={styles.iconButton}
-          >
-            <Feather name="search" size={24} color={theme.colors.white} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.titleBar}>
-          <Text style={styles.titleText}>Privacy Policy</Text>
+          <Text style={styles.headerTitle}>Privacy Policy</Text>
+          <View style={styles.iconButton} />
         </View>
 
         <ScrollView
-          style={styles.contentScrollView}
-          contentContainerStyle={[
-            styles.contentContainer,
-            { paddingBottom: insets.bottom + 20 },
-          ]}
+          contentContainerStyle={[styles.contentContainer, { paddingBottom: insets.bottom + 20 }]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.contentText}>{apiResponse?.content}</Text>
+          <View style={styles.contentCard}>
+            <Text style={styles.contentText}>{apiResponse?.content}</Text>
+          </View>
         </ScrollView>
       </View>
     </DefaultBackground>
@@ -96,68 +49,41 @@ const PrivacyPolicyScreen: React.FC<AboutUsScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
   },
   iconButton: {
-    backgroundColor: theme.colors.secondary,
-    padding: 8,
-    borderRadius: 20,
     width: 40,
     height: 40,
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
   },
-  titleBar: {
-    backgroundColor: theme.colors.secondary,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    marginHorizontal: 15,
-    marginTop: 10,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-  },
-  titleText: {
-    fontSize: 20,
-    ...theme.font.fontBold,
-    color: theme.colors.white,
-  },
-  contentScrollView: {
-    flex: 1,
-    marginHorizontal: 15,
-    backgroundColor: theme.colors.secondary,
-    marginBottom: 70,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
+  headerTitle: {
+    fontSize: 18,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.text,
   },
   contentContainer: {
-    padding: 10,
+    paddingHorizontal: 16,
+    paddingTop: 4,
+  },
+  contentCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   contentText: {
-    fontSize: 16,
-    ...theme.font.fontRegular,
-    color: theme.colors.white,
-    textAlign: "left",
+    fontSize: 15,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.text,
     lineHeight: 24,
-    paddingHorizontal: 5,
-  },
-  logoImg: {
-    resizeMode: "contain",
-    width: "100%",
-    height: 40,
-  },
-  btnlogoImg: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "50%",
-    height: 40,
   },
 });
 

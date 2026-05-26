@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Image,
   TextInput,
   Alert,
   ActivityIndicator,
@@ -18,8 +17,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Formik, FormikHelpers } from "formik";
 import * as Yup from "yup";
-import ActionButtons from "../../Components/ActionButtons";
-import Header from "../../Components/Header";
 import {
   changeProfileName,
   deleteAccountApi,
@@ -32,38 +29,23 @@ import { useAtom } from "jotai";
 import { apiCallBackGlobal } from "../../../jotaiStore";
 import FastImage from "react-native-fast-image";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-type UserProfileScreenNavigationProp = {
-  navigate: (screen: string, params?: object) => void;
-  openDrawer: () => void;
-};
-
-interface UserProfileScreenProps {
-  navigation: UserProfileScreenNavigationProp;
-}
-
-interface UpdateNameFormValues {
-  firstName: string;
-  lastName: string;
-}
+import { SideMenuModal } from "../../Components/SideMenuModal";
 
 const updateNameValidationSchema = Yup.object().shape({
   firstName: Yup.string().required("First name is required"),
   lastName: Yup.string(),
 });
 
-const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
-  navigation,
-}) => {
+const UserProfileScreen: React.FC<any> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const [userData, setUserData] = useState<any>({});
-  const [isEditingName, setIsEditingName] = useState(false);
   const [profilePic, setProfilePic]: any = useState(undefined);
   const [loading, setLoading]: any = useState(false);
   const [, setGlobalCall]: any = useAtom(apiCallBackGlobal);
   const [deleteModalOpen, setDeleteModalOpen]: any = useState(false);
   const [modalPasswordOpen, setModalPasswordOpen]: any = useState(false);
   const [deletePassword, setDeletePassword]: any = useState("");
+  const [menuVisible, setMenuVisible] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -83,16 +65,8 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
 
   const handlePickImage = async () => {
     Alert.alert("Pick Image", "Choose from camera or gallery", [
-      {
-        text: "Gallery",
-        onPress: () => getImage(setProfilePic),
-        style: "default",
-      },
-      {
-        text: "Camera",
-        onPress: async () => await takePicture(setProfilePic),
-        style: "default",
-      },
+      { text: "Gallery", onPress: () => getImage(setProfilePic), style: "default" },
+      { text: "Camera", onPress: async () => await takePicture(setProfilePic), style: "default" },
       { text: "Cancel", style: "cancel" },
     ]);
   };
@@ -101,591 +75,380 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
     if (profilePic) {
       setLoading(true);
       const formData = new FormData();
-      if (profilePic) {
-        formData.append("profile_pic", getfileobj(profilePic));
-      }
-      changeProfileName({
-        body: formData,
-      })
+      formData.append("profile_pic", getfileobj(profilePic));
+      changeProfileName({ body: formData })
         ?.then(() => {
           setLoading(false);
-          setGlobalCall((oldVal: any) => oldVal + 1);
-          Toast.show({
-            type: "success",
-            text1: "Profile pic updated successfully.",
-          });
+          setGlobalCall((v: any) => v + 1);
+          Toast.show({ type: "success", text1: "Profile photo updated." });
         })
         ?.catch(() => {
           setLoading(false);
-          Toast.show({
-            type: "error",
-            text1: "Something went wrong.",
-          });
+          Toast.show({ type: "error", text1: "Something went wrong." });
         });
-      setUserData((olddata: any) => {
-        return {
-          ...olddata,
-          avatarUri: profilePic,
-        };
-      });
+      setUserData((prev: any) => ({ ...prev, avatarUri: profilePic }));
     }
   }, [profilePic]);
 
-  const handleCreateContact = () => navigation.navigate("CreateContactScreen");
-  const handleCreateNote = () => navigation.navigate("CreateNoteScreen");
-
-  const handleChangePassword = () => {
-    navigation.navigate("ChangePasswordScreen", {
-      email: userData.email,
-    });
-  };
+  const handleChangePassword = () =>
+    navigation.navigate("ChangePasswordScreen", { email: userData.email });
 
   const handleUpdateNameSubmit = (
-    values: UpdateNameFormValues,
-    { setSubmitting }: FormikHelpers<UpdateNameFormValues>
+    values: { firstName: string; lastName: string },
+    { setSubmitting }: FormikHelpers<{ firstName: string; lastName: string }>
   ) => {
     setLoading(true);
-    changeProfileName({
-      body: {
-        first_name: values.firstName,
-        last_name: values.lastName,
-      },
-    })
-      ?.then((res: any) => {
-        setUserData((prev: any) => ({
-          ...prev,
-          firstName: values.firstName,
-          lastName: values.lastName,
-        }));
+    changeProfileName({ body: { first_name: values.firstName, last_name: values.lastName } })
+      ?.then(() => {
+        setUserData((prev: any) => ({ ...prev, firstName: values.firstName, lastName: values.lastName }));
         setLoading(false);
-        setIsEditingName(false);
         setSubmitting(false);
-        Toast.show({
-          type: "success",
-          text1: "Profile update successfully.",
-        });
+        Toast.show({ type: "success", text1: "Profile updated." });
       })
       ?.catch(() => {
         setLoading(false);
-        setIsEditingName(false);
         setSubmitting(false);
-        Toast.show({
-          type: "error",
-          text1: "Something went wrong.",
-        });
+        Toast.show({ type: "error", text1: "Something went wrong." });
       });
   };
 
-  const renderInfoField = (label: string, value: string) => (
-    <View style={styles.infoFieldGroup}>
-      <Text style={styles.label}>{label}</Text>
-      <View
-        style={{
-          ...styles.valueContainer,
-          backgroundColor: "rgba(255,255,255,0.05)",
-        }}
-      >
-        <Text style={{ ...styles.valueText, color: "#fff" }}>{value}</Text>
-      </View>
-    </View>
-  );
-
   const handleDeleteAccount = () => {
-    deleteAccountApi({
-      body: {
-        password: deletePassword,
-      },
-    })
+    deleteAccountApi({ body: { password: deletePassword } })
       .then((res: any) => {
-        console.log("account deleted", res);
-        Toast.show({
-          type: "success",
-          text1: res?.msg,
-        });
+        Toast.show({ type: "success", text1: res?.msg });
         setDeleteModalOpen(false);
         setModalPasswordOpen(false);
         AsyncStorage.clear();
         navigation.navigate("LoginScreen");
       })
-      .catch((err: any) => {
-        Toast.show({
-          type: "error",
-          text1: "Wrong Password entered",
-        });
+      .catch(() => {
+        Toast.show({ type: "error", text1: "Wrong password" });
         setDeleteModalOpen(false);
         setModalPasswordOpen(false);
       });
   };
 
+  const initials = [userData.firstName?.[0], userData.lastName?.[0]].filter(Boolean).join("").toUpperCase() || "U";
+  const displayName = [userData.firstName, userData.lastName].filter(Boolean).join(" ");
+
   return (
     <DefaultBackground>
       {loading && <FullScreenLoader />}
-      <StatusBar style="light" />
-      <View style={[styles.flexContainer]}>
-        <Header menu={false} />
+      <SideMenuModal visible={menuVisible} onClose={() => setMenuVisible(false)} />
+      <StatusBar style="dark" />
+      <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.backBtn}>
+            <Feather name="menu" size={22} color={theme.colors.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>My Profile</Text>
+          <View style={styles.headerRight} />
+        </View>
+
         <ScrollView
-          style={styles.scrollableContent}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          style={styles.scroll}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <ActionButtons
-            onCreateContactPress={handleCreateContact}
-            onCreateNotePress={handleCreateNote}
-          />
-
-          <View style={styles.profileCard}>
-            <Text style={styles.cardTitle}>User Profile</Text>
-
-            <View style={styles.avatarSection}>
-              <TouchableOpacity
-                onPress={handlePickImage}
-                style={styles.avatarContainer}
-              >
-                {userData.avatarUri ? (
-                  <FastImage
-                    source={{
-                      uri: userData.avatarUri,
-                      priority: FastImage.priority.normal,
-                    }}
-                    style={styles.avatarImage}
-                  />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Feather
-                      name="user"
-                      size={60}
-                      color={theme.colors.secondary}
-                    />
-                  </View>
-                )}
-                <View style={styles.editIconContainer}>
-                  <Feather name="camera" size={18} color={theme.colors.white} />
+          {/* Avatar */}
+          <View style={styles.avatarSection}>
+            <TouchableOpacity style={styles.avatarWrap} onPress={handlePickImage}>
+              {userData.avatarUri ? (
+                <FastImage
+                  source={{ uri: userData.avatarUri, priority: FastImage.priority.normal }}
+                  style={styles.avatarImage}
+                />
+              ) : (
+                <View style={styles.avatarCircle}>
+                  <Text style={styles.avatarInitials}>{initials}</Text>
                 </View>
-              </TouchableOpacity>
-            </View>
+              )}
+              <View style={styles.cameraBtn}>
+                <Feather name="camera" size={14} color={theme.colors.white} />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.displayName}>{displayName}</Text>
+            {userData.username && <Text style={styles.usernameText}>@{userData.username}</Text>}
+          </View>
+
+          {/* Identity Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardSectionTitle}>PERSONAL IDENTITY</Text>
 
             <Formik
-              initialValues={{
-                firstName: userData.firstName,
-                lastName: userData.lastName,
-              }}
+              initialValues={{ firstName: userData.firstName || "", lastName: userData.lastName || "" }}
               validationSchema={updateNameValidationSchema}
               onSubmit={handleUpdateNameSubmit}
-              enableReinitialize // Important: To update Formik values if userData changes externally
+              enableReinitialize
             >
-              {({
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                values,
-                errors,
-                touched,
-                isSubmitting,
-                resetForm, // To cancel editing
-              }: any) => (
+              {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }: any) => (
                 <>
-                  <View style={styles.infoFieldGroup}>
-                    <Text style={styles.label}>First Name</Text>
-                    {isEditingName ? (
-                      <TextInput
-                        style={[
-                          styles.valueContainer, // Re-use for background and padding
-                          styles.inputText, // For text color and font
-                          touched.firstName &&
-                            errors.firstName &&
-                            styles.inputError,
-                        ]}
-                        value={values.firstName}
-                        onChangeText={handleChange("firstName")}
-                        onBlur={handleBlur("firstName")}
-                        placeholder="Enter first name"
-                        placeholderTextColor={theme.colors.grey}
-                      />
-                    ) : (
-                      <View style={styles.valueContainer}>
-                        <Text style={styles.valueText}>
-                          {userData.firstName}
-                        </Text>
-                      </View>
-                    )}
-                    {isEditingName && touched.firstName && errors.firstName && (
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>FIRST NAME</Text>
+                    <TextInput
+                      style={[styles.fieldInput, touched.firstName && errors.firstName && styles.fieldInputError]}
+                      value={values.firstName}
+                      onChangeText={handleChange("firstName")}
+                      onBlur={handleBlur("firstName")}
+                      placeholder="First name"
+                      placeholderTextColor={theme.colors.grey}
+                    />
+                    {touched.firstName && errors.firstName && (
                       <Text style={styles.errorText}>{errors.firstName}</Text>
                     )}
                   </View>
 
-                  <View style={styles.infoFieldGroup}>
-                    <Text style={styles.label}>Last Name</Text>
-                    {isEditingName ? (
-                      <TextInput
-                        style={[
-                          styles.valueContainer,
-                          styles.inputText,
-                          touched.lastName &&
-                            errors.lastName &&
-                            styles.inputError,
-                        ]}
-                        value={values.lastName}
-                        onChangeText={handleChange("lastName")}
-                        onBlur={handleBlur("lastName")}
-                        placeholder="Enter last name"
-                        placeholderTextColor={theme.colors.grey}
-                      />
-                    ) : (
-                      <View style={styles.valueContainer}>
-                        <Text style={styles.valueText}>
-                          {userData.lastName}
-                        </Text>
-                      </View>
-                    )}
-                    {isEditingName && touched.lastName && errors.lastName && (
-                      <Text style={styles.errorText}>{errors.lastName}</Text>
-                    )}
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>LAST NAME</Text>
+                    <TextInput
+                      style={styles.fieldInput}
+                      value={values.lastName}
+                      onChangeText={handleChange("lastName")}
+                      onBlur={handleBlur("lastName")}
+                      placeholder="Last name"
+                      placeholderTextColor={theme.colors.grey}
+                    />
                   </View>
 
-                  {/* Non-editable fields */}
-                  {renderInfoField("Email", userData.email)}
-                  {renderInfoField("Username", userData.username)}
-
-                  {isEditingName ? (
-                    <View style={styles.editingButtonsContainer}>
-                      <TouchableOpacity
-                        style={[styles.actionButton, styles.cancelButton]}
-                        onPress={() => {
-                          resetForm({
-                            values: {
-                              firstName: userData.firstName,
-                              lastName: userData.lastName,
-                            },
-                          }); // Reset to original
-                          setIsEditingName(false);
-                        }}
-                        disabled={isSubmitting}
-                      >
-                        <Text
-                          style={[
-                            styles.actionButtonText,
-                            styles.cancelButtonText,
-                          ]}
-                        >
-                          Cancel
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.actionButton,
-                          styles.saveButton,
-                          isSubmitting && styles.buttonDisabled,
-                        ]}
-                        onPress={() => handleSubmit()}
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <ActivityIndicator color={theme.colors.white} />
-                        ) : (
-                          <Text
-                            style={[
-                              styles.actionButtonText,
-                              styles.saveButtonText,
-                            ]}
-                          >
-                            Save Changes
-                          </Text>
-                        )}
-                      </TouchableOpacity>
+                  <View style={styles.fieldGroup}>
+                    <View style={styles.fieldLabelRow}>
+                      <Text style={styles.fieldLabel}>EMAIL ADDRESS</Text>
+                      <View style={styles.lockedBadge}>
+                        <Feather name="lock" size={11} color={theme.colors.greyText} />
+                        <Text style={styles.lockedText}>locked</Text>
+                      </View>
                     </View>
-                  ) : (
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => setIsEditingName(true)}
-                    >
-                      <Text style={styles.actionButtonText}>Update Name</Text>
-                    </TouchableOpacity>
-                  )}
+                    <View style={styles.fieldInputLocked}>
+                      <Text style={styles.fieldInputLockedText}>{userData.email}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldGroup}>
+                    <View style={styles.fieldLabelRow}>
+                      <Text style={styles.fieldLabel}>USERNAME</Text>
+                      <View style={styles.lockedBadge}>
+                        <Feather name="lock" size={11} color={theme.colors.greyText} />
+                        <Text style={styles.lockedText}>locked</Text>
+                      </View>
+                    </View>
+                    <View style={styles.fieldInputLocked}>
+                      <Text style={styles.fieldInputLockedText}>{userData.username}</Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.updateBtn, isSubmitting && styles.btnDisabled]}
+                    onPress={() => handleSubmit()}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <ActivityIndicator color={theme.colors.white} />
+                    ) : (
+                      <Text style={styles.updateBtnText}>UPDATE NAME</Text>
+                    )}
+                  </TouchableOpacity>
                 </>
               )}
             </Formik>
+          </View>
 
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleChangePassword}
-            >
-              <Text style={styles.actionButtonText}>Change Password</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setDeleteModalOpen(true)}>
-              <Text style={styles.deleteText}>Delete Account</Text>
+          {/* Security Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardSectionTitle}>SECURITY</Text>
+            <TouchableOpacity style={styles.securityRow} onPress={handleChangePassword}>
+              <View style={styles.securityLeft}>
+                <View style={styles.securityIconWrap}>
+                  <Feather name="lock" size={18} color={theme.colors.red} />
+                </View>
+                <Text style={styles.securityLabel}>Change Password</Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={theme.colors.grey} />
             </TouchableOpacity>
           </View>
+
+          {/* Danger Zone */}
+          <TouchableOpacity onPress={() => setDeleteModalOpen(true)} style={styles.deleteLink}>
+            <Text style={styles.deleteLinkText}>Delete Account</Text>
+          </TouchableOpacity>
         </ScrollView>
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={deleteModalOpen}
-          onRequestClose={() => {
-            Alert.alert("Modal has been closed.");
-            setDeleteModalOpen(!deleteModalOpen);
-          }}
-        >
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <Text style={styles.confirmdeleteText}>
-                Do you really want to delete account!
-              </Text>
-
-              <Text style={styles.confirmdeleteText}>
-                This will delete your complete data
-              </Text>
-              {!modalPasswordOpen && (
-                <View style={styles.modalButtonView}>
-                  <TouchableOpacity
-                    style={{
-                      ...styles.modalButton,
-                      backgroundColor: "red",
-                    }}
-                    onPress={() => setModalPasswordOpen(true)}
-                  >
-                    <Text style={styles.btnText}>Yes, Delete</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.modalButton}
-                    onPress={() => setDeleteModalOpen(false)}
-                  >
-                    <Text style={styles.btnText}>cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              {modalPasswordOpen && (
-                <View>
-                  <View style={styles.passwordInputView}>
-                    <TextInput
-                      placeholder="Enter your account password"
-                      placeholderTextColor="#000"
-                      secureTextEntry={true}
-                      style={styles.passwordInput}
-                      onChangeText={setDeletePassword}
-                    />
-                  </View>
-                  <View style={styles.modalButtonView}>
-                    <TouchableOpacity
-                      style={{
-                        ...styles.modalButton,
-                        backgroundColor: "red",
-                      }}
-                      onPress={handleDeleteAccount}
-                    >
-                      <Text style={styles.btnText}>Confirm</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.modalButton}
-                      onPress={() => {
-                        setDeleteModalOpen(false);
-                        setModalPasswordOpen(false);
-                      }}
-                    >
-                      <Text style={styles.btnText}>cancel</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            </View>
-          </View>
-        </Modal>
       </View>
+
+      {/* Delete Modal */}
+      <Modal animationType="slide" transparent visible={deleteModalOpen} onRequestClose={() => setDeleteModalOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Delete Account</Text>
+            <Text style={styles.modalText}>This will permanently delete your account and all data.</Text>
+            {!modalPasswordOpen ? (
+              <View style={styles.modalBtnsRow}>
+                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setDeleteModalOpen(false)}>
+                  <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalDeleteBtn} onPress={() => setModalPasswordOpen(true)}>
+                  <Text style={styles.modalDeleteBtnText}>Yes, Delete</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Enter your password to confirm"
+                  placeholderTextColor={theme.colors.grey}
+                  secureTextEntry
+                  onChangeText={setDeletePassword}
+                />
+                <View style={styles.modalBtnsRow}>
+                  <TouchableOpacity style={styles.modalCancelBtn} onPress={() => { setDeleteModalOpen(false); setModalPasswordOpen(false); }}>
+                    <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.modalDeleteBtn} onPress={handleDeleteAccount}>
+                    <Text style={styles.modalDeleteBtnText}>Confirm</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </DefaultBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  flexContainer: {
-    flex: 1,
-  },
-  scrollableContent: {
-    flex: 1,
-  },
-  profileCard: {
-    backgroundColor: theme.colors.secondary,
-    borderRadius: 15,
-    marginHorizontal: 15,
-    marginBottom: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  cardTitle: {
-    fontSize: 22,
-    ...theme.font.fontBold,
-    color: theme.colors.white,
-    marginBottom: 20,
-  },
-  avatarSection: {
+  container: { flex: 1, backgroundColor: theme.colors.lightBackground },
+  headerRow: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 25,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 12,
   },
-  avatarContainer: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: theme.colors.grey,
+  backBtn: { width: 40, height: 40, justifyContent: "center" },
+  headerTitle: { fontSize: 18, fontFamily: "Poppins-Bold", color: theme.colors.text },
+  headerRight: { width: 40 },
+  scroll: { flex: 1 },
+  avatarSection: { alignItems: "center", paddingVertical: 20 },
+  avatarWrap: { position: "relative", marginBottom: 12 },
+  avatarCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: theme.colors.avatarBg,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 3,
-    borderColor: theme.colors.white,
   },
-  avatarImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 55,
-  },
-  avatarPlaceholder: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 55,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.colors.white,
-  },
-  editIconContainer: {
+  avatarInitials: { fontSize: 32, fontFamily: "Poppins-Bold", color: theme.colors.white },
+  avatarImage: { width: 90, height: 90, borderRadius: 45 },
+  cameraBtn: {
     position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: theme.colors.secondary,
-    padding: 8,
-    borderRadius: 15,
-    borderWidth: 1,
+    bottom: 2,
+    right: 2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: theme.colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
     borderColor: theme.colors.white,
   },
-  infoFieldGroup: {
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 14,
-    ...theme.font.fontMedium,
-    color: theme.colors.white,
-    marginBottom: 6,
-  },
-  valueContainer: {
-    // Used for both display text and TextInput background/padding
+  displayName: { fontSize: 20, fontFamily: "Poppins-Bold", color: theme.colors.text },
+  usernameText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginTop: 2 },
+  card: {
     backgroundColor: theme.colors.white,
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    height: 50,
-    justifyContent: "center", // For display text
+    borderRadius: 14,
+    marginHorizontal: 16,
+    padding: 16,
+    marginBottom: 14,
+    ...theme.elevationLight,
   },
-  valueText: {
-    // For display text
-    fontSize: 16,
-    ...theme.font.fontRegular,
-    color: theme.colors.black,
+  cardSectionTitle: {
+    fontSize: 11,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.primary,
+    letterSpacing: 1,
+    marginBottom: 16,
   },
-  inputText: {
-    // For TextInput specifically (text color, font, already has bg from valueContainer)
-    fontSize: 16,
-    ...theme.font.fontRegular,
-    color: theme.colors.black,
-  },
-  inputError: {
-    borderColor: theme.colors.red,
-    borderWidth: 1.5,
-  },
-  errorText: {
-    fontSize: 13,
-    color: theme.colors.red,
-    marginTop: 5,
-  },
-  actionButton: {
-    backgroundColor: theme.colors.white,
-    borderRadius: 8,
-    paddingVertical: 15,
-    alignItems: "center",
-    marginTop: 12,
-  },
-  actionButtonText: {
-    fontSize: 16,
-    ...theme.font.fontBold,
-    color: theme.colors.black,
-  },
-  editingButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: theme.colors.primary, // Example: use primary color for save
-    marginLeft: 5,
-  },
-  saveButtonText: {
-    color: theme.colors.white,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: theme.colors.grey, // Lighter button for cancel
-    marginRight: 5,
-  },
-  cancelButtonText: {
-    color: theme.colors.black,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  deleteText: {
-    marginVertical: 20,
-    color: "red",
-    textAlign: "right",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  confirmdeleteText: {
-    color: "#000",
+  fieldGroup: { marginBottom: 14 },
+  fieldLabel: { fontSize: 11, fontFamily: "Poppins-SemiBold", color: theme.colors.greyText, letterSpacing: 0.5, marginBottom: 6 },
+  fieldLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 },
+  lockedBadge: { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: theme.colors.lightCard, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 },
+  lockedText: { fontSize: 11, fontFamily: "Poppins-Regular", color: theme.colors.greyText },
+  fieldInput: {
+    backgroundColor: theme.colors.lightCard,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    height: 48,
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.text,
   },
-  centeredView: {
-    flex: 1,
+  fieldInputError: { borderWidth: 1.5, borderColor: theme.colors.red },
+  fieldInputLocked: {
+    backgroundColor: theme.colors.lightCard,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    height: 48,
+    justifyContent: "center",
+  },
+  fieldInputLockedText: { fontSize: 15, fontFamily: "Poppins-Regular", color: theme.colors.greyText },
+  errorText: { fontSize: 12, color: theme.colors.red, marginTop: 4 },
+  updateBtn: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 6,
+  },
+  updateBtnText: { fontSize: 15, fontFamily: "Poppins-Bold", color: theme.colors.white, letterSpacing: 1 },
+  btnDisabled: { opacity: 0.6 },
+  securityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: theme.colors.white,
+    borderRadius: 10,
+    paddingVertical: 12,
+  },
+  securityLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  securityIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#fde8e8",
     justifyContent: "center",
     alignItems: "center",
   },
-  modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+  securityLabel: { fontSize: 15, fontFamily: "Poppins-Medium", color: theme.colors.text },
+  deleteLink: { alignItems: "center", paddingVertical: 16 },
+  deleteLinkText: { fontSize: 14, fontFamily: "Poppins-Medium", color: theme.colors.red },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
+  modalCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: 16,
+    padding: 24,
+    marginHorizontal: 24,
+    width: "90%",
+    ...theme.elevationHeavy,
   },
-  modalButtonView: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-    marginTop: 20,
-  },
-  modalButton: {
-    backgroundColor: "gray",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  btnText: {
-    color: "#fff",
-    fontWeight: "500",
-    fontSize: 14,
-  },
-  passwordInputView: {
-    color: "#000",
-    fontSize: 14,
-    borderBottomWidth: 1,
-    borderColor: "#000",
-    marginTop: 20,
-  },
+  modalTitle: { fontSize: 18, fontFamily: "Poppins-Bold", color: theme.colors.text, marginBottom: 8 },
+  modalText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginBottom: 20 },
+  modalBtnsRow: { flexDirection: "row", gap: 10, marginTop: 16 },
+  modalCancelBtn: { flex: 1, borderRadius: 10, paddingVertical: 12, alignItems: "center", backgroundColor: theme.colors.lightCard },
+  modalCancelBtnText: { fontSize: 14, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
+  modalDeleteBtn: { flex: 1, borderRadius: 10, paddingVertical: 12, alignItems: "center", backgroundColor: theme.colors.red },
+  modalDeleteBtnText: { fontSize: 14, fontFamily: "Poppins-SemiBold", color: theme.colors.white },
   passwordInput: {
-    paddingVertical: 5,
-    fontSize: 16,
+    backgroundColor: theme.colors.lightCard,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    height: 48,
+    fontSize: 14,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.text,
+    marginTop: 8,
   },
 });
 

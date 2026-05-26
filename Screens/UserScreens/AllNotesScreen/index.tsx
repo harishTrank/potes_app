@@ -5,8 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Image,
-  Platform,
   Alert,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
@@ -14,7 +12,6 @@ import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import ImageModule from "../../../ImageModule";
 import { deleteNotes } from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
 import dayjs from "dayjs";
@@ -83,31 +80,17 @@ const AllNotesScreen: any = ({ route }: any) => {
 
   return (
     <DefaultBackground>
-      <StatusBar style="light" />
-      <View
-        style={[
-          styles.container,
-          { paddingTop: Platform.OS === "android" ? insets.top : insets.top },
-        ]}
-      >
+      <StatusBar style="dark" />
+      <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
         <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.iconButton}
-          >
-            <Feather name="chevron-left" size={24} color={theme.colors.white} />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
+            <Feather name="arrow-left" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnlogoImg}
-            onPress={() => navigation.navigate("DrawerNavigation")}
-          >
-            <Image source={ImageModule.logo} style={styles.logoImg} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleSearchPress}
-            style={styles.iconButton}
-          >
-            <Feather name="search" size={24} color={theme.colors.white} />
+          <Text style={styles.headerTitle}>
+            {route.params?.contactName ? `Notes — ${route.params.contactName}` : "All Notes"}
+          </Text>
+          <TouchableOpacity onPress={handleSearchPress} style={styles.iconButton}>
+            <Feather name="search" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -117,12 +100,6 @@ const AllNotesScreen: any = ({ route }: any) => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.notesCard}>
-            <Text style={styles.cardTitle}>
-              {route.params?.contactName
-                ? `Notes for ${route.params.contactName}`
-                : "All Notes"}
-            </Text>
-
             {allNotesApiHandler?.data.length === 0 ? (
               <Text style={styles.noNotesText}>No notes found.</Text>
             ) : (
@@ -231,21 +208,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
   },
-  logoImg: { width: "100%", height: 40, resizeMode: "contain" },
-  btnlogoImg: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "50%",
-    height: 40,
+headerTitle: {
+    fontSize: 17,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.text,
+    flex: 1,
+    textAlign: "center",
   },
   iconButton: {
-    backgroundColor: theme.colors.secondary,
-    padding: 8,
-    borderRadius: 20,
     width: 40,
     height: 40,
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
   },
   contentScrollView: { flex: 1, marginTop: 10 },
   notesCard: {

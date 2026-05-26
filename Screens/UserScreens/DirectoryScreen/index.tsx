@@ -5,56 +5,43 @@ import {
   TouchableOpacity,
   StyleSheet,
   SectionList,
-  Image,
-  Platform,
   Dimensions,
   Alert,
+  TextInput,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import DefaultBackground from "../../Components/DefaultBackground";
 import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import Header from "../../Components/Header";
-import ActionButtons from "../../Components/ActionButtons";
 import FullScreenLoader from "../../Components/FullScreenLoader";
 import { allContactApiHook } from "../../../hooks/Others/query";
-import { formatPhoneNumber } from "../../../utils/ImagePicker";
 import FastImage from "react-native-fast-image";
 import dayjs from "dayjs";
 import * as Contacts from "expo-contacts";
 import { selectContact } from "react-native-select-contact";
 import { importContactsAPI } from "../../../store/Services/Others";
-// --- Navigation & Props ---
-type DirectoryScreenNavigationProp = {
-  navigate: (screen: string, params?: object) => void;
-  openDrawer: () => void;
-};
-interface DirectoryScreenProps {
-  navigation: DirectoryScreenNavigationProp;
-}
+import { useAtom } from "jotai";
+import { apiCallBackGlobal, userProfileGlobal } from "../../../jotaiStore";
+import { viewProfileApi } from "../../../store/Services/Others";
+import { SideMenuModal } from "../../Components/SideMenuModal";
+import { useNavigation } from "@react-navigation/native";
 
 interface ApiContact {
-  id: number; // API returns number
+  id: number;
   full_name: string;
   email?: string | null;
   phone?: string | null;
   birthday?: string | null;
   photo?: string | null;
 }
-
 interface SectionData {
   title: string;
   data: ApiContact[];
 }
 
-const processContactsForSectionList = (
-  contacts: ApiContact[],
-): SectionData[] => {
-  if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
-    return [];
-  }
-
+const processContactsForSectionList = (contacts: ApiContact[]): SectionData[] => {
+  if (!contacts || !Array.isArray(contacts) || contacts.length === 0) return [];
   const grouped: { [key: string]: ApiContact[] } = {};
   contacts.forEach((contact) => {
     const firstLetter = contact.full_name?.[0]?.toUpperCase();
@@ -73,49 +60,62 @@ const processContactsForSectionList = (
   });
   return sortedLetters.map((letter) => ({
     title: letter,
-    data: grouped[letter].sort((a, b) =>
-      a.full_name.localeCompare(b.full_name),
-    ),
+    data: grouped[letter].sort((a, b) => a.full_name.localeCompare(b.full_name)),
   }));
 };
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
+const ITEM_ESTIMATED_HEIGHT = 68;
+const SECTION_HEADER_HEIGHT = 32;
 
-// --- FIX: Add constants for estimated item and header heights ---
-// We estimate the height of items and headers to help SectionList calculate positions.
-// This is crucial for making scrollToLocation work reliably.
-const ITEM_ESTIMATED_HEIGHT = 60; // Average height for a contact item
-const SECTION_HEADER_HEIGHT = 32; // Height of a section letter (e.g., 'A', 'B')
+const getInitials = (name: string) => {
+  if (!name) return "?";
+  return name.split(" ").slice(0, 2).map((p) => p[0]).join("").toUpperCase();
+};
 
-// --- Main Screen Component ---
-const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
-  navigation,
-}: any) => {
+const UserAvatar = ({ userProfile }: any) => {
+  if (userProfile?.profile_pic) {
+    return (
+      <FastImage
+        style={styles.headerAvatar}
+        source={{ uri: userProfile.profile_pic, priority: FastImage.priority.normal }}
+      />
+    );
+  }
+  const initials = [userProfile?.first_name?.[0], userProfile?.last_name?.[0]]
+    .filter(Boolean).join("").toUpperCase() || "U";
+  return (
+    <View style={styles.headerAvatarCircle}>
+      <Text style={styles.headerAvatarInitials}>{initials}</Text>
+    </View>
+  );
+};
+
+const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const [sections, setSections] = useState<SectionData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [menuVisible, setMenuVisible] = useState(false);
   const sectionListRef = useRef<SectionList<ApiContact, SectionData>>(null);
-  const {
-    data: apiResponse,
-    isLoading: apiIsLoading,
-    refetch: apiRefetch,
-  }: any = allContactApiHook();
+  const { data: apiResponse, isLoading: apiIsLoading, refetch: apiRefetch }: any = allContactApiHook();
+  const [userProfile, setUserProfile]: any = useAtom(userProfileGlobal);
+  const [globalCall]: any = useAtom(apiCallBackGlobal);
+
+  useEffect(() => {
+    viewProfileApi().then((res: any) => setUserProfile(res)).catch(() => {});
+  }, [globalCall]);
 
   useEffect(() => {
     if (apiResponse?.results) {
       const contactsFromApi: ApiContact[] = apiResponse.results || [];
       let filteredContacts = contactsFromApi;
       if (searchQuery) {
-        const lowerQuery = searchQuery.toLowerCase();
+        const lq = searchQuery.toLowerCase();
         filteredContacts = contactsFromApi.filter(
-          (contact) =>
-            contact.full_name.toLowerCase().includes(lowerQuery) ||
-            contact.email?.toLowerCase().includes(lowerQuery) ||
-            contact.phone?.includes(searchQuery),
+          (c) => c.full_name.toLowerCase().includes(lq) || c.email?.toLowerCase().includes(lq)
         );
       }
-      const processed = processContactsForSectionList(filteredContacts);
-      setSections(processed);
+      setSections(processContactsForSectionList(filteredContacts));
     } else if (!apiIsLoading) {
       setSections([]);
     }
@@ -123,116 +123,39 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
-      if (apiRefetch) {
-        apiRefetch();
-      }
+      if (apiRefetch) apiRefetch();
     });
     return unsubscribe;
   }, [navigation, apiRefetch]);
 
-  const ITEM_HEIGHT = 75;
-  const HEADER_HEIGHT = 28;
-
-  const sectionOffsets = React.useMemo(() => {
-    const offsets: { [key: string]: number } = {};
-    let currentOffset = 0;
-
-    sections.forEach((section) => {
-      offsets[section.title] = currentOffset;
-      currentOffset += HEADER_HEIGHT + section.data.length * ITEM_HEIGHT;
-    });
-
-    return offsets;
-  }, [sections]);
-
   const getItemLayout = (_: any, index: number) => {
     let offset = 0;
     let i = 0;
-
     for (const section of sections) {
-      // Header
-      if (i === index) {
-        return { length: SECTION_HEADER_HEIGHT, offset, index };
-      }
+      if (i === index) return { length: SECTION_HEADER_HEIGHT, offset, index };
       offset += SECTION_HEADER_HEIGHT;
       i++;
-
-      // Items
       if (index < i + section.data.length) {
-        const itemOffset = offset + (index - i) * ITEM_ESTIMATED_HEIGHT;
-        return {
-          length: ITEM_ESTIMATED_HEIGHT,
-          offset: itemOffset,
-          index,
-        };
+        return { length: ITEM_ESTIMATED_HEIGHT, offset: offset + (index - i) * ITEM_ESTIMATED_HEIGHT, index };
       }
-
       offset += section.data.length * ITEM_ESTIMATED_HEIGHT;
       i += section.data.length;
     }
-
     return { length: 0, offset, index };
   };
 
   const handleAlphabetPress = (letter: string) => {
-    const sectionIndex = sections.findIndex(
-      (section) => section.title === letter,
-    );
+    const sectionIndex = sections.findIndex((s) => s.title === letter);
     if (sectionIndex === -1) return;
-
-    sectionListRef.current?.scrollToLocation({
-      sectionIndex,
-      itemIndex: 0,
-      viewPosition: 0,
-      animated: true,
-    });
-  };
-
-  const importContacts2 = async () => {
-    try {
-      const picked: any = await selectContact();
-
-      if (!picked) {
-        Alert.alert("Cancelled", "No contact selected");
-        return;
-      }
-
-      const birthday = picked.birthday
-        ? dayjs(
-            `${picked.birthday.year}-${picked.birthday.month}-${picked.birthday.day}`,
-          ).format("YYYY-MM-DD")
-        : null;
-
-      const formattedContact = {
-        full_name: picked.name || "",
-        phone: picked.phones?.[0]?.number || "",
-        email: picked.emails?.[0]?.address || "",
-        birthday: birthday,
-      };
-
-      await importContactsAPI({
-        body: { contacts: [formattedContact] },
-      });
-
-      apiRefetch();
-      Alert.alert("Success", "Contact imported successfully!");
-    } catch (err) {
-      console.log(err);
-      Alert.alert("Error", "Failed to import contact.");
-    }
+    sectionListRef.current?.scrollToLocation({ sectionIndex, itemIndex: 0, viewPosition: 0, animated: true });
   };
 
   const importContacts = async () => {
     Alert.alert(
-      "Potes will import only the contacts you grant access to",
-      Platform.OS === "ios"
-        ? "All contacts you allow access to will be imported. If you wish to change which contacts Potes can access later, you can do so anytime from:\n\nSettings → Privacy & Security → Contacts → MyPotes → Allow Full Access or Select Limited Contacts."
-        : "You can change this anytime from:\n\nSettings → Apps → App management→ MyPotes → Permissions → Contacts",
+      "Import Contacts",
+      "Potes will import contacts you select from your device.",
       [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
+        { text: "Cancel", style: "cancel" },
         {
           text: "OK",
           onPress: async () => {
@@ -240,55 +163,23 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
             if (permission.status !== "granted" && permission.canAskAgain) {
               permission = await Contacts.requestPermissionsAsync();
             }
-            if (permission.status == "granted") {
+            if (permission.status === "granted") {
               const { data } = await Contacts.getContactsAsync({
-                fields: [
-                  Contacts.Fields.PhoneNumbers,
-                  Contacts.Fields.Emails,
-                  Contacts.Fields.Birthday,
-                ],
+                fields: [Contacts.Fields.PhoneNumbers, Contacts.Fields.Emails, Contacts.Fields.Birthday],
               });
-
               if (data.length > 0) {
                 const formattedContacts = data.map((c) => {
                   let birthday = null;
                   if (c.birthday) {
                     const { day, month, year } = c.birthday;
-                    if (day && month && year) {
-                      birthday = dayjs(`${year}-${month}-${day}`).format(
-                        "YYYY-MM-DD",
-                      );
-                    } else if (day && month) {
-                      birthday = `1999-${month}-${day}`;
-                    }
+                    if (day && month && year) birthday = dayjs(`${year}-${month}-${day}`).format("YYYY-MM-DD");
+                    else if (day && month) birthday = `1999-${month}-${day}`;
                   }
-
-                  return {
-                    full_name: c.name || "",
-                    phone: c.phoneNumbers?.[0]?.number || "",
-                    email: c.emails?.[0]?.email || "",
-                    birthday,
-                  };
+                  return { full_name: c.name || "", phone: c.phoneNumbers?.[0]?.number || "", email: c.emails?.[0]?.email || "", birthday };
                 });
-
-                try {
-                  importContactsAPI({
-                    body: {
-                      contacts: formattedContacts,
-                    },
-                  })
-                    .then((res: any) => {
-                      apiRefetch();
-                      Alert.alert("Success", "Contacts imported successfully!");
-                    })
-                    .catch((err: any) => {
-                      Alert.alert("Error", "Failed to import contacts.");
-                      console.log("err.data.error", JSON.stringify(err));
-                    });
-                } catch (err) {
-                  console.log("Error uploading contacts:", err);
-                  Alert.alert("Error", "Failed to upload contacts.");
-                }
+                importContactsAPI({ body: { contacts: formattedContacts } })
+                  .then(() => { apiRefetch(); Alert.alert("Success", "Contacts imported!"); })
+                  .catch(() => Alert.alert("Error", "Failed to import contacts."));
               } else {
                 Alert.alert("No contacts found");
               }
@@ -297,231 +188,269 @@ const DirectoryScreen: React.FC<DirectoryScreenProps> = ({
             }
           },
         },
-      ],
+      ]
     );
   };
 
-  const handleMenuPress = () => navigation.openDrawer();
-  const handleProfilePress = () => navigation.navigate("UserProfileScreen");
-  const handleCreateContact = () => navigation.navigate("CreateContactScreen");
-  const handleCreateNote = () => navigation.navigate("CreateNoteScreen");
-
-  const handleHeaderSearchChange = (query: string) => {
-    setSearchQuery(query);
-  };
+  const totalContacts = apiResponse?.results?.length || 0;
 
   const renderContactItem = ({ item }: { item: ApiContact }) => (
     <TouchableOpacity
       style={styles.contactItem}
-      onPress={() =>
-        navigation.navigate("ViewContactScreen", {
-          contactId: item.id,
-          contactName: item.full_name,
-        })
-      }
+      onPress={() => navigation.navigate("ViewContactScreen", { contactId: item.id, contactName: item.full_name })}
     >
-      <View style={styles.avatarPlaceholder}>
+      <View style={styles.contactAvatarWrap}>
         {item.photo ? (
-          <FastImage
-            style={styles.avatarImage}
-            source={{
-              uri: item.photo,
-              priority: FastImage.priority.normal,
-            }}
-          />
+          <FastImage style={styles.contactAvatarImg} source={{ uri: item.photo, priority: FastImage.priority.normal }} />
         ) : (
-          <Feather name="user" size={20} color={theme.colors.white} />
+          <View style={styles.contactAvatarCircle}>
+            <Text style={styles.contactAvatarInitials}>{getInitials(item.full_name)}</Text>
+          </View>
         )}
       </View>
       <View style={styles.contactInfo}>
         <Text style={styles.contactName}>{item.full_name}</Text>
-        {item.email && item.email !== "-" && (
-          <Text style={styles.contactDetail} numberOfLines={1}>
-            <Feather name="mail" size={13} color={theme.colors.white} />
-            <Text> {item.email}</Text>
-          </Text>
-        )}
-        {item.phone && item.phone !== "-" && (
-          <Text style={styles.contactDetail} numberOfLines={1}>
-            <Feather name="phone" size={13} color={theme.colors.white} />
-            <Text> {formatPhoneNumber(item.phone)}</Text>
-          </Text>
-        )}
         {item.birthday && (
-          <Text style={styles.contactDetail} numberOfLines={1}>
-            <Feather name="gift" size={13} color={theme.colors.white} />
-            <Text> {dayjs(item.birthday).format("MMMM DD")}</Text>
-          </Text>
+          <View style={styles.birthdayRow}>
+            <Feather name="gift" size={11} color={theme.colors.greyText} />
+            <Text style={styles.contactBirthday}> {dayjs(item.birthday).format("MMMM DD")}</Text>
+          </View>
         )}
       </View>
+      <Feather name="chevron-right" size={18} color={theme.colors.grey} />
     </TouchableOpacity>
   );
 
-  const renderSectionHeader = ({
-    section: { title },
-  }: {
-    section: SectionData;
-  }) => <Text style={styles.sectionHeader}>{title}</Text>;
+  const renderSectionHeader = ({ section: { title } }: { section: SectionData }) => (
+    <View style={styles.sectionHeaderWrap}>
+      <Text style={styles.sectionHeaderText}>{title}</Text>
+      <View style={styles.sectionDivider} />
+    </View>
+  );
 
   return (
     <DefaultBackground>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       {apiIsLoading && <FullScreenLoader />}
-      <View style={[styles.flexContainer]}>
-        <Header
-          onMenuPress={handleMenuPress}
-          onProfilePress={handleProfilePress}
-          onSearchChange={handleHeaderSearchChange}
-          directory={true}
-        />
-        <ActionButtons
-          onCreateContactPress={handleCreateContact}
-          onCreateNotePress={handleCreateNote}
-        />
+      <SideMenuModal visible={menuVisible} onClose={() => setMenuVisible(false)} />
 
-        <View style={styles.directoryContentWrapper}>
-          <View style={styles.listContainerCard}>
-            {!apiIsLoading && sections.length === 0 ? (
-              <Text style={styles.noResultsText}>
-                {searchQuery
-                  ? `No contacts found for "${searchQuery}"`
-                  : "No contacts available."}
-              </Text>
-            ) : (
-              <SectionList
-                ref={sectionListRef}
-                sections={sections}
-                renderItem={renderContactItem}
-                renderSectionHeader={renderSectionHeader}
-                keyExtractor={(item) => String(item.id)}
-                getItemLayout={getItemLayout}
-                stickySectionHeadersEnabled={true}
-                removeClippedSubviews={false}
-                initialNumToRender={2000}
-                windowSize={10}
-                maxToRenderPerBatch={40}
-              />
-            )}
+      <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
+        {/* Header */}
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuBtn}>
+            <Feather name="menu" size={22} color={theme.colors.primary} />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={styles.logoText}>POTES</Text>
+            <Text style={styles.logoSub}>people notes</Text>
           </View>
+          <TouchableOpacity onPress={() => navigation.navigate("UserProfileScreen")} style={styles.avatarBtn}>
+            <UserAvatar userProfile={userProfile} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Search */}
+        <View style={styles.searchRow}>
+          <Feather name="search" size={16} color={theme.colors.searchPlaceholder} style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search directory..."
+            placeholderTextColor={theme.colors.searchPlaceholder}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Feather name="x" size={16} color={theme.colors.grey} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Directory Title */}
+        <View style={styles.titleRow}>
+          <View>
+            <Text style={styles.pageTitle}>Your Contacts</Text>
+            <Text style={styles.pageSubtitle}>Managing {totalContacts} total contacts</Text>
+          </View>
+        </View>
+
+        {/* Contact List */}
+        <View style={styles.listWrapper}>
+          {!apiIsLoading && sections.length === 0 ? (
+            <Text style={styles.noResultsText}>
+              {searchQuery ? `No contacts found for "${searchQuery}"` : "No contacts yet. Import or add one!"}
+            </Text>
+          ) : (
+            <SectionList
+              ref={sectionListRef}
+              sections={sections}
+              renderItem={renderContactItem}
+              renderSectionHeader={renderSectionHeader}
+              keyExtractor={(item) => String(item.id)}
+              getItemLayout={getItemLayout}
+              stickySectionHeadersEnabled={true}
+              removeClippedSubviews={false}
+              initialNumToRender={30}
+              windowSize={10}
+              maxToRenderPerBatch={40}
+              contentContainerStyle={{ paddingBottom: 10 }}
+            />
+          )}
           {!apiIsLoading && sections.length > 0 && (
-            <View style={styles.alphabetScrollerContainer}>
+            <View style={styles.alphabetSidebar}>
               {ALPHABET.map((letter) => (
-                <TouchableOpacity
-                  key={letter}
-                  onPress={() => handleAlphabetPress(letter)}
-                  style={styles.alphabetLetterButton}
-                >
-                  <Text style={styles.alphabetLetterText}>{letter}</Text>
+                <TouchableOpacity key={letter} onPress={() => handleAlphabetPress(letter)} style={styles.alphaBtn}>
+                  <Text style={styles.alphaText}>{letter}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           )}
         </View>
-        <TouchableOpacity onPress={() => importContacts()}>
-          <View style={{ alignItems: "center", marginTop: -5 }}>
-            <Text
-              style={{
-                color: theme.colors.secondary,
-                fontWeight: "700",
-                fontSize: 16,
-              }}
-            >
-              Import Contacts
-            </Text>
-          </View>
-        </TouchableOpacity>
+
+        {/* Sticky Bottom Bar */}
+        <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 6 }]}>
+          <TouchableOpacity style={styles.syncBtn} onPress={importContacts}>
+            <View style={styles.syncIconWrap}>
+              <Feather name="user-plus" size={18} color={theme.colors.white} />
+            </View>
+            <Text style={styles.syncText}>SYNC LOCAL{"\n"}STORAGE</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.importBtn} onPress={importContacts}>
+            <Text style={styles.importBtnText}>Import{"\n"}contacts</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </DefaultBackground>
   );
 };
 
 const screenHeight = Dimensions.get("window").height;
-const alphabetItemHeight = Math.min(20, screenHeight / (ALPHABET.length * 1.8));
+const alphabetItemHeight = Math.min(16, screenHeight / (ALPHABET.length * 2.2));
 
 const styles = StyleSheet.create({
-  flexContainer: { flex: 1, paddingBottom: 70 },
-  directoryContentWrapper: {
-    flex: 1,
+  container: { flex: 1 },
+  topBar: {
     flexDirection: "row",
-    marginHorizontal: 15,
-    marginBottom: 10,
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 10,
   },
-  listContainerCard: {
-    flex: 1,
-    backgroundColor: theme.colors.secondary,
-    borderTopLeftRadius: 15,
-    borderBottomLeftRadius: 15,
+  menuBtn: { width: 36, height: 36, justifyContent: "center", alignItems: "center" },
+  headerCenter: { alignItems: "center" },
+  logoText: { fontSize: 18, fontFamily: "Poppins-Bold", color: theme.colors.primary, letterSpacing: 1 },
+  logoSub: { fontSize: 9, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginTop: -4 },
+  avatarBtn: {},
+  headerAvatarCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.avatarBg, justifyContent: "center", alignItems: "center" },
+  headerAvatarInitials: { fontSize: 13, fontFamily: "Poppins-Bold", color: theme.colors.white },
+  headerAvatar: { width: 36, height: 36, borderRadius: 18 },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.lightCard,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    paddingHorizontal: 14,
+    height: 46,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  searchInput: { flex: 1, fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.searchText },
+  titleRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
+  pageTitle: { fontSize: 24, fontFamily: "Poppins-Bold", color: theme.colors.text },
+  pageSubtitle: { fontSize: 13, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginTop: 2 },
+  listWrapper: { flex: 1, flexDirection: "row" },
+  sectionHeaderWrap: {
+    backgroundColor: theme.colors.lightBackground,
+    paddingHorizontal: 16,
     paddingTop: 10,
-    overflow: "hidden",
+    paddingBottom: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
-  sectionHeader: {
-    fontSize: 16,
-    ...theme.font.fontBold,
-    color: theme.colors.white,
-    backgroundColor: theme.colors.secondary,
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-  },
+  sectionHeaderText: { fontSize: 13, fontFamily: "Poppins-Bold", color: theme.colors.primary, width: 16 },
+  sectionDivider: { flex: 1, height: 1, backgroundColor: theme.colors.border },
   contactItem: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderBottomWidth: 0.5,
-    borderBottomColor: theme.colors.grey,
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.white,
   },
-  avatarPlaceholder: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.grey,
+  contactAvatarWrap: { marginRight: 12 },
+  contactAvatarCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.avatarBg,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
-    marginTop: 2,
-    overflow: "hidden",
   },
-  avatarImage: { width: "100%", height: "100%" },
+  contactAvatarImg: { width: 44, height: 44, borderRadius: 22 },
+  contactAvatarInitials: { fontSize: 16, fontFamily: "Poppins-Bold", color: theme.colors.white },
   contactInfo: { flex: 1 },
-  contactName: {
-    fontSize: 15,
-    ...theme.font.fontSemiBold,
-    color: theme.colors.white,
-    marginBottom: 2,
-  },
-  contactDetail: {
-    fontSize: 12,
-    ...theme.font.fontRegular,
-    color: theme.colors.white,
-    opacity: 0.8,
-    lineHeight: 16,
-    flexWrap: "wrap",
-  },
-  alphabetScrollerContainer: {
-    width: 25,
-    backgroundColor: theme.colors.secondary,
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 15,
-    paddingVertical: 3,
+  contactName: { fontSize: 15, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
+  birthdayRow: { flexDirection: "row", alignItems: "center", marginTop: 3 },
+  contactBirthday: { fontSize: 12, fontFamily: "Poppins-Regular", color: theme.colors.greyText },
+  alphabetSidebar: {
+    width: 20,
+    paddingVertical: 6,
     justifyContent: "space-between",
     alignItems: "center",
   },
-  alphabetLetterButton: {
-    paddingVertical: 0,
-    height: alphabetItemHeight,
+  alphaBtn: { height: alphabetItemHeight, justifyContent: "center" },
+  alphaText: { fontSize: 9, fontFamily: "Poppins-SemiBold", color: theme.colors.primary },
+  noResultsText: { flex: 1, textAlign: "center", color: theme.colors.greyText, fontSize: 14, marginTop: 40, paddingHorizontal: 30 },
+  bottomBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    backgroundColor: theme.colors.white,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    gap: 12,
+  },
+  syncBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  syncIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: theme.colors.primary,
     justifyContent: "center",
+    alignItems: "center",
   },
-  alphabetLetterText: {
+  syncText: {
     fontSize: 11,
-    ...theme.font.fontSemiBold,
-    color: theme.colors.white,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.greyText,
+    lineHeight: 16,
   },
-  noResultsText: {
-    textAlign: "center",
-    color: theme.colors.white,
-    fontSize: 16,
-    marginTop: 30,
+  importBtn: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 12,
     paddingHorizontal: 20,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  importBtnText: {
+    fontSize: 13,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.white,
+    textAlign: "center",
+    lineHeight: 18,
   },
 });
 
