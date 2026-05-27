@@ -29,6 +29,15 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "jsEngine": "hermes"
+    "jsEngine": "hermes",
+    "plugins": [
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to use the microphone for voice notes.",
+          "speechRecognitionPermission": "Allow $(PRODUCT_NAME) to recognize your speech for voice notes."
+        }
+      ]
+    ]
   }
 }

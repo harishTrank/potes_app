@@ -282,7 +282,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                       <Text style={values.birthday ? styles.dateText : styles.datePlaceholder}>
                         {values.birthday ? dayjs(values.birthday).format("MM/DD") : "mm/dd"}
                       </Text>
-                      <Feather name="calendar" size={16} color={theme.colors.greyText} />
+                      <MaterialCommunityIcons name="cake-variant" size={18} color={theme.colors.greyText} />
                     </TouchableOpacity>
                   </View>
                   <View style={[styles.card, { flex: 1, marginLeft: 6 }]}>

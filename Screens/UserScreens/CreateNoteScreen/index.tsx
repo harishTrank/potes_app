@@ -12,6 +12,10 @@ import {
   FlatList,
   Keyboard,
 } from "react-native";
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from "expo-speech-recognition";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import DefaultBackground from "../../Components/DefaultBackground";
@@ -58,6 +62,41 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
   const [isContactDropdownOpen, setContactDropdownOpen] = useState(false);
   const [globalNoteFlag, setGlobalNoteFlag]: any = useAtom(homeNoteEditGlobal);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+
+  useSpeechRecognitionEvent("start", () => setIsListening(true));
+  useSpeechRecognitionEvent("end", () => setIsListening(false));
+  useSpeechRecognitionEvent("result", (event: any) => {
+    const transcript = event.results?.[0]?.transcript;
+    if (transcript) {
+      setVoiceSetField((prev: any) => {
+        if (prev) prev(transcript);
+        return null;
+      });
+    }
+  });
+  useSpeechRecognitionEvent("error", () => {
+    setIsListening(false);
+    Toast.show({ type: "error", text1: "Voice recognition failed. Try again." });
+  });
+
+  const [voiceSetField, setVoiceSetField] = useState<any>(null);
+
+  const handleVoicePress = async (setFieldValue: Function, currentText: string) => {
+    if (isListening) {
+      ExpoSpeechRecognitionModule.stop();
+      return;
+    }
+    const { granted } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    if (!granted) {
+      Toast.show({ type: "error", text1: "Microphone permission is required." });
+      return;
+    }
+    setVoiceSetField(() => (transcript: string) => {
+      setFieldValue("noteText", currentText ? currentText + " " + transcript : transcript);
+    });
+    ExpoSpeechRecognitionModule.start({ lang: "en-US", interimResults: false });
+  };
   const [initialValues, setInitialValues]: any = useState({
     contactId: item?.contact_id || route?.params?.contactId || null,
     contactName: item?.contact_full_name || contact_name || "Select contact",
@@ -259,14 +298,24 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                 {/* NOTE */}
                 <View style={styles.card}>
                   <View style={styles.noteLabelRow}>
-                    <Text style={styles.cardLabel}>ENTER THE NOTE</Text>
-                    <TouchableOpacity
-                      style={styles.newLineBtn}
-                      onPress={() => setFieldValue("noteText", values.noteText + "\n")}
-                    >
-                      <Feather name="corner-down-left" size={13} color={theme.colors.primary} />
-                      <Text style={styles.newLineBtnText}>New Line</Text>
-                    </TouchableOpacity>
+                    <Text style={styles.cardLabel}>NOTE</Text>
+                    <View style={styles.noteLabelActions}>
+                      <TouchableOpacity
+                        style={styles.newLineBtn}
+                        onPress={() => setFieldValue("noteText", values.noteText + "\n")}
+                      >
+                        <Feather name="corner-down-left" size={13} color={theme.colors.primary} />
+                        <Text style={styles.newLineBtnText}>New Line</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.voiceBtn, isListening && styles.voiceBtnActive]}
+                        onPress={() => handleVoicePress(setFieldValue, values.noteText)}
+                        activeOpacity={0.8}
+                      >
+                        <Feather name="mic" size={13} color={theme.colors.white} />
+                        <Text style={styles.voiceBtnText}>{isListening ? "Listening..." : "Voice"}</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                   <TextInput
                     style={[styles.noteInput, touched.noteText && errors.noteText && styles.inputError]}
@@ -450,6 +499,24 @@ const styles = StyleSheet.create({
   dropdownItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
   dropdownItemText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.text },
   noteLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
+  noteLabelActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  voiceBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  voiceBtnActive: {
+    backgroundColor: theme.colors.red ?? "#e53935",
+  },
+  voiceBtnText: {
+    fontSize: 12,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.white,
+  },
   newLineBtn: {
     flexDirection: "row",
     alignItems: "center",
