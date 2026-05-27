@@ -10,6 +10,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   FlatList,
+  Keyboard,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -23,6 +24,7 @@ import {
   allContactOptionApi,
   createNotesApi,
   editNote,
+  postAiChat,
 } from "../../../store/Services/Others";
 import { DatePickerModal } from "react-native-paper-dates";
 import { en, registerTranslation } from "react-native-paper-dates";
@@ -55,6 +57,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isContactDropdownOpen, setContactDropdownOpen] = useState(false);
   const [globalNoteFlag, setGlobalNoteFlag]: any = useAtom(homeNoteEditGlobal);
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [initialValues, setInitialValues]: any = useState({
     contactId: item?.contact_id || route?.params?.contactId || null,
     contactName: item?.contact_full_name || contact_name || "Select contact",
@@ -137,6 +140,33 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
     setDatePickerVisible(false);
     if (params.date) setFieldValue("customReminderDate", params.date);
   }, []);
+
+  const AI_PROMPTS: Record<string, string> = {
+    cleanup: "Clean up and improve the following note. Keep it concise and professional. Return only the improved note text, no explanations:\n\n",
+    summarize: "Summarize the following note in 2-3 sentences. Return only the summary, no explanations:\n\n",
+    commitments: "Extract all commitments and action items from the following note as a short bulleted list. Return only the list, no explanations:\n\n",
+  };
+
+  const handleAiAssist = (action: string, noteText: string, setFieldValue: Function) => {
+    if (!noteText.trim()) {
+      Toast.show({ type: "error", text1: "Please enter a note first." });
+      return;
+    }
+    setAiLoading(action);
+    postAiChat({
+      body: {
+        message: AI_PROMPTS[action] + noteText,
+        query: AI_PROMPTS[action] + noteText,
+        conversation_id: null,
+      },
+    })
+      .then((res: any) => {
+        const result = res?.ui?.message || res?.response;
+        if (result) setFieldValue("noteText", result);
+      })
+      .catch(() => Toast.show({ type: "error", text1: "AI assist failed. Please try again." }))
+      .finally(() => setAiLoading(null));
+  };
 
   const isEdit = route?.params?.type === "edit";
 
@@ -230,6 +260,13 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                 <View style={styles.card}>
                   <View style={styles.noteLabelRow}>
                     <Text style={styles.cardLabel}>ENTER THE NOTE</Text>
+                    <TouchableOpacity
+                      style={styles.newLineBtn}
+                      onPress={() => setFieldValue("noteText", values.noteText + "\n")}
+                    >
+                      <Feather name="corner-down-left" size={13} color={theme.colors.primary} />
+                      <Text style={styles.newLineBtnText}>New Line</Text>
+                    </TouchableOpacity>
                   </View>
                   <TextInput
                     style={[styles.noteInput, touched.noteText && errors.noteText && styles.inputError]}
@@ -240,7 +277,9 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     onBlur={handleBlur("noteText")}
                     multiline
                     numberOfLines={6}
-                    blurOnSubmit={false}
+                    returnKeyType="done"
+                    submitBehavior="blurAndSubmit"
+                    onSubmitEditing={() => Keyboard.dismiss()}
                     textAlignVertical="top"
                   />
                   {touched.noteText && errors.noteText && (
@@ -289,20 +328,44 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     <MaterialCommunityIcons name="star-four-points" size={16} color={theme.colors.primary} />
                     <Text style={styles.aiAssistLabel}> AI ASSIST</Text>
                   </View>
-                  <Text style={styles.aiAssistSub}>After saving your raw note, ask AI to refine it.</Text>
+                  <Text style={styles.aiAssistSub}>Tap a button to refine your note using AI.</Text>
                   <View style={styles.aiChipsRow}>
-                    <View style={styles.aiChip}>
-                      <MaterialCommunityIcons name="star-four-points" size={13} color={theme.colors.primary} />
+                    <TouchableOpacity
+                      style={[styles.aiChip, aiLoading === "cleanup" && styles.aiChipLoading]}
+                      onPress={() => handleAiAssist("cleanup", values.noteText, setFieldValue)}
+                      disabled={!!aiLoading}
+                    >
+                      {aiLoading === "cleanup" ? (
+                        <ActivityIndicator size={13} color={theme.colors.primary} />
+                      ) : (
+                        <MaterialCommunityIcons name="star-four-points" size={13} color={theme.colors.primary} />
+                      )}
                       <Text style={styles.aiChipText}> Clean up</Text>
-                    </View>
-                    <View style={styles.aiChip}>
-                      <Feather name="align-left" size={13} color={theme.colors.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.aiChip, aiLoading === "summarize" && styles.aiChipLoading]}
+                      onPress={() => handleAiAssist("summarize", values.noteText, setFieldValue)}
+                      disabled={!!aiLoading}
+                    >
+                      {aiLoading === "summarize" ? (
+                        <ActivityIndicator size={13} color={theme.colors.primary} />
+                      ) : (
+                        <Feather name="align-left" size={13} color={theme.colors.primary} />
+                      )}
                       <Text style={styles.aiChipText}> Summarize</Text>
-                    </View>
-                    <View style={styles.aiChip}>
-                      <Feather name="check-square" size={13} color={theme.colors.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.aiChip, aiLoading === "commitments" && styles.aiChipLoading]}
+                      onPress={() => handleAiAssist("commitments", values.noteText, setFieldValue)}
+                      disabled={!!aiLoading}
+                    >
+                      {aiLoading === "commitments" ? (
+                        <ActivityIndicator size={13} color={theme.colors.primary} />
+                      ) : (
+                        <Feather name="check-square" size={13} color={theme.colors.primary} />
+                      )}
                       <Text style={styles.aiChipText}> Commitments</Text>
-                    </View>
+                    </TouchableOpacity>
                   </View>
                 </View>
 
@@ -386,7 +449,18 @@ const styles = StyleSheet.create({
   dropdownSearch: { padding: 10, borderBottomWidth: 1, borderBottomColor: theme.colors.border, fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.text },
   dropdownItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
   dropdownItemText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.text },
-  noteLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  noteLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
+  newLineBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
+  newLineBtnText: { fontSize: 11, fontFamily: "Poppins-SemiBold", color: theme.colors.primary },
   noteInput: {
     minHeight: 130,
     fontSize: 14,
@@ -441,6 +515,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.lightCard,
   },
   aiChipText: { fontSize: 12, fontFamily: "Poppins-Medium", color: theme.colors.primary },
+  aiChipLoading: { opacity: 0.6 },
   saveBtn: {
     backgroundColor: theme.colors.primary,
     borderRadius: 12,
