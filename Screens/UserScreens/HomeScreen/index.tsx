@@ -89,8 +89,12 @@ const HomeScreen = ({ navigation }: any) => {
   const todayCount = reminder?.today?.reduce((acc: number, curr: any) => {
     return curr.completed ? acc : acc + 1;
   }, 0);
+  const tomorrowCount = reminder?.tomorrow?.reduce((acc: number, curr: any) => {
+    return curr.completed ? acc : acc + 1;
+  }, 0);
   const globalCount =
     todayCount +
+    tomorrowCount +
     reminder?.missed?.length +
     birthday?.birthdays?.length +
     birthday?.anniversary?.length +
@@ -167,6 +171,10 @@ const HomeScreen = ({ navigation }: any) => {
           </View>
           <ReminderCategory
             category={{ items: reminder?.today, initiallyOpen: true, name: "Today", count: reminder?.today?.length, type: "Reminders" }}
+            setReminer={setReminder}
+          />
+          <ReminderCategory
+            category={{ items: reminder?.tomorrow, initiallyOpen: false, name: "Tomorrow", count: reminder?.tomorrow?.length, type: "Reminders" }}
             setReminer={setReminder}
           />
           <ReminderCategory

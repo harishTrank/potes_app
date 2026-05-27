@@ -28,10 +28,13 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const CollapsibleSection: any = ({ title, children, isOpen, onPress }: any) => (
+const CollapsibleSection: any = ({ title, children, isOpen, onPress, color }: any) => (
   <View style={styles.collapsibleSection}>
     <TouchableOpacity onPress={onPress} style={styles.sectionHeader}>
-      <Text style={styles.sectionHeaderText}>{title}</Text>
+      <View>
+        <Text style={[styles.sectionHeaderText, { color }]}>{title}</Text>
+        <View style={[styles.sectionHeaderUnderline, { backgroundColor: color }]} />
+      </View>
       <Feather name={isOpen ? "chevron-up" : "chevron-down"} size={18} color={theme.colors.greyText} />
     </TouchableOpacity>
     {isOpen && <View style={styles.sectionContent}>{children}</View>}
@@ -169,7 +172,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionBtn, styles.actionBtnActive]}
-                onPress={() => navigation.navigate("ChatAiScreen", { contactId })}
+                onPress={() => navigation.navigate("DrawerNavigation", { screen: "ChatAiScreen", params: { contactId } })}
               >
                 <MaterialCommunityIcons name="star-four-points" size={16} color={theme.colors.white} />
                 <Text style={[styles.actionBtnText, { color: theme.colors.white }]}>AI</Text>
@@ -183,7 +186,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
 
           {/* Info Card */}
           <View style={styles.infoCard}>
-            <CollapsibleSection title="PERSONAL INFO" isOpen={sectionOpenState.personal} onPress={() => toggleSection("personal")}>
+            <CollapsibleSection title="PERSONAL INFO" color="#3d8b6e" isOpen={sectionOpenState.personal} onPress={() => toggleSection("personal")}>
               <InfoRow label="Birthday" value={contact.birthday ? dayjs(contact.birthday, "YYYY-MM-DD").format("D MMMM") : null} />
               <InfoRow label="Anniversary" value={contact.anniversary ? dayjs(contact.anniversary, "YYYY-MM-DD").format("D MMMM") : null} />
               <InfoRow label="Email" value={contact.email} />
@@ -191,7 +194,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             </CollapsibleSection>
 
             {(contact.spouse_name || contact.spouse_birthday || contact.children?.length > 0) && (
-              <CollapsibleSection title="FAMILY DETAILS" isOpen={sectionOpenState.family} onPress={() => toggleSection("family")}>
+              <CollapsibleSection title="FAMILY DETAILS" color="#e07b39" isOpen={sectionOpenState.family} onPress={() => toggleSection("family")}>
                 <InfoRow label="Spouse" value={contact.spouse_name} />
                 <InfoRow label="Spouse Birthday" value={contact.spouse_birthday ? dayjs(contact.spouse_birthday, "YYYY-MM-DD").format("D MMMM") : null} />
                 {contact.children?.map((child: any) => (
@@ -201,7 +204,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             )}
 
             {contact.previous_employers?.length > 0 && (
-              <CollapsibleSection title="EMPLOYMENT" isOpen={sectionOpenState.employment} onPress={() => toggleSection("employment")}>
+              <CollapsibleSection title="EMPLOYMENT" color="#1a6b9a" isOpen={sectionOpenState.employment} onPress={() => toggleSection("employment")}>
                 {contact.previous_employers.map((job: any) => (
                   <View key={job.id} style={styles.subCard}>
                     <InfoRow label="Employer" value={job.name} />
@@ -212,7 +215,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             )}
 
             {contact.universities?.length > 0 && (
-              <CollapsibleSection title="EDUCATION" isOpen={sectionOpenState.education} onPress={() => toggleSection("education")}>
+              <CollapsibleSection title="EDUCATION" color="#7d5a9a" isOpen={sectionOpenState.education} onPress={() => toggleSection("education")}>
                 {contact.universities.map((edu: any) => (
                   <View key={edu.id} style={styles.subCard}>
                     <InfoRow label="Institution" value={edu.name} />
@@ -223,7 +226,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             )}
 
             {contact.interests?.length > 0 && (
-              <CollapsibleSection title="INTERESTS" isOpen={sectionOpenState.interests} onPress={() => toggleSection("interests")}>
+              <CollapsibleSection title="INTERESTS" color="#c0623a" isOpen={sectionOpenState.interests} onPress={() => toggleSection("interests")}>
                 <View style={styles.interestPillsRow}>
                   {contact.interests.map((interest: any) => (
                     <View key={interest.id} style={styles.interestPill}>
@@ -235,7 +238,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             )}
 
             {contact.custom_fields?.length > 0 && (
-              <CollapsibleSection title="MORE DETAILS" isOpen={sectionOpenState.others} onPress={() => toggleSection("others")}>
+              <CollapsibleSection title="MORE DETAILS" color="#5a7a9a" isOpen={sectionOpenState.others} onPress={() => toggleSection("others")}>
                 {contact.custom_fields.map((field: any) => (
                   <View key={field.id || field.title} style={styles.subCard}>
                     <Text style={styles.infoLabel}>{field.title}</Text>
@@ -346,7 +349,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
   },
-  sectionHeaderText: { fontSize: 12, fontFamily: "Poppins-Bold", color: theme.colors.greyText, letterSpacing: 0.8 },
+  sectionHeaderText: { fontSize: 12, fontFamily: "Poppins-Bold", letterSpacing: 0.8 },
+  sectionHeaderUnderline: { height: 2, borderRadius: 1, marginTop: 3, width: "60%" },
   sectionContent: { paddingHorizontal: 16, paddingBottom: 14 },
   infoRow: {
     flexDirection: "row",

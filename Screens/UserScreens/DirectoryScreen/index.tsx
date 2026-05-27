@@ -249,6 +249,14 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
 
+        {/* Directory Title */}
+        <View style={styles.titleRow}>
+          <View>
+            <Text style={styles.pageTitle}>Your Contacts</Text>
+            <Text style={styles.pageSubtitle}>Managing {totalContacts} total contacts</Text>
+          </View>
+        </View>
+
         {/* Search */}
         <View style={styles.searchRow}>
           <Feather name="search" size={16} color={theme.colors.searchPlaceholder} style={{ marginRight: 8 }} />
@@ -264,14 +272,6 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
               <Feather name="x" size={16} color={theme.colors.grey} />
             </TouchableOpacity>
           )}
-        </View>
-
-        {/* Directory Title */}
-        <View style={styles.titleRow}>
-          <View>
-            <Text style={styles.pageTitle}>Your Contacts</Text>
-            <Text style={styles.pageSubtitle}>Managing {totalContacts} total contacts</Text>
-          </View>
         </View>
 
         {/* Contact List */}

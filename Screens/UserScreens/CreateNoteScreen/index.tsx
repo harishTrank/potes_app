@@ -241,10 +241,10 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
               <View style={{ paddingHorizontal: 16 }}>
 
                 {/* ASSOCIATE CONTACT */}
-                <View style={styles.card}>
+                <View style={[styles.card, values.contactId && styles.cardHighlighted]}>
                   <Text style={styles.cardLabel}>ASSOCIATE CONTACT</Text>
                   <TouchableOpacity
-                    style={styles.contactSelector}
+                    style={[styles.contactSelector, values.contactId && styles.contactSelectorFilled]}
                     onPress={() => setContactDropdownOpen(!isContactDropdownOpen)}
                   >
                     <View style={styles.contactSelectorInner}>
@@ -296,7 +296,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                 </View>
 
                 {/* NOTE */}
-                <View style={styles.card}>
+                <View style={[styles.card, values.noteText.length > 0 && styles.cardHighlighted]}>
                   <View style={styles.noteLabelRow}>
                     <Text style={styles.cardLabel}>NOTE</Text>
                     <View style={styles.noteLabelActions}>
@@ -318,7 +318,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     </View>
                   </View>
                   <TextInput
-                    style={[styles.noteInput, touched.noteText && errors.noteText && styles.inputError]}
+                    style={[styles.noteInput, values.noteText.length > 0 && styles.noteInputFilled, touched.noteText && errors.noteText && styles.inputError]}
                     placeholder="Start typing your note here..."
                     placeholderTextColor={theme.colors.grey}
                     value={values.noteText}
@@ -466,7 +466,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     marginBottom: 14,
+    borderWidth: 1.5,
+    borderColor: "transparent",
     ...theme.elevationLight,
+  },
+  cardHighlighted: {
+    borderColor: theme.colors.primary,
+    backgroundColor: "#f0f9f5",
   },
   cardLabel: {
     fontSize: 11,
@@ -482,6 +488,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.lightCard,
     borderRadius: 10,
     padding: 10,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  contactSelectorFilled: {
+    borderColor: theme.colors.primary,
+    backgroundColor: "#e8f5ef",
   },
   contactSelectorInner: { flexDirection: "row", alignItems: "center", gap: 10 },
   contactAvatarSmall: {
@@ -537,6 +549,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     textAlignVertical: "top",
+  },
+  noteInputFilled: {
+    backgroundColor: "#e8f5ef",
   },
   inputError: { borderWidth: 1.5, borderColor: theme.colors.red },
   errorText: { fontSize: 12, color: theme.colors.red, marginTop: 4 },

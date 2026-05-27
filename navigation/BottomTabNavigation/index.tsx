@@ -1,6 +1,7 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import theme from "../../utils/theme";
 import HomeScreen from "../../Screens/UserScreens/HomeScreen";
 import DirectoryScreen from "../../Screens/UserScreens/DirectoryScreen";
@@ -23,11 +24,12 @@ const AITabIcon = ({ focused }: { focused: boolean }) => (
 );
 
 export default function BottomTabNavigation() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [styles.tabBar, { height: 60 + insets.bottom, paddingBottom: insets.bottom + 6 }],
         tabBarActiveTintColor: theme.colors.tabBarActive,
         tabBarInactiveTintColor: theme.colors.tabBarInactive,
         tabBarLabelStyle: styles.tabLabel,
@@ -81,8 +83,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
-    height: 65,
-    paddingBottom: 8,
     paddingTop: 8,
   },
   tabLabel: {
