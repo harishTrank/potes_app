@@ -41,11 +41,14 @@ const CollapsibleSection: any = ({ title, children, isOpen, onPress, color }: an
   </View>
 );
 
-const InfoRow = ({ label, value }: { label: string; value?: string | null }) => {
+const InfoRow = ({ label, value, icon }: { label: string; value?: string | null; icon?: React.ReactNode }) => {
   if (!value || value.trim() === "" || value === "-") return null;
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
+      <View style={styles.infoLabelRow}>
+        {icon && <View style={styles.infoLabelIcon}>{icon}</View>}
+        <Text style={styles.infoLabel}>{label}</Text>
+      </View>
       <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
@@ -187,8 +190,8 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
           {/* Info Card */}
           <View style={styles.infoCard}>
             <CollapsibleSection title="PERSONAL INFO" color="#3d8b6e" isOpen={sectionOpenState.personal} onPress={() => toggleSection("personal")}>
-              <InfoRow label="Birthday" value={contact.birthday ? dayjs(contact.birthday, "YYYY-MM-DD").format("D MMMM") : null} />
-              <InfoRow label="Anniversary" value={contact.anniversary ? dayjs(contact.anniversary, "YYYY-MM-DD").format("D MMMM") : null} />
+              <InfoRow label="Birthday" value={contact.birthday ? dayjs(contact.birthday, "YYYY-MM-DD").format("D MMMM") : null} icon={<MaterialCommunityIcons name="cake-variant-outline" size={14} color={theme.colors.primary} />} />
+              <InfoRow label="Anniversary" value={contact.anniversary ? dayjs(contact.anniversary, "YYYY-MM-DD").format("D MMMM") : null} icon={<Feather name="heart" size={14} color="#9a6eb0" />} />
               <InfoRow label="Email" value={contact.email} />
               <InfoRow label="Phone" value={formatPhoneNumber(contact.phone)} />
             </CollapsibleSection>
@@ -360,7 +363,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  infoLabel: { fontSize: 13, fontFamily: "Poppins-Regular", color: theme.colors.greyText, flex: 1 },
+  infoLabelRow: { flexDirection: "row", alignItems: "center", flex: 1 },
+  infoLabelIcon: { marginRight: 5 },
+  infoLabel: { fontSize: 13, fontFamily: "Poppins-Regular", color: theme.colors.greyText },
   infoValue: { fontSize: 13, fontFamily: "Poppins-Medium", color: theme.colors.text, flex: 2, textAlign: "right" },
   subCard: { backgroundColor: theme.colors.lightCard, borderRadius: 8, padding: 10, marginBottom: 8 },
   interestPillsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

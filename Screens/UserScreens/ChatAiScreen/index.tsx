@@ -23,6 +23,49 @@ import { useAtom } from "jotai";
 import { userProfileGlobal } from "../../../jotaiStore";
 import { SideMenuModal } from "../../Components/SideMenuModal";
 
+const renderInlineSegments = (text: string, textStyle: any) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  if (parts.length === 1) return <Text style={textStyle}>{text}</Text>;
+  return (
+    <Text style={textStyle}>
+      {parts.map((part, i) =>
+        part.startsWith("**") && part.endsWith("**") && part.length > 4 ? (
+          <Text key={i} style={[textStyle, { fontFamily: "Poppins-SemiBold" }]}>
+            {part.slice(2, -2)}
+          </Text>
+        ) : (
+          <Text key={i}>{part}</Text>
+        )
+      )}
+    </Text>
+  );
+};
+
+const renderMarkdown = (text: string, textStyle: any): React.ReactNode[] => {
+  return text.split("\n").map((line, index) => {
+    const trimmed = line.trim();
+
+    if (!trimmed) return <View key={index} style={{ height: 5 }} />;
+
+    const bulletMatch = trimmed.match(/^[*-]\s+(.*)$/);
+    if (bulletMatch) {
+      const indentPx = (line.length - line.trimStart().length) > 0 ? 14 : 0;
+      return (
+        <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 3, paddingLeft: indentPx }}>
+          <Text style={[textStyle, { marginRight: 5 }]}>{"•"}</Text>
+          {renderInlineSegments(bulletMatch[1], textStyle)}
+        </View>
+      );
+    }
+
+    return (
+      <View key={index} style={{ marginBottom: 2 }}>
+        {renderInlineSegments(line, textStyle)}
+      </View>
+    );
+  });
+};
+
 const QUICK_ACTIONS = [
   { label: "Who to follow up?", icon: "people-outline" },
   { label: "Birthdays this week", icon: "gift-outline" },
@@ -102,7 +145,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
               <MaterialCommunityIcons name="star-four-points" size={12} color={theme.colors.primary} />
             </View>
             <View style={[styles.bubble, styles.aiBubble]}>
-              <Text style={styles.aiBubbleText}>{item.reply}</Text>
+              {renderMarkdown(item.reply, styles.aiBubbleText)}
             </View>
           </View>
         )}

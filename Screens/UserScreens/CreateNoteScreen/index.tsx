@@ -11,7 +11,13 @@ import {
   KeyboardAvoidingView,
   FlatList,
   Keyboard,
+  LayoutAnimation,
+  UIManager,
 } from "react-native";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
@@ -43,7 +49,7 @@ registerTranslation("en", en);
 
 const createNoteValidationSchema = Yup.object().shape({
   contactId: Yup.mixed().nullable().required("Contact name is required"),
-  noteText: Yup.string().required("Note text is required").min(5, "Note must be at least 5 characters"),
+  noteText: Yup.string().trim().required("Note text is required").min(5, "Note must be at least 5 characters"),
   reminderOption: Yup.string().required("Reminder option is required"),
   customReminderDate: Yup.date().when("reminderOption", {
     is: "Custom",
@@ -63,6 +69,12 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
   const [globalNoteFlag, setGlobalNoteFlag]: any = useAtom(homeNoteEditGlobal);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [isReminderOpen, setIsReminderOpen] = useState(true);
+
+  const toggleReminder = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setIsReminderOpen((prev) => !prev);
+  };
 
   useSpeechRecognitionEvent("start", () => setIsListening(true));
   useSpeechRecognitionEvent("end", () => setIsListening(false));
@@ -181,27 +193,52 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
   }, []);
 
   const AI_PROMPTS: Record<string, string> = {
-    cleanup: "Clean up and improve the following note. Keep it concise and professional. Return only the improved note text, no explanations:\n\n",
-    summarize: "Summarize the following note in 2-3 sentences. Return only the summary, no explanations:\n\n",
-    commitments: "Extract all commitments and action items from the following note as a short bulleted list. Return only the list, no explanations:\n\n",
+    cleanup: "Clean up and improve the following note about {contact}. Fix grammar, spelling, and formatting. Return only the improved note text, no explanations:\n\n",
+    summarize: "Summarize the following note about {contact} in 2-3 sentences. Return only the summary, no explanations:\n\n",
+    commitments: "Extract all commitments and action items from the following note about {contact} as a short bulleted list. Return only the list, no explanations:\n\n",
   };
 
-  const handleAiAssist = (action: string, noteText: string, setFieldValue: Function) => {
+  const AI_ERROR_PATTERNS = [
+    "contact name not provided",
+    "could not be inferred from context",
+    "cannot infer the contact",
+    "contact not found",
+  ];
+
+  const handleAiAssist = (action: string, noteText: string, setFieldValue: Function, contactId?: any, contactName?: string) => {
     if (!noteText.trim()) {
       Toast.show({ type: "error", text1: "Please enter a note first." });
       return;
     }
+    if (!contactId) {
+      Toast.show({ type: "error", text1: "Please select a contact before using AI Assist." });
+      return;
+    }
+    Keyboard.dismiss();
     setAiLoading(action);
+    const prompt = AI_PROMPTS[action].replace("{contact}", contactName || "the contact");
+    const fullMessage = prompt + noteText;
     postAiChat({
       body: {
-        message: AI_PROMPTS[action] + noteText,
-        query: AI_PROMPTS[action] + noteText,
+        message: fullMessage,
+        query: fullMessage,
         conversation_id: null,
+        contact_id: contactId,
       },
     })
       .then((res: any) => {
-        const result = res?.ui?.message || res?.response;
-        if (result) setFieldValue("noteText", result);
+        const result = res?.ui?.message || res?.response || res?.message || res?.reply;
+        if (!result) {
+          Toast.show({ type: "error", text1: "AI did not return a result. Please try again." });
+          return;
+        }
+        const lower = String(result).toLowerCase();
+        const isErrorResponse = AI_ERROR_PATTERNS.some((p) => lower.includes(p));
+        if (isErrorResponse) {
+          Toast.show({ type: "error", text1: "AI could not process this note. Please try again." });
+          return;
+        }
+        setFieldValue("noteText", String(result));
       })
       .catch(() => Toast.show({ type: "error", text1: "AI assist failed. Please try again." }))
       .finally(() => setAiLoading(null));
@@ -237,7 +274,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
             onSubmit={handleFormSubmit}
             enableReinitialize
           >
-            {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting, setFieldValue }: any) => (
+            {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting, setFieldValue, submitCount }: any) => (
               <View style={{ paddingHorizontal: 16 }}>
 
                 {/* ASSOCIATE CONTACT */}
@@ -259,7 +296,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     </View>
                     <Feather name={isContactDropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={theme.colors.greyText} />
                   </TouchableOpacity>
-                  {touched.contactId && errors.contactId && (
+                  {(touched.contactId || submitCount > 0) && errors.contactId && (
                     <Text style={styles.errorText}>{errors.contactId as string}</Text>
                   )}
                   {isContactDropdownOpen && (
@@ -278,7 +315,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                           <TouchableOpacity
                             style={styles.dropdownItem}
                             onPress={() => {
-                              setInitialValues({ ...initialValues, contactName: item?.full_name, contactId: item?.id });
+                              setInitialValues({ ...initialValues, contactName: item?.full_name, contactId: item?.id, noteText: values.noteText });
                               setFieldValue("contactId", item?.id);
                               setContactDropdownOpen(false);
                               setSearchTerm("");
@@ -331,43 +368,50 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     onSubmitEditing={() => Keyboard.dismiss()}
                     textAlignVertical="top"
                   />
-                  {touched.noteText && errors.noteText && (
+                  {(touched.noteText || submitCount > 0) && errors.noteText && (
                     <Text style={styles.errorText}>{errors.noteText as string}</Text>
                   )}
                 </View>
 
                 {/* SET REMINDER */}
                 <View style={styles.card}>
-                  <View style={styles.reminderLabelRow}>
-                    <Text style={styles.cardLabel}>SET REMINDER</Text>
-                    <Feather name="bell" size={16} color={theme.colors.greyText} />
-                  </View>
-                  <View style={styles.reminderToggleRow}>
-                    <TouchableOpacity
-                      style={[styles.reminderToggle, values.reminderOption === "None" && styles.reminderToggleActive]}
-                      onPress={() => { setFieldValue("reminderOption", "None"); setFieldValue("customReminderDate", undefined); }}
-                    >
-                      <Feather name="calendar" size={14} color={values.reminderOption === "None" ? theme.colors.white : theme.colors.primary} />
-                      <Text style={[styles.reminderToggleText, values.reminderOption === "None" && styles.reminderToggleTextActive]}>None</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.reminderToggle, values.reminderOption === "Custom" && styles.reminderToggleActive]}
-                      onPress={() => setFieldValue("reminderOption", "Custom")}
-                    >
-                      <Feather name="calendar" size={14} color={values.reminderOption === "Custom" ? theme.colors.white : theme.colors.primary} />
-                      <Text style={[styles.reminderToggleText, values.reminderOption === "Custom" && styles.reminderToggleTextActive]}>Custom</Text>
-                    </TouchableOpacity>
-                  </View>
-                  {values.reminderOption === "Custom" && (
-                    <TouchableOpacity
-                      style={[styles.dateDisplay, touched.customReminderDate && errors.customReminderDate && styles.inputError]}
-                      onPress={() => setDatePickerVisible(true)}
-                    >
-                      <Text style={values.customReminderDate ? styles.dateText : styles.datePlaceholder}>
-                        {values.customReminderDate ? dayjs(values.customReminderDate).format("MM-DD-YYYY") : "MM-DD-YYYY"}
-                      </Text>
-                      <Feather name="calendar" size={18} color={theme.colors.greyText} />
-                    </TouchableOpacity>
+                  <TouchableOpacity style={styles.reminderLabelRow} onPress={toggleReminder} activeOpacity={0.7}>
+                    <View style={styles.reminderLabelLeft}>
+                      <Feather name="bell" size={16} color={theme.colors.greyText} />
+                      <Text style={[styles.cardLabel, { marginBottom: 0 }]}>SET REMINDER</Text>
+                    </View>
+                    <Feather name={isReminderOpen ? "chevron-up" : "chevron-down"} size={18} color={theme.colors.greyText} />
+                  </TouchableOpacity>
+                  {isReminderOpen && (
+                    <>
+                      <View style={styles.reminderToggleRow}>
+                        <TouchableOpacity
+                          style={[styles.reminderToggle, values.reminderOption === "None" && styles.reminderToggleActive]}
+                          onPress={() => { setFieldValue("reminderOption", "None"); setFieldValue("customReminderDate", undefined); }}
+                        >
+                          <Feather name="calendar" size={14} color={values.reminderOption === "None" ? theme.colors.white : theme.colors.primary} />
+                          <Text style={[styles.reminderToggleText, values.reminderOption === "None" && styles.reminderToggleTextActive]}>None</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.reminderToggle, values.reminderOption === "Custom" && styles.reminderToggleActive]}
+                          onPress={() => setFieldValue("reminderOption", "Custom")}
+                        >
+                          <Feather name="calendar" size={14} color={values.reminderOption === "Custom" ? theme.colors.white : theme.colors.primary} />
+                          <Text style={[styles.reminderToggleText, values.reminderOption === "Custom" && styles.reminderToggleTextActive]}>Custom</Text>
+                        </TouchableOpacity>
+                      </View>
+                      {values.reminderOption === "Custom" && (
+                        <TouchableOpacity
+                          style={[styles.dateDisplay, touched.customReminderDate && errors.customReminderDate && styles.inputError]}
+                          onPress={() => setDatePickerVisible(true)}
+                        >
+                          <Text style={values.customReminderDate ? styles.dateText : styles.datePlaceholder}>
+                            {values.customReminderDate ? dayjs(values.customReminderDate).format("MM-DD-YYYY") : "MM-DD-YYYY"}
+                          </Text>
+                          <Feather name="calendar" size={18} color={theme.colors.greyText} />
+                        </TouchableOpacity>
+                      )}
+                    </>
                   )}
                 </View>
 
@@ -381,19 +425,19 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                   <View style={styles.aiChipsRow}>
                     <TouchableOpacity
                       style={[styles.aiChip, aiLoading === "cleanup" && styles.aiChipLoading]}
-                      onPress={() => handleAiAssist("cleanup", values.noteText, setFieldValue)}
+                      onPress={() => handleAiAssist("cleanup", values.noteText, setFieldValue, values.contactId, initialValues.contactName)}
                       disabled={!!aiLoading}
                     >
                       {aiLoading === "cleanup" ? (
                         <ActivityIndicator size={13} color={theme.colors.primary} />
                       ) : (
-                        <MaterialCommunityIcons name="star-four-points" size={13} color={theme.colors.primary} />
+                        <Feather name="edit-2" size={13} color={theme.colors.primary} />
                       )}
                       <Text style={styles.aiChipText}> Clean up</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.aiChip, aiLoading === "summarize" && styles.aiChipLoading]}
-                      onPress={() => handleAiAssist("summarize", values.noteText, setFieldValue)}
+                      onPress={() => handleAiAssist("summarize", values.noteText, setFieldValue, values.contactId, initialValues.contactName)}
                       disabled={!!aiLoading}
                     >
                       {aiLoading === "summarize" ? (
@@ -405,7 +449,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.aiChip, aiLoading === "commitments" && styles.aiChipLoading]}
-                      onPress={() => handleAiAssist("commitments", values.noteText, setFieldValue)}
+                      onPress={() => handleAiAssist("commitments", values.noteText, setFieldValue, values.contactId, initialValues.contactName)}
                       disabled={!!aiLoading}
                     >
                       {aiLoading === "commitments" ? (
@@ -555,8 +599,9 @@ const styles = StyleSheet.create({
   },
   inputError: { borderWidth: 1.5, borderColor: theme.colors.red },
   errorText: { fontSize: 12, color: theme.colors.red, marginTop: 4 },
-  reminderLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
-  reminderToggleRow: { flexDirection: "row", gap: 10 },
+  reminderLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10, paddingBottom: 2 },
+  reminderLabelLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
+  reminderToggleRow: { flexDirection: "row", gap: 10, marginTop: 4 },
   reminderToggle: {
     flexDirection: "row",
     alignItems: "center",

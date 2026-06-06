@@ -79,8 +79,8 @@ const UserProfileScreen: React.FC<any> = ({ navigation }) => {
       changeProfileName({ body: formData })
         ?.then(() => {
           setLoading(false);
+          Toast.show({ type: "success", text1: "Profile photo updated successfully." });
           setGlobalCall((v: any) => v + 1);
-          Toast.show({ type: "success", text1: "Profile photo updated." });
         })
         ?.catch(() => {
           setLoading(false);
