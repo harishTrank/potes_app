@@ -15,7 +15,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.harish1999.potes"
+      "bundleIdentifier": "com.harish1999.potes",
+      "deploymentTarget": "16.4"
     },
     "android": {
       "adaptiveIcon": {

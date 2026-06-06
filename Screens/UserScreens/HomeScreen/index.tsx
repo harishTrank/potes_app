@@ -215,7 +215,7 @@ const HomeScreen = ({ navigation }: any) => {
             <View style={{ padding: 12 }}>
               {birthday?.birthdays?.length > 0 && (
                 <View style={styles.eventGroup}>
-                  <Text style={styles.eventGroupLabel}>Birthday</Text>
+                  <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>Birthday</Text>
                   {birthday.birthdays.map((item: any) => (
                     <EventListItem item={item} key={item?.id} type={"Birthdays"} />
                   ))}
@@ -223,7 +223,7 @@ const HomeScreen = ({ navigation }: any) => {
               )}
               {birthday?.anniversary?.length > 0 && (
                 <View style={styles.eventGroup}>
-                  <Text style={styles.eventGroupLabel}>Anniversary</Text>
+                  <Text style={[styles.eventGroupLabel, { color: "#9a6eb0" }]}>Anniversary</Text>
                   {birthday.anniversary.map((item: any) => (
                     <EventListItem item={item} key={item?.id} type={"Anniversary"} />
                   ))}
@@ -231,7 +231,7 @@ const HomeScreen = ({ navigation }: any) => {
               )}
               {birthday?.spouse_birthday?.length > 0 && (
                 <View style={styles.eventGroup}>
-                  <Text style={styles.eventGroupLabel}>Spouse Birthday</Text>
+                  <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>Spouse Birthday</Text>
                   {birthday.spouse_birthday.map((item: any) => (
                     <EventListItem item={item} key={item?.id} type={"spouse"} />
                   ))}
@@ -239,7 +239,7 @@ const HomeScreen = ({ navigation }: any) => {
               )}
               {birthday?.child_birthday?.length > 0 && (
                 <View style={styles.eventGroup}>
-                  <Text style={styles.eventGroupLabel}>Family Birthday</Text>
+                  <Text style={[styles.eventGroupLabel, { color: theme.colors.primary }]}>Family Birthday</Text>
                   {birthday.child_birthday.map((item: any) => (
                     <EventListItem item={item} key={item?.id} type={"child"} />
                   ))}

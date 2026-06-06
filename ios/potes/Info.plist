@@ -56,6 +56,8 @@
     <string>Allow Potes to access your contacts to import contacts</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow Potes to access your microphone to record sound</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Allow Potes to recognize your speech for voice notes.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Allow access to your photo library to choose profile and contact photos.</string>
     <key>NSUserNotificationUsageDescription</key>
