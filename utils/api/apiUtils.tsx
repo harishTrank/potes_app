@@ -90,13 +90,19 @@ const callAxios = async (
       ...defHeaders,
     };
   }
+  const finalHeaders: any = {
+    ...headers,
+    ...uriEndPoint.headerProps,
+  };
+  // Let native XHR auto-set Content-Type with the multipart boundary for FormData
+  if (body instanceof FormData) {
+    delete finalHeaders["Content-Type"];
+    delete finalHeaders["content-type"];
+  }
   return Axios({
     method: uriEndPoint.method,
     url: makeUrl({ ...uriEndPoint, pathParams, query }, apiHostUrl),
-    headers: {
-      ...headers,
-      ...uriEndPoint.headerProps,
-    },
+    headers: finalHeaders,
     data: body || undefined,
   });
 };

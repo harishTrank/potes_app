@@ -113,11 +113,27 @@ const HomeScreen = ({ navigation }: any) => {
     }
   };
 
+  const handleDismissEvent = (type: string, itemId: any) => {
+    setBirthday((prev: any) => {
+      if (type === "Birthdays") return { ...prev, birthdays: prev.birthdays.filter((i: any) => i.id !== itemId) };
+      if (type === "Anniversary") return { ...prev, anniversary: prev.anniversary.filter((i: any) => i.id !== itemId) };
+      if (type === "spouse") return { ...prev, spouse_birthday: prev.spouse_birthday.filter((i: any) => i.id !== itemId) };
+      if (type === "child") return { ...prev, child_birthday: prev.child_birthday.filter((i: any) => i.id !== itemId) };
+      return prev;
+    });
+  };
+
   const hasEvents =
     (birthday?.birthdays?.length || 0) +
       (birthday?.anniversary?.length || 0) +
       (birthday?.spouse_birthday?.length || 0) +
       (birthday?.child_birthday?.length || 0) >
+    0;
+
+  const hasMemories =
+    (memories?.year?.length || 0) +
+      (memories?.six_month?.length || 0) +
+      (memories?.one_month?.length || 0) >
     0;
 
   return (
@@ -192,15 +208,27 @@ const HomeScreen = ({ navigation }: any) => {
             <View style={[styles.sectionAccent, { backgroundColor: "#9a6eb0" }]} />
             <Text style={styles.sectionTitle}>Memories</Text>
           </View>
-          <ReminderCategory
-            category={{ items: memories?.year, initiallyOpen: true, name: "One Year Ago", count: memories?.year?.length, type: "memories" }}
-          />
-          <ReminderCategory
-            category={{ items: memories?.six_month, initiallyOpen: false, name: "Six Months Ago", count: memories?.six_month?.length, type: "memories" }}
-          />
-          <ReminderCategory
-            category={{ items: memories?.one_month, initiallyOpen: false, name: "One Month Ago", count: memories?.one_month?.length, type: "memories" }}
-          />
+          {!hasMemories ? (
+            <Text style={styles.nothingText}>NOTHING RECENT</Text>
+          ) : (
+            <>
+              {memories?.year?.length > 0 && (
+                <ReminderCategory
+                  category={{ items: memories.year, initiallyOpen: true, name: "One Year Ago", count: memories.year.length, type: "memories" }}
+                />
+              )}
+              {memories?.six_month?.length > 0 && (
+                <ReminderCategory
+                  category={{ items: memories.six_month, initiallyOpen: false, name: "Six Months Ago", count: memories.six_month.length, type: "memories" }}
+                />
+              )}
+              {memories?.one_month?.length > 0 && (
+                <ReminderCategory
+                  category={{ items: memories.one_month, initiallyOpen: false, name: "One Month Ago", count: memories.one_month.length, type: "memories" }}
+                />
+              )}
+            </>
+          )}
         </View>
 
         {/* Events Section */}
@@ -217,7 +245,7 @@ const HomeScreen = ({ navigation }: any) => {
                 <View style={styles.eventGroup}>
                   <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>Birthday</Text>
                   {birthday.birthdays.map((item: any) => (
-                    <EventListItem item={item} key={item?.id} type={"Birthdays"} />
+                    <EventListItem item={item} key={item?.id} type={"Birthdays"} onDismiss={handleDismissEvent} />
                   ))}
                 </View>
               )}
@@ -225,7 +253,7 @@ const HomeScreen = ({ navigation }: any) => {
                 <View style={styles.eventGroup}>
                   <Text style={[styles.eventGroupLabel, { color: "#9a6eb0" }]}>Anniversary</Text>
                   {birthday.anniversary.map((item: any) => (
-                    <EventListItem item={item} key={item?.id} type={"Anniversary"} />
+                    <EventListItem item={item} key={item?.id} type={"Anniversary"} onDismiss={handleDismissEvent} />
                   ))}
                 </View>
               )}
@@ -233,7 +261,7 @@ const HomeScreen = ({ navigation }: any) => {
                 <View style={styles.eventGroup}>
                   <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>Spouse Birthday</Text>
                   {birthday.spouse_birthday.map((item: any) => (
-                    <EventListItem item={item} key={item?.id} type={"spouse"} />
+                    <EventListItem item={item} key={item?.id} type={"spouse"} onDismiss={handleDismissEvent} />
                   ))}
                 </View>
               )}
@@ -241,7 +269,7 @@ const HomeScreen = ({ navigation }: any) => {
                 <View style={styles.eventGroup}>
                   <Text style={[styles.eventGroupLabel, { color: theme.colors.primary }]}>Family Birthday</Text>
                   {birthday.child_birthday.map((item: any) => (
-                    <EventListItem item={item} key={item?.id} type={"child"} />
+                    <EventListItem item={item} key={item?.id} type={"child"} onDismiss={handleDismissEvent} />
                   ))}
                 </View>
               )}

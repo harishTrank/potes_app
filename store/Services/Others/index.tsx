@@ -87,6 +87,12 @@ export const changeProfileName = ({ body }: any) =>
     multipart: true,
   });
 
+export const deleteProfilePhotoApi = () =>
+  callApi({
+    uriEndPoint: allApi.changeProfileName.v1,
+    body: { profile_pic: null },
+  });
+
 export const mainSearchApi = ({ query }: any) =>
   callApi({
     uriEndPoint: allApi.mainSearch.v1,

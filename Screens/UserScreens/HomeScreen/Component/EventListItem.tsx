@@ -11,7 +11,7 @@ const getInitials = (name: string) => {
   return name.split(" ").slice(0, 2).map((p) => p[0]).join("").toUpperCase();
 };
 
-const EventListItem: any = ({ item, type }: any) => {
+const EventListItem: any = ({ item, type, onDismiss }: any) => {
   const navigation: any = useNavigation();
   const cardClickHandler = () => {
     navigation.navigate("ViewContactScreen", {
@@ -53,11 +53,24 @@ const EventListItem: any = ({ item, type }: any) => {
         {name}
       </Text>
       <Text style={styles.eventDate}>{date}</Text>
+      {onDismiss && (
+        <TouchableOpacity
+          onPress={(e) => { e.stopPropagation(); onDismiss(type, item?.id); }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={styles.dismissBtn}
+        >
+          <Feather name="x" size={15} color={theme.colors.greyText} />
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
+  dismissBtn: {
+    marginLeft: 6,
+    padding: 2,
+  },
   container: {
     flexDirection: "row",
     alignItems: "center",

@@ -209,7 +209,11 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
         )}
       </View>
       <View style={styles.contactInfo}>
-        <Text style={styles.contactName}>{item.full_name}</Text>
+        <Text style={styles.contactName} numberOfLines={1}>
+          {item.full_name
+            ? item.full_name.charAt(0).toUpperCase() + item.full_name.slice(1)
+            : ""}
+        </Text>
         {item.birthday && (
           <View style={styles.birthdayRow}>
             <Feather name="gift" size={11} color={theme.colors.greyText} />
@@ -240,10 +244,10 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
           <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuBtn}>
             <Feather name="menu" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
-          <View style={styles.headerCenter}>
+          <TouchableOpacity onPress={() => navigation.navigate("HomeScreen")} style={styles.headerCenter}>
             <Text style={styles.logoText}>POTES</Text>
             <Text style={styles.logoSub}>people notes</Text>
-          </View>
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate("UserProfileScreen")} style={styles.avatarBtn}>
             <UserAvatar userProfile={userProfile} />
           </TouchableOpacity>
@@ -334,7 +338,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingBottom: 6,
   },
   menuBtn: { width: 36, height: 36, justifyContent: "center", alignItems: "center" },
   headerCenter: { alignItems: "center" },
@@ -351,18 +355,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginHorizontal: 16,
     paddingHorizontal: 14,
-    height: 46,
-    marginBottom: 12,
+    height: 44,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
   searchInput: { flex: 1, fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.searchText },
   titleRow: {
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingBottom: 4,
   },
-  pageTitle: { fontSize: 24, fontFamily: "Poppins-Bold", color: theme.colors.text },
-  pageSubtitle: { fontSize: 13, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginTop: 2 },
+  pageTitle: { fontSize: 18, fontFamily: "Poppins-Bold", color: theme.colors.text },
+  pageSubtitle: { fontSize: 12, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginTop: 1 },
   listWrapper: { flex: 1, flexDirection: "row" },
   sectionHeaderWrap: {
     backgroundColor: theme.colors.lightBackground,

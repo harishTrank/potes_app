@@ -287,11 +287,11 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     <View style={styles.contactSelectorInner}>
                       <View style={styles.contactAvatarSmall}>
                         <Text style={styles.contactAvatarText}>
-                          {initialValues.contactName?.[0]?.toUpperCase() || "?"}
+                          {values.contactName?.[0]?.toUpperCase() || "?"}
                         </Text>
                       </View>
                       <View>
-                        <Text style={styles.contactSelectorName}>{initialValues.contactName}</Text>
+                        <Text style={styles.contactSelectorName}>{values.contactName}</Text>
                       </View>
                     </View>
                     <Feather name={isContactDropdownOpen ? "chevron-up" : "chevron-down"} size={20} color={theme.colors.greyText} />
@@ -315,8 +315,8 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                           <TouchableOpacity
                             style={styles.dropdownItem}
                             onPress={() => {
-                              setInitialValues({ ...initialValues, contactName: item?.full_name, contactId: item?.id, noteText: values.noteText });
                               setFieldValue("contactId", item?.id);
+                              setFieldValue("contactName", item?.full_name);
                               setContactDropdownOpen(false);
                               setSearchTerm("");
                             }}
@@ -425,7 +425,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                   <View style={styles.aiChipsRow}>
                     <TouchableOpacity
                       style={[styles.aiChip, aiLoading === "cleanup" && styles.aiChipLoading]}
-                      onPress={() => handleAiAssist("cleanup", values.noteText, setFieldValue, values.contactId, initialValues.contactName)}
+                      onPress={() => handleAiAssist("cleanup", values.noteText, setFieldValue, values.contactId, values.contactName)}
                       disabled={!!aiLoading}
                     >
                       {aiLoading === "cleanup" ? (
@@ -437,7 +437,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.aiChip, aiLoading === "summarize" && styles.aiChipLoading]}
-                      onPress={() => handleAiAssist("summarize", values.noteText, setFieldValue, values.contactId, initialValues.contactName)}
+                      onPress={() => handleAiAssist("summarize", values.noteText, setFieldValue, values.contactId, values.contactName)}
                       disabled={!!aiLoading}
                     >
                       {aiLoading === "summarize" ? (
@@ -449,7 +449,7 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.aiChip, aiLoading === "commitments" && styles.aiChipLoading]}
-                      onPress={() => handleAiAssist("commitments", values.noteText, setFieldValue, values.contactId, initialValues.contactName)}
+                      onPress={() => handleAiAssist("commitments", values.noteText, setFieldValue, values.contactId, values.contactName)}
                       disabled={!!aiLoading}
                     >
                       {aiLoading === "commitments" ? (

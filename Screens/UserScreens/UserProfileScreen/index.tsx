@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  InteractionManager,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import DefaultBackground from "../../Components/DefaultBackground";
@@ -25,6 +26,7 @@ import {
 import FullScreenLoader from "../../Components/FullScreenLoader";
 import Toast from "react-native-toast-message";
 import { getImage, getfileobj, takePicture } from "../../../utils/ImagePicker";
+import { Asset } from "expo-asset";
 import { useAtom } from "jotai";
 import { apiCallBackGlobal } from "../../../jotaiStore";
 import FastImage from "react-native-fast-image";
@@ -46,6 +48,7 @@ const UserProfileScreen: React.FC<any> = ({ navigation }) => {
   const [modalPasswordOpen, setModalPasswordOpen]: any = useState(false);
   const [deletePassword, setDeletePassword]: any = useState("");
   const [menuVisible, setMenuVisible] = useState(false);
+  const [viewPhotoVisible, setViewPhotoVisible] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -63,12 +66,58 @@ const UserProfileScreen: React.FC<any> = ({ navigation }) => {
       ?.catch(() => setLoading(false));
   }, []);
 
+  const handleRemovePhoto = () => {
+    Alert.alert("Remove Photo", "Are you sure you want to remove your profile photo?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: async () => {
+          setLoading(true);
+          try {
+            const asset = Asset.fromModule(require("../../../assets/Images/user.jpg"));
+            await asset.downloadAsync();
+            const uri = asset.localUri;
+            if (!uri) throw new Error("Asset unavailable");
+            const formData = new FormData();
+            formData.append("profile_pic", getfileobj(uri));
+            changeProfileName({ body: formData })
+              ?.then(() => {
+                setUserData((prev: any) => ({ ...prev, avatarUri: null }));
+                setLoading(false);
+                InteractionManager.runAfterInteractions(() => {
+                  Toast.show({ type: "success", text1: "Profile photo removed successfully." });
+                });
+                setGlobalCall((v: any) => v + 1);
+              })
+              ?.catch(() => {
+                setLoading(false);
+                InteractionManager.runAfterInteractions(() => {
+                  Toast.show({ type: "error", text1: "Could not remove photo. Please try again." });
+                });
+              });
+          } catch {
+            setLoading(false);
+            InteractionManager.runAfterInteractions(() => {
+              Toast.show({ type: "error", text1: "Could not remove photo. Please try again." });
+            });
+          }
+        },
+      },
+    ]);
+  };
+
   const handlePickImage = async () => {
-    Alert.alert("Pick Image", "Choose from camera or gallery", [
+    const options: any[] = [
       { text: "Gallery", onPress: () => getImage(setProfilePic), style: "default" },
       { text: "Camera", onPress: async () => await takePicture(setProfilePic), style: "default" },
-      { text: "Cancel", style: "cancel" },
-    ]);
+    ];
+    if (userData.avatarUri) {
+      options.unshift({ text: "View Photo", onPress: () => setViewPhotoVisible(true), style: "default" });
+      options.push({ text: "Remove Photo", onPress: handleRemovePhoto, style: "destructive" });
+    }
+    options.push({ text: "Cancel", style: "cancel" });
+    Alert.alert("Profile Photo", "Choose an option", options);
   };
 
   useEffect(() => {
@@ -79,12 +128,31 @@ const UserProfileScreen: React.FC<any> = ({ navigation }) => {
       changeProfileName({ body: formData })
         ?.then(() => {
           setLoading(false);
-          Toast.show({ type: "success", text1: "Profile photo updated successfully." });
+          InteractionManager.runAfterInteractions(() => {
+            Toast.show({ type: "success", text1: "Profile photo updated successfully." });
+          });
           setGlobalCall((v: any) => v + 1);
         })
-        ?.catch(() => {
+        ?.catch((err: any) => {
           setLoading(false);
-          Toast.show({ type: "error", text1: "Something went wrong." });
+          const status = err?.status;
+          let errorMsg = "Photo upload failed. Please try again.";
+          if (!status) {
+            errorMsg = "Network error. Please check your connection and try again.";
+          } else if (status === 413) {
+            errorMsg = "Image is too large. Please choose a smaller photo.";
+          } else if (status === 415) {
+            errorMsg = "Unsupported image format. Please use JPEG or PNG.";
+          } else if (status >= 500) {
+            errorMsg = "Server error. Please try again later.";
+          } else if (err?.data?.profile_pic) {
+            errorMsg = Array.isArray(err.data.profile_pic) ? err.data.profile_pic[0] : err.data.profile_pic;
+          } else if (err?.data?.detail || err?.data?.message) {
+            errorMsg = err?.data?.detail || err?.data?.message;
+          }
+          InteractionManager.runAfterInteractions(() => {
+            Toast.show({ type: "error", text1: errorMsg });
+          });
         });
       setUserData((prev: any) => ({ ...prev, avatarUri: profilePic }));
     }
@@ -161,9 +229,10 @@ const UserProfileScreen: React.FC<any> = ({ navigation }) => {
                   style={styles.avatarImage}
                 />
               ) : (
-                <View style={styles.avatarCircle}>
-                  <Text style={styles.avatarInitials}>{initials}</Text>
-                </View>
+                <FastImage
+                  source={require("../../../assets/Images/user.jpg")}
+                  style={styles.avatarImage}
+                />
               )}
               <View style={styles.cameraBtn}>
                 <Feather name="camera" size={14} color={theme.colors.white} />
@@ -275,12 +344,32 @@ const UserProfileScreen: React.FC<any> = ({ navigation }) => {
         </ScrollView>
       </View>
 
+      {/* View Photo Modal */}
+      <Modal animationType="fade" transparent visible={viewPhotoVisible} onRequestClose={() => setViewPhotoVisible(false)}>
+        <TouchableOpacity
+          style={styles.viewPhotoOverlay}
+          activeOpacity={1}
+          onPress={() => setViewPhotoVisible(false)}
+        >
+          {userData.avatarUri ? (
+            <FastImage
+              source={{ uri: userData.avatarUri, priority: FastImage.priority.high }}
+              style={styles.viewPhotoImage}
+              resizeMode={FastImage.resizeMode.contain}
+            />
+          ) : null}
+          <TouchableOpacity style={styles.viewPhotoClose} onPress={() => setViewPhotoVisible(false)}>
+            <Feather name="x" size={22} color={theme.colors.white} />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
       {/* Delete Modal */}
       <Modal animationType="slide" transparent visible={deleteModalOpen} onRequestClose={() => setDeleteModalOpen(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Delete Account</Text>
-            <Text style={styles.modalText}>This will permanently delete your account and all data.</Text>
+            <Text style={styles.modalText}>Are you sure you want to delete your account and all data? This action cannot be undone.</Text>
             {!modalPasswordOpen ? (
               <View style={styles.modalBtnsRow}>
                 <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setDeleteModalOpen(false)}>
@@ -424,6 +513,24 @@ const styles = StyleSheet.create({
   securityLabel: { fontSize: 15, fontFamily: "Poppins-Medium", color: theme.colors.text },
   deleteLink: { alignItems: "center", paddingVertical: 16 },
   deleteLinkText: { fontSize: 14, fontFamily: "Poppins-Medium", color: theme.colors.red },
+  viewPhotoOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  viewPhotoImage: { width: "100%", height: "80%" },
+  viewPhotoClose: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
   modalCard: {
     backgroundColor: theme.colors.white,

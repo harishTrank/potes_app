@@ -265,20 +265,20 @@ const styles = StyleSheet.create({
   greetingSection: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 30,
+    paddingTop: 14,
   },
   greetingTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontFamily: "Poppins-Bold",
     color: theme.colors.text,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   greetingSubtitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: "Poppins-Regular",
     color: theme.colors.greyText,
-    lineHeight: 22,
-    marginBottom: 32,
+    lineHeight: 20,
+    marginBottom: 18,
   },
   quickActionsGrid: {
     flexDirection: "row",

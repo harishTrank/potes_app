@@ -76,8 +76,6 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     nameOrDescription: "",
     birthday: undefined,
     anniversary: undefined,
-    email: "",
-    number: "",
     spouseName: "",
     spouseBirthday: undefined,
     spouseDetails: "",
@@ -103,8 +101,6 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
         nameOrDescription: contactToEdit.full_name || "",
         birthday: parseApiDate(contactToEdit.birthday),
         anniversary: parseApiDate(contactToEdit.anniversary),
-        email: contactToEdit.email || "",
-        number: contactToEdit.phone || "",
         spouseName: contactToEdit.spouse_name || "",
         spouseBirthday: parseApiDate(contactToEdit.spouse_birthday),
         spouseDetails: contactToEdit.spouse_details || "",
@@ -130,9 +126,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     const formData = new FormData();
     setLoading(true);
     formData.append("full_name", values.nameOrDescription);
-    formData.append("phone", values.number);
     if (values.birthday) formData.append("birthday", formatDateToYYYYMMDD(values.birthday)!);
-    formData.append("email", values.email);
     formData.append("spouse_name", values.spouseName);
     if (values.spouseBirthday) formData.append("spouse_birthday", formatDateToYYYYMMDD(values.spouseBirthday)!);
     if (values.anniversary) formData.append("anniversary", formatDateToYYYYMMDD(values.anniversary)!);
@@ -198,12 +192,12 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
         blurOnSubmit={true}
         returnKeyType="done"
         numberOfLines={numberOfLines}
-        maxLength={name === "number" ? 10 : 200}
+        maxLength={200}
       />
     </View>
   );
 
-  const renderDateInput = (formikValues: any, setFieldValue: Function, fieldPath: string, label: string, placeholder: string, arrayIndex?: number) => {
+  const renderDateInput = (formikValues: any, _setFieldValue: Function, fieldPath: string, label: string, placeholder: string, arrayIndex?: number) => {
     let displayValue: Date | undefined;
     if (arrayIndex !== undefined) {
       const arrayName = fieldPath.split("[index]")[0];
@@ -294,12 +288,6 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                       <Feather name="heart" size={16} color={theme.colors.greyText} />
                     </TouchableOpacity>
                   </View>
-                </View>
-
-                {/* Email & Phone */}
-                <View style={styles.card}>
-                  {renderTextInput({ values, handleChange, handleBlur }, "email", "EMAIL", "Enter email", false, "email-address")}
-                  {renderTextInput({ values, handleChange, handleBlur }, "number", "PHONE", "Enter phone number", false, "phone-pad")}
                 </View>
 
                 {/* Collapsible Sections */}
