@@ -49,6 +49,7 @@ const UserProfileScreen: React.FC<any> = ({ navigation }) => {
   const [deletePassword, setDeletePassword]: any = useState("");
   const [menuVisible, setMenuVisible] = useState(false);
   const [viewPhotoVisible, setViewPhotoVisible] = useState(false);
+  const [photoSheetVisible, setPhotoSheetVisible] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -107,18 +108,18 @@ const UserProfileScreen: React.FC<any> = ({ navigation }) => {
     ]);
   };
 
-  const handlePickImage = async () => {
-    const options: any[] = [
-      { text: "Gallery", onPress: () => getImage(setProfilePic), style: "default" },
-      { text: "Camera", onPress: async () => await takePicture(setProfilePic), style: "default" },
-    ];
-    if (userData.avatarUri) {
-      options.unshift({ text: "View Photo", onPress: () => setViewPhotoVisible(true), style: "default" });
-      options.push({ text: "Remove Photo", onPress: handleRemovePhoto, style: "destructive" });
-    }
-    options.push({ text: "Cancel", style: "cancel" });
-    Alert.alert("Profile Photo", "Choose an option", options);
-  };
+  const handlePickImage = () => setPhotoSheetVisible(true);
+
+  const photoSheetOptions: any[] = [
+    ...(userData.avatarUri
+      ? [{ text: "View Photo", icon: "eye", onPress: () => setViewPhotoVisible(true) }]
+      : []),
+    { text: "Gallery", icon: "image", onPress: () => getImage(setProfilePic) },
+    { text: "Camera", icon: "camera", onPress: async () => await takePicture(setProfilePic) },
+    ...(userData.avatarUri
+      ? [{ text: "Remove Photo", icon: "trash-2", onPress: handleRemovePhoto, destructive: true }]
+      : []),
+  ];
 
   useEffect(() => {
     if (profilePic) {
@@ -344,6 +345,42 @@ const UserProfileScreen: React.FC<any> = ({ navigation }) => {
         </ScrollView>
       </View>
 
+      {/* Profile Photo Options Sheet */}
+      <Modal animationType="fade" transparent visible={photoSheetVisible} onRequestClose={() => setPhotoSheetVisible(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setPhotoSheetVisible(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.photoSheetCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Profile Photo</Text>
+            <Text style={styles.modalText}>Choose an option</Text>
+            {photoSheetOptions.map((option) => (
+              <TouchableOpacity
+                key={option.text}
+                style={styles.photoSheetOption}
+                onPress={() => {
+                  setPhotoSheetVisible(false);
+                  option.onPress();
+                }}
+              >
+                <Feather
+                  name={option.icon}
+                  size={18}
+                  color={option.destructive ? theme.colors.red : theme.colors.primary}
+                />
+                <Text style={[styles.photoSheetOptionText, option.destructive && styles.photoSheetOptionTextDestructive]}>
+                  {option.text}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.photoSheetCancelBtn} onPress={() => setPhotoSheetVisible(false)}>
+              <Text style={styles.modalCancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
       {/* View Photo Modal */}
       <Modal animationType="fade" transparent visible={viewPhotoVisible} onRequestClose={() => setViewPhotoVisible(false)}>
         <TouchableOpacity
@@ -547,6 +584,31 @@ const styles = StyleSheet.create({
   modalCancelBtnText: { fontSize: 14, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
   modalDeleteBtn: { flex: 1, borderRadius: 10, paddingVertical: 12, alignItems: "center", backgroundColor: theme.colors.red },
   modalDeleteBtnText: { fontSize: 14, fontFamily: "Poppins-SemiBold", color: theme.colors.white },
+  photoSheetCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 24,
+    width: "90%",
+    ...theme.elevationHeavy,
+  },
+  photoSheetOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.lightCard,
+  },
+  photoSheetOptionText: { fontSize: 15, fontFamily: "Poppins-Medium", color: theme.colors.text },
+  photoSheetOptionTextDestructive: { color: theme.colors.red },
+  photoSheetCancelBtn: {
+    marginTop: 12,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    backgroundColor: theme.colors.lightCard,
+  },
   passwordInput: {
     backgroundColor: theme.colors.lightCard,
     borderRadius: 10,

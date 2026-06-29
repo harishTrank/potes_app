@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Axios from "axios";
 import queryString from "querystring";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 
 export const hostname = () => {
   // let hostUrl = "http://192.168.0.49:8001/api";
@@ -13,12 +13,12 @@ export const hostname = () => {
 const hostUrl = hostname();
 export const makeUrl = (
   { uri = "", pathParams, query, version }: any,
-  host: any
+  host: any,
 ) =>
   `${host || hostUrl}${version}${uri
     .split("/")
     .map((param: any) =>
-      param.charAt(0) === ":" ? encodeURI(pathParams[param.slice(1)]) : param
+      param.charAt(0) === ":" ? encodeURI(pathParams[param.slice(1)]) : param,
     )
     .join("/")}${query ? `?${queryString.stringify(query)}` : ""}`;
 
@@ -79,9 +79,44 @@ export const hasErrors = (apiResponse: any) => {
  * @param {Object} APIParamaters.body - Body of the request.
  * @returns {Promise<object>} Body Data from the server.
  */
+const callFormDataWithFetch = async (
+  { uriEndPoint, pathParams, query, body, apiHostUrl, multipart }: any,
+  options?: CallApiOptions,
+) => {
+  const defHeaders = await getDefaultHeaders(multipart);
+  let headers = {};
+  if (!options?.hideDefaultHeaders) {
+    headers = {
+      ...defHeaders,
+    };
+  }
+  const finalHeaders: any = {
+    ...headers,
+    ...uriEndPoint.headerProps,
+  };
+  if (body instanceof FormData) {
+    delete finalHeaders["Content-Type"];
+    delete finalHeaders["content-type"];
+  }
+
+  const url = makeUrl({ ...uriEndPoint, pathParams, query }, apiHostUrl);
+  const response = await fetch(url, {
+    method: uriEndPoint.method,
+    headers: finalHeaders,
+    body,
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error: any = { response: { status: response.status, data } };
+    throw error;
+  }
+  return { data };
+};
+
 const callAxios = async (
   { uriEndPoint, pathParams, query, body, apiHostUrl, multipart }: any,
-  options?: CallApiOptions
+  options?: CallApiOptions,
 ) => {
   const defHeaders = await getDefaultHeaders(multipart);
   let headers = {};
@@ -99,6 +134,14 @@ const callAxios = async (
     delete finalHeaders["Content-Type"];
     delete finalHeaders["content-type"];
   }
+
+  if (Platform.OS === "android" && body instanceof FormData) {
+    return callFormDataWithFetch(
+      { uriEndPoint, pathParams, query, body, apiHostUrl, multipart },
+      options,
+    );
+  }
+
   return Axios({
     method: uriEndPoint.method,
     url: makeUrl({ ...uriEndPoint, pathParams, query }, apiHostUrl),
@@ -145,7 +188,7 @@ export const callApi = (
     apiHostUrl,
     multipart,
   }: CallApiType,
-  options?: CallApiOptions
+  options?: CallApiOptions,
 ) =>
   new Promise((resolve, reject) => {
     callAxios(
@@ -157,7 +200,7 @@ export const callApi = (
         apiHostUrl,
         multipart,
       },
-      options
+      options,
     )
       .then((response) => {
         resolve(response.data);
