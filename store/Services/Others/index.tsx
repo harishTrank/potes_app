@@ -102,6 +102,7 @@ export const contactUsApi = ({ body }: any) =>
   callApi({
     uriEndPoint: allApi.contactUsApi.v1,
     body,
+    multipart: true,
   });
 export const staticDataApi = ({ query }: any) =>
   callApi({

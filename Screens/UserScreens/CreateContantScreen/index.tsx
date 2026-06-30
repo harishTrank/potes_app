@@ -12,6 +12,8 @@ import {
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Modal,
+  InteractionManager,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -28,6 +30,7 @@ import FullScreenLoader from "../../Components/FullScreenLoader";
 import FastImage from "react-native-fast-image";
 import dayjs from "dayjs";
 import MonthDayPicker from "./Component/MonthDayPicker";
+import { Asset } from "expo-asset";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -67,7 +70,11 @@ const CollapsibleSection: any = ({ title, children, initiallyOpen = false }: any
 
 const CreateContactScreen: any = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
+  const isEdit = route?.params?.type === "edit";
+  const contactId = route?.params?.contactData?.id;
   const [selectedAvatarFileUri, setSelectedAvatarFileUri] = useState<string | null>(null);
+  const [photoSheetVisible, setPhotoSheetVisible] = useState(false);
+  const [viewPhotoVisible, setViewPhotoVisible] = useState(false);
   const [monthDayVisible, setMonthDayVisible] = useState(false);
   const [activeDateField, setActiveDateField] = useState<{ path: string; index?: number } | null>(null);
   const [loading, setLoading]: any = useState(false);
@@ -139,14 +146,16 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
       .map((cf: any) => ({ title: cf.title.trim(), values: cf.values.map((v: any) => v.trim()).filter((v: any) => v !== "") }))
       .filter((cf: any) => cf.title !== "" && cf.values.length > 0);
     formData.append("custom_fields", JSON.stringify(filteredCustomFields));
-    if (selectedAvatarFileUri && !selectedAvatarFileUri.includes("http")) {
+    // In edit mode the photo is uploaded immediately when picked/removed (see uploadContactPhoto/handleRemovePhoto),
+    // so only bundle it here for the initial create flow where the contact has no id yet.
+    if (!isEdit && selectedAvatarFileUri && !selectedAvatarFileUri.includes("http")) {
       formData.append("photo", getfileobj(selectedAvatarFileUri));
     }
 
     const onSuccess = () => {
       resetForm({ values: initialContactValues });
       setSelectedAvatarFileUri(null);
-      Toast.show({ type: "success", text1: route.params?.type === "edit" ? "Contact updated." : "Contact created." });
+      Toast.show({ type: "success", text1: isEdit ? "Contact updated." : "Contact created." });
       setSubmitting(false);
       setLoading(false);
       navigation.goBack();
@@ -157,20 +166,83 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
       setLoading(false);
     };
 
-    if (route.params?.type === "edit") {
-      editContactApi({ body: formData, query: { id: route.params?.contactData?.id } }).then(onSuccess).catch(onError);
+    if (isEdit) {
+      editContactApi({ body: formData, query: { id: contactId } }).then(onSuccess).catch(onError);
     } else {
       createContactApi({ body: formData }).then(onSuccess).catch(onError);
     }
   };
 
-  const handleChangeProfileImage = () => {
-    Alert.alert("Pick Image", "Choose from camera or gallery", [
-      { text: "Gallery", onPress: () => getImage(setSelectedAvatarFileUri), style: "default" },
-      { text: "Camera", onPress: async () => await takePicture(setSelectedAvatarFileUri), style: "default" },
+  const handlePickImage = () => setPhotoSheetVisible(true);
+
+  // Mirrors UserProfileScreen: in edit mode, photo changes upload immediately instead of waiting for Save.
+  const uploadContactPhoto = (uri: string) => {
+    setSelectedAvatarFileUri(uri);
+    if (!isEdit || !contactId) return;
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("photo", getfileobj(uri));
+    editContactApi({ body: formData, query: { id: contactId } })
+      ?.then(() => {
+        setLoading(false);
+        InteractionManager.runAfterInteractions(() => {
+          Toast.show({ type: "success", text1: "Contact photo updated successfully." });
+        });
+      })
+      ?.catch(() => {
+        setLoading(false);
+        InteractionManager.runAfterInteractions(() => {
+          Toast.show({ type: "error", text1: "Could not update photo. Please try again." });
+        });
+      });
+  };
+
+  const handleRemovePhoto = () => {
+    Alert.alert("Remove Photo", "Are you sure you want to remove this contact's photo?", [
       { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: async () => {
+          if (!isEdit || !contactId) {
+            setSelectedAvatarFileUri(null);
+            return;
+          }
+          setLoading(true);
+          try {
+            const asset = Asset.fromModule(require("../../../assets/Images/user.jpg"));
+            await asset.downloadAsync();
+            const uri = asset.localUri;
+            if (!uri) throw new Error("Asset unavailable");
+            const formData = new FormData();
+            formData.append("photo", getfileobj(uri));
+            await editContactApi({ body: formData, query: { id: contactId } });
+            setSelectedAvatarFileUri(null);
+            setLoading(false);
+            InteractionManager.runAfterInteractions(() => {
+              Toast.show({ type: "success", text1: "Contact photo removed successfully." });
+            });
+          } catch {
+            setLoading(false);
+            InteractionManager.runAfterInteractions(() => {
+              Toast.show({ type: "error", text1: "Could not remove photo. Please try again." });
+            });
+          }
+        },
+      },
     ]);
   };
+
+  const photoSheetOptions: any[] = [
+    ...(selectedAvatarFileUri
+      ? [{ text: "View Photo", icon: "eye", onPress: () => setViewPhotoVisible(true) }]
+      : []),
+    { text: "Gallery", icon: "image", onPress: () => getImage(uploadContactPhoto) },
+    { text: "Camera", icon: "camera", onPress: async () => await takePicture(uploadContactPhoto) },
+    ...(selectedAvatarFileUri
+      ? [{ text: "Remove Photo", icon: "trash-2", onPress: handleRemovePhoto, destructive: true }]
+      : []),
+  ];
 
   const openDatePicker = useCallback((path: string, _currentValue: Date | undefined, index?: number) => {
     setActiveDateField({ path, index });
@@ -219,8 +291,6 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
     );
   };
 
-  const isEdit = route?.params?.type === "edit";
-
   return (
     <DefaultBackground>
       <StatusBar style="dark" />
@@ -240,7 +310,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
               <View style={{ paddingHorizontal: 16 }}>
 
                 {/* Avatar */}
-                <TouchableOpacity style={styles.avatarSection} onPress={handleChangeProfileImage}>
+                <TouchableOpacity style={styles.avatarSection} onPress={handlePickImage}>
                   <View style={styles.avatarContainer}>
                     {selectedAvatarFileUri ? (
                       <FastImage source={{ uri: selectedAvatarFileUri, priority: FastImage.priority.normal }} style={styles.avatarImage} />
@@ -487,6 +557,62 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
           </Formik>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Contact Photo Options Sheet */}
+      <Modal animationType="fade" transparent visible={photoSheetVisible} onRequestClose={() => setPhotoSheetVisible(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setPhotoSheetVisible(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.photoSheetCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Contact Photo</Text>
+            <Text style={styles.modalText}>Choose an option</Text>
+            {photoSheetOptions.map((option) => (
+              <TouchableOpacity
+                key={option.text}
+                style={styles.photoSheetOption}
+                onPress={() => {
+                  setPhotoSheetVisible(false);
+                  option.onPress();
+                }}
+              >
+                <Feather
+                  name={option.icon}
+                  size={18}
+                  color={option.destructive ? theme.colors.red : theme.colors.primary}
+                />
+                <Text style={[styles.photoSheetOptionText, option.destructive && styles.photoSheetOptionTextDestructive]}>
+                  {option.text}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.photoSheetCancelBtn} onPress={() => setPhotoSheetVisible(false)}>
+              <Text style={styles.modalCancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* View Photo Modal */}
+      <Modal animationType="fade" transparent visible={viewPhotoVisible} onRequestClose={() => setViewPhotoVisible(false)}>
+        <TouchableOpacity
+          style={styles.viewPhotoOverlay}
+          activeOpacity={1}
+          onPress={() => setViewPhotoVisible(false)}
+        >
+          {selectedAvatarFileUri ? (
+            <FastImage
+              source={{ uri: selectedAvatarFileUri, priority: FastImage.priority.high }}
+              style={styles.viewPhotoImage}
+              resizeMode={FastImage.resizeMode.contain}
+            />
+          ) : null}
+          <TouchableOpacity style={styles.viewPhotoClose} onPress={() => setViewPhotoVisible(false)}>
+            <Feather name="x" size={22} color={theme.colors.white} />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </DefaultBackground>
   );
 };
@@ -616,6 +742,53 @@ const styles = StyleSheet.create({
   },
   saveBtnText: { fontSize: 16, fontFamily: "Poppins-Bold", color: theme.colors.white, letterSpacing: 1 },
   btnDisabled: { opacity: 0.6 },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
+  modalTitle: { fontSize: 18, fontFamily: "Poppins-Bold", color: theme.colors.text, marginBottom: 8 },
+  modalText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginBottom: 20 },
+  modalCancelBtnText: { fontSize: 14, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
+  photoSheetCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 24,
+    width: "90%",
+    ...theme.elevationHeavy,
+  },
+  photoSheetOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.lightCard,
+  },
+  photoSheetOptionText: { fontSize: 15, fontFamily: "Poppins-Medium", color: theme.colors.text },
+  photoSheetOptionTextDestructive: { color: theme.colors.red },
+  photoSheetCancelBtn: {
+    marginTop: 12,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    backgroundColor: theme.colors.lightCard,
+  },
+  viewPhotoOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  viewPhotoImage: { width: "100%", height: "80%" },
+  viewPhotoClose: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
 
 export default CreateContactScreen;
