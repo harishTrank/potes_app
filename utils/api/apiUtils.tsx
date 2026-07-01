@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Axios from "axios";
 import queryString from "querystring";
 import { Platform } from "react-native";
+import Toast from "react-native-toast-message";
 
 export const hostname = () => {
   // let hostUrl = "http://192.168.0.49:8001/api";
@@ -208,6 +209,10 @@ export const callApi = (
       })
       .catch((err) => {
         if (!err.response) {
+          Toast.show({
+            type: "error",
+            text1: "Unable to connect. Please check your internet connection and try again.",
+          });
           reject(err);
           return;
         }

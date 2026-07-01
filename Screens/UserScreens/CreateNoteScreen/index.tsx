@@ -339,10 +339,10 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     <View style={styles.noteLabelActions}>
                       <TouchableOpacity
                         style={styles.newLineBtn}
-                        onPress={() => setFieldValue("noteText", values.noteText + "\n")}
+                        onPress={() => Keyboard.dismiss()}
                       >
-                        <Feather name="corner-down-left" size={13} color={theme.colors.primary} />
-                        <Text style={styles.newLineBtnText}>New Line</Text>
+                        <Feather name="check" size={13} color={theme.colors.primary} />
+                        <Text style={styles.newLineBtnText}>Done</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.voiceBtn, isListening && styles.voiceBtnActive]}
@@ -363,9 +363,8 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
                     onBlur={handleBlur("noteText")}
                     multiline
                     numberOfLines={6}
-                    returnKeyType="done"
-                    submitBehavior="blurAndSubmit"
-                    onSubmitEditing={() => Keyboard.dismiss()}
+                    returnKeyType="default"
+                    submitBehavior="newline"
                     textAlignVertical="top"
                   />
                   {(touched.noteText || submitCount > 0) && errors.noteText && (
