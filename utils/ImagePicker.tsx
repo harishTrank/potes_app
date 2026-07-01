@@ -2,6 +2,8 @@ import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
 // Use the official Expo library for image manipulation
 import * as ImageManipulator from "expo-image-manipulator";
+import * as FileSystem from "expo-file-system";
+import { DEFAULT_AVATAR_BASE64 } from "./defaultAvatarBase64";
 
 const MAX_SIZE_BYTES = 1024 * 1024; // 1 MB
 
@@ -144,6 +146,20 @@ export const takePicture = async (setImage: (uri: string) => void) => {
     console.error("Error in takePicture:", err);
     Alert.alert("Error", "Could not take a picture. Please try again.");
   }
+};
+
+/**
+ * Writes the embedded default avatar to a real cache file and returns its uri.
+ * Used instead of expo-asset's Asset.downloadAsync() for the bundled placeholder
+ * image, since extracting a require()'d resource to a usable file:// uri has been
+ * unreliable in release/standalone builds (works in debug, times out in production).
+ */
+export const getDefaultAvatarFileUri = async (): Promise<string> => {
+  const fileUri = `${FileSystem.cacheDirectory}default-avatar.jpg`;
+  await FileSystem.writeAsStringAsync(fileUri, DEFAULT_AVATAR_BASE64, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+  return fileUri;
 };
 
 export const getfileobj: any = (fileUri: string) => {

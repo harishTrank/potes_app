@@ -25,8 +25,7 @@ import {
 } from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
 import Toast from "react-native-toast-message";
-import { getImage, getfileobj, takePicture } from "../../../utils/ImagePicker";
-import { Asset } from "expo-asset";
+import { getDefaultAvatarFileUri, getImage, getfileobj, takePicture } from "../../../utils/ImagePicker";
 import { useAtom } from "jotai";
 import { apiCallBackGlobal } from "../../../jotaiStore";
 import FastImage from "react-native-fast-image";
@@ -76,27 +75,16 @@ const UserProfileScreen: React.FC<any> = ({ navigation }) => {
         onPress: async () => {
           setLoading(true);
           try {
-            const asset = Asset.fromModule(require("../../../assets/Images/user.jpg"));
-            await asset.downloadAsync();
-            const uri = asset.localUri;
-            if (!uri) throw new Error("Asset unavailable");
+            const uri = await getDefaultAvatarFileUri();
             const formData = new FormData();
             formData.append("profile_pic", getfileobj(uri));
-            changeProfileName({ body: formData })
-              ?.then(() => {
-                setUserData((prev: any) => ({ ...prev, avatarUri: null }));
-                setLoading(false);
-                InteractionManager.runAfterInteractions(() => {
-                  Toast.show({ type: "success", text1: "Profile photo removed successfully." });
-                });
-                setGlobalCall((v: any) => v + 1);
-              })
-              ?.catch(() => {
-                setLoading(false);
-                InteractionManager.runAfterInteractions(() => {
-                  Toast.show({ type: "error", text1: "Could not remove photo. Please try again." });
-                });
-              });
+            await changeProfileName({ body: formData });
+            setUserData((prev: any) => ({ ...prev, avatarUri: null }));
+            setLoading(false);
+            InteractionManager.runAfterInteractions(() => {
+              Toast.show({ type: "success", text1: "Profile photo removed successfully." });
+            });
+            setGlobalCall((v: any) => v + 1);
           } catch {
             setLoading(false);
             InteractionManager.runAfterInteractions(() => {
