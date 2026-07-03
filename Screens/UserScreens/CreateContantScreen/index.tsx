@@ -23,6 +23,7 @@ import theme from "../../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Formik, FieldArray, FieldArrayRenderProps } from "formik";
+import * as Yup from "yup";
 import {
   getDefaultAvatarFileUri,
   getImage,
@@ -45,6 +46,12 @@ if (
 ) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
+
+const createContactValidationSchema = Yup.object().shape({
+  nameOrDescription: Yup.string()
+    .trim()
+    .required("Name or description is required"),
+});
 
 const SECTION_ICONS: any = {
   "Family Details": "people-outline",
@@ -488,6 +495,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
           <Formik
             initialValues={initialContactValues}
             onSubmit={handleFormSubmit}
+            validationSchema={createContactValidationSchema}
             enableReinitialize
           >
             {({
@@ -497,6 +505,9 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
               values,
               setFieldValue,
               isSubmitting,
+              errors,
+              touched,
+              submitCount,
             }) => (
               <View style={{ paddingHorizontal: 16 }}>
                 {/* Avatar */}
@@ -535,7 +546,12 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                 <View style={styles.card}>
                   <Text style={styles.cardLabel}>NAME OR DESCRIPTION *</Text>
                   <TextInput
-                    style={styles.nameInput}
+                    style={[
+                      styles.nameInput,
+                      (touched.nameOrDescription || submitCount > 0) &&
+                        errors.nameOrDescription &&
+                        styles.inputError,
+                    ]}
                     placeholder="e.g. Julianne Smith"
                     placeholderTextColor={theme.colors.grey}
                     value={values.nameOrDescription}
@@ -543,6 +559,12 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                     onBlur={handleBlur("nameOrDescription")}
                     returnKeyType="done"
                   />
+                  {(touched.nameOrDescription || submitCount > 0) &&
+                    errors.nameOrDescription && (
+                      <Text style={styles.errorText}>
+                        {errors.nameOrDescription as string}
+                      </Text>
+                    )}
                 </View>
 
                 {/* Birthday & Anniversary */}
@@ -1212,6 +1234,8 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
     paddingVertical: 6,
   },
+  inputError: { borderWidth: 1.5, borderColor: theme.colors.red },
+  errorText: { fontSize: 12, color: theme.colors.red, marginTop: 4 },
   dateRow: { flexDirection: "row", marginBottom: 0 },
   dateInputInline: {
     flexDirection: "row",

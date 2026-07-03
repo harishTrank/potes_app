@@ -48,15 +48,23 @@ const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
 
   const handleChangePhoto = () => {
     Alert.alert("Pick Image", "Choose from camera or gallery", [
-      { text: "Gallery", onPress: () => getImage(setSelectedPhotoUri), style: "default" },
-      { text: "Camera", onPress: async () => await takePicture(setSelectedPhotoUri), style: "default" },
+      {
+        text: "Gallery",
+        onPress: () => getImage(setSelectedPhotoUri),
+        style: "default",
+      },
+      {
+        text: "Camera",
+        onPress: async () => await takePicture(setSelectedPhotoUri),
+        style: "default",
+      },
       { text: "Cancel", style: "cancel" },
     ]);
   };
 
   const handleFormSubmit = (
     values: ContactFormValues,
-    actions: FormikHelpers<ContactFormValues>
+    actions: FormikHelpers<ContactFormValues>,
   ) => {
     setLoading(true);
     const formData = new FormData();
@@ -72,17 +80,18 @@ const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
       ?.then((res: any) => {
         setLoading(false);
         Toast.show({ type: "success", text1: res?.msg });
-        const subject = encodeURIComponent("Potes, I have a query");
-        const body = encodeURIComponent(`I'm ${values.fullName},\n\n${values.message}`);
-        const mailtoUrl = `mailto:admin@mypotes.com?subject=${subject}&body=${body}`;
-        Linking.canOpenURL(mailtoUrl).then((supported) => {
-          if (supported) {
-            Linking.openURL(mailtoUrl);
-          } else {
-            Toast.show({ type: "error", text1: "No email app found." });
-          }
-        });
-        actions.resetForm();
+        // const subject = encodeURIComponent("Potes, I have a query");
+        // const body = encodeURIComponent(`I'm ${values.fullName},\n\n${values.message}`);
+        // const mailtoUrl = `mailto:admin@mypotes.com?subject=${subject}&body=${body}`;
+        // Linking.canOpenURL(mailtoUrl).then((supported) => {
+        //   if (supported) {
+        //     Linking.openURL(mailtoUrl);
+        //   } else {
+        //     Toast.show({ type: "error", text1: "No email app found." });
+        //   }
+        // });
+        // actions.resetForm();
+        navigation.goBack();
         setSelectedPhotoUri(null);
       })
       ?.catch(() => {
@@ -102,15 +111,25 @@ const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
       >
         <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
           <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
-              <Feather name="arrow-left" size={22} color={theme.colors.primary} />
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.iconButton}
+            >
+              <Feather
+                name="arrow-left"
+                size={22}
+                color={theme.colors.primary}
+              />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Contact Us</Text>
             <View style={styles.iconButton} />
           </View>
 
           <ScrollView
-            contentContainerStyle={[styles.contentContainer, { paddingBottom: insets.bottom + 20 }]}
+            contentContainerStyle={[
+              styles.contentContainer,
+              { paddingBottom: insets.bottom + 20 },
+            ]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
@@ -118,19 +137,46 @@ const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
               <Formik
                 initialValues={{ fullName: "", email: "", message: "" }}
                 validationSchema={contactValidationSchema}
-                onSubmit={(values, actions) => handleFormSubmit(values, actions)}
+                onSubmit={(values, actions) =>
+                  handleFormSubmit(values, actions)
+                }
               >
-                {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  values,
+                  errors,
+                  touched,
+                  isSubmitting,
+                }) => (
                   <>
-                    <TouchableOpacity style={styles.avatarSection} onPress={handleChangePhoto}>
+                    <TouchableOpacity
+                      style={styles.avatarSection}
+                      onPress={handleChangePhoto}
+                    >
                       <View style={styles.avatarContainer}>
                         {selectedPhotoUri ? (
-                          <FastImage source={{ uri: selectedPhotoUri, priority: FastImage.priority.normal }} style={styles.avatarImage} />
+                          <FastImage
+                            source={{
+                              uri: selectedPhotoUri,
+                              priority: FastImage.priority.normal,
+                            }}
+                            style={styles.avatarImage}
+                          />
                         ) : (
-                          <Feather name="image" size={32} color={theme.colors.greyText} />
+                          <Feather
+                            name="image"
+                            size={32}
+                            color={theme.colors.greyText}
+                          />
                         )}
                         <View style={styles.cameraBtn}>
-                          <Feather name="camera" size={14} color={theme.colors.white} />
+                          <Feather
+                            name="camera"
+                            size={14}
+                            color={theme.colors.white}
+                          />
                         </View>
                       </View>
                       <Text style={styles.addPhotoText}>ATTACH A PHOTO</Text>
@@ -139,7 +185,12 @@ const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>Full Name</Text>
                       <TextInput
-                        style={[styles.input, touched.fullName && errors.fullName && styles.inputError]}
+                        style={[
+                          styles.input,
+                          touched.fullName &&
+                            errors.fullName &&
+                            styles.inputError,
+                        ]}
                         placeholder="Enter your full name"
                         placeholderTextColor={theme.colors.searchPlaceholder}
                         value={values.fullName}
@@ -155,7 +206,10 @@ const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>Email</Text>
                       <TextInput
-                        style={[styles.input, touched.email && errors.email && styles.inputError]}
+                        style={[
+                          styles.input,
+                          touched.email && errors.email && styles.inputError,
+                        ]}
                         placeholder="Enter your email"
                         placeholderTextColor={theme.colors.searchPlaceholder}
                         value={values.email}
@@ -172,7 +226,13 @@ const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>Message</Text>
                       <TextInput
-                        style={[styles.input, styles.textArea, touched.message && errors.message && styles.inputError]}
+                        style={[
+                          styles.input,
+                          styles.textArea,
+                          touched.message &&
+                            errors.message &&
+                            styles.inputError,
+                        ]}
                         placeholder="Enter your message"
                         placeholderTextColor={theme.colors.searchPlaceholder}
                         value={values.message}
@@ -189,7 +249,10 @@ const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
                     </View>
 
                     <TouchableOpacity
-                      style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
+                      style={[
+                        styles.submitButton,
+                        isSubmitting && styles.buttonDisabled,
+                      ]}
                       onPress={() => handleSubmit()}
                       disabled={isSubmitting}
                     >
