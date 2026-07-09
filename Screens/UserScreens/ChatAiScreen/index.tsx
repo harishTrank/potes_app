@@ -9,6 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import theme from "../../../utils/theme";
 import DefaultBackground from "../../Components/DefaultBackground";
@@ -48,12 +50,12 @@ const renderMarkdown = (text: string, textStyle: any): React.ReactNode[] => {
 
     if (!trimmed) return <View key={index} style={{ height: 5 }} />;
 
-    const bulletMatch = trimmed.match(/^[*-]\s*(.*)$/);
+    const bulletMatch = trimmed.match(/^[*•-]\s*(.*)$/);
     if (bulletMatch) {
       const indentPx = (line.length - line.trimStart().length) > 0 ? 14 : 0;
       return (
         <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 3, paddingLeft: indentPx }}>
-          <Text style={[textStyle, { marginRight: 5 }]}>{"•"}</Text>
+          <View style={styles.bulletDot} />
           {renderInlineSegments(bulletMatch[1], textStyle)}
         </View>
       );
@@ -85,7 +87,19 @@ const ChatWithAI = ({ navigation, route }: any) => {
   const flatListRef = useRef<FlatList>(null);
   const [userProfile]: any = useAtom(userProfileGlobal);
   const [hasStartedChat, setHasStartedChat] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const sessionKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -120,7 +134,10 @@ const ChatWithAI = ({ navigation, route }: any) => {
     postAiChat({
       body: {
         message: userMessage,
-        contact_id: contactId || null,
+        // Only scope the first turn to the launching contact so the AI can
+        // still answer general questions about other contacts once the
+        // conversation is underway.
+        contact_id: conversationId ? null : contactId || null,
         query: userMessage,
         conversation_id: conversationId || null,
       },
@@ -196,6 +213,11 @@ const ChatWithAI = ({ navigation, route }: any) => {
               <Text style={styles.aiHeaderTitle}>AI Assistant</Text>
             </View>
             <View style={{ flexDirection: "row" }}>
+              {keyboardVisible && (
+                <TouchableOpacity onPress={() => Keyboard.dismiss()} style={styles.menuBtn}>
+                  <Feather name="chevron-down" size={20} color={theme.colors.greyText} />
+                </TouchableOpacity>
+              )}
               {hasStartedChat && (
                 <TouchableOpacity onPress={() => { setAiChats([]); setHasStartedChat(false); setConversationId(null); }} style={styles.menuBtn}>
                   <Feather name="refresh-ccw" size={18} color={theme.colors.greyText} />
@@ -209,6 +231,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
 
           {!hasStartedChat && aiChats.length === 0 ? (
             // Greeting Screen
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.greetingSection}>
               <Text style={styles.greetingTitle}>Hello, {firstName}.</Text>
               <Text style={styles.greetingSubtitle}>How can I help you manage your connections today?</Text>
@@ -226,6 +249,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
                 ))}
               </View>
             </View>
+            </TouchableWithoutFeedback>
           ) : (
             // Chat View
             <FlatList
@@ -241,7 +265,11 @@ const ChatWithAI = ({ navigation, route }: any) => {
         </View>
 
         {/* Input Bar */}
-        <View style={[styles.inputBar, { paddingBottom: insets.bottom || 10 }]}>
+        {/* This screen lives inside the bottom tab navigator, whose tab bar
+            already reserves the safe-area inset below the content, so we
+            don't add insets.bottom again here (that doubled up as dead
+            white space above the tab bar). */}
+        <View style={styles.inputBar}>
           <TextInput
             style={styles.textInput}
             placeholder='Ask me anything... (e.g., "Draft an email to John")'
@@ -361,11 +389,20 @@ const styles = StyleSheet.create({
   },
   aiBubbleText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.text, lineHeight: 20 },
   userBubbleText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.white, lineHeight: 20 },
+  bulletDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: theme.colors.greyText,
+    marginRight: 8,
+    marginTop: 7,
+  },
   inputBar: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 10,
+    paddingBottom: 10,
     backgroundColor: theme.colors.white,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,

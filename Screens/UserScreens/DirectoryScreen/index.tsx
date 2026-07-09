@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   SectionList,
+  FlatList,
+  Modal,
   Dimensions,
   Alert,
   TextInput,
@@ -19,7 +21,6 @@ import { allContactApiHook } from "../../../hooks/Others/query";
 import FastImage from "react-native-fast-image";
 import dayjs from "dayjs";
 import * as Contacts from "expo-contacts";
-import { selectContact } from "react-native-select-contact";
 import { importContactsAPI } from "../../../store/Services/Others";
 import { useAtom } from "jotai";
 import { apiCallBackGlobal, userProfileGlobal } from "../../../jotaiStore";
@@ -38,6 +39,13 @@ interface ApiContact {
 interface SectionData {
   title: string;
   data: ApiContact[];
+}
+interface DeviceContact {
+  id: string;
+  full_name: string;
+  phone: string;
+  email: string;
+  birthday: string | null;
 }
 
 const processContactsForSectionList = (contacts: ApiContact[]): SectionData[] => {
@@ -100,6 +108,10 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
   const { data: apiResponse, isLoading: apiIsLoading, refetch: apiRefetch }: any = allContactApiHook();
   const [userProfile, setUserProfile]: any = useAtom(userProfileGlobal);
   const [globalCall]: any = useAtom(apiCallBackGlobal);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [deviceContacts, setDeviceContacts] = useState<DeviceContact[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     viewProfileApi().then((res: any) => setUserProfile(res)).catch(() => {});
@@ -168,18 +180,26 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
                 fields: [Contacts.Fields.PhoneNumbers, Contacts.Fields.Emails, Contacts.Fields.Birthday],
               });
               if (data.length > 0) {
-                const formattedContacts = data.map((c) => {
-                  let birthday = null;
-                  if (c.birthday) {
-                    const { day, month, year } = c.birthday;
-                    if (day && month && year) birthday = dayjs(`${year}-${month}-${day}`).format("YYYY-MM-DD");
-                    else if (day && month) birthday = `1999-${month}-${day}`;
-                  }
-                  return { full_name: c.name || "", phone: c.phoneNumbers?.[0]?.number || "", email: c.emails?.[0]?.email || "", birthday };
-                });
-                importContactsAPI({ body: { contacts: formattedContacts } })
-                  .then(() => { apiRefetch(); Alert.alert("Success", "Contacts imported!"); })
-                  .catch(() => Alert.alert("Error", "Failed to import contacts."));
+                const formattedContacts: DeviceContact[] = data
+                  .filter((c) => c.name)
+                  .map((c) => {
+                    let birthday = null;
+                    if (c.birthday) {
+                      const { day, month, year } = c.birthday;
+                      if (day && month && year) birthday = dayjs(`${year}-${month}-${day}`).format("YYYY-MM-DD");
+                      else if (day && month) birthday = `1999-${month}-${day}`;
+                    }
+                    return {
+                      id: c.id || c.name || Math.random().toString(),
+                      full_name: c.name || "",
+                      phone: c.phoneNumbers?.[0]?.number || "",
+                      email: c.emails?.[0]?.email || "",
+                      birthday,
+                    };
+                  });
+                setDeviceContacts(formattedContacts);
+                setSelectedIds(new Set(formattedContacts.map((c) => c.id)));
+                setPickerVisible(true);
               } else {
                 Alert.alert("No contacts found");
               }
@@ -190,6 +210,40 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
         },
       ]
     );
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) =>
+      prev.size === deviceContacts.length ? new Set() : new Set(deviceContacts.map((c) => c.id))
+    );
+  };
+
+  const confirmImport = () => {
+    const contactsToImport = deviceContacts
+      .filter((c) => selectedIds.has(c.id))
+      .map(({ id, ...rest }) => rest);
+    if (contactsToImport.length === 0) {
+      Alert.alert("No contacts selected", "Select at least one contact to import.");
+      return;
+    }
+    setImporting(true);
+    importContactsAPI({ body: { contacts: contactsToImport } })
+      .then(() => {
+        setPickerVisible(false);
+        apiRefetch();
+        Alert.alert("Success", "Contacts imported!");
+      })
+      .catch(() => Alert.alert("Error", "Failed to import contacts."))
+      .finally(() => setImporting(false));
   };
 
   const totalContacts = apiResponse?.results?.length || 0;
@@ -319,6 +373,70 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
           <Feather name="user-plus" size={20} color={theme.colors.white} />
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={pickerVisible}
+        animationType="slide"
+        onRequestClose={() => setPickerVisible(false)}
+      >
+        <DefaultBackground>
+          <View style={[styles.pickerContainer, { paddingTop: insets.top + 6, paddingBottom: insets.bottom + 12 }]}>
+            <View style={styles.pickerHeaderRow}>
+              <TouchableOpacity onPress={() => setPickerVisible(false)} style={styles.iconButton}>
+                <Feather name="x" size={22} color={theme.colors.primary} />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Select Contacts</Text>
+              <TouchableOpacity onPress={toggleSelectAll} style={styles.iconButton}>
+                <Text style={styles.selectAllText}>
+                  {selectedIds.size === deviceContacts.length ? "None" : "All"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.pickerSubtitle}>
+              {selectedIds.size} of {deviceContacts.length} selected
+            </Text>
+            <FlatList
+              data={deviceContacts}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              renderItem={({ item }) => {
+                const isSelected = selectedIds.has(item.id);
+                return (
+                  <TouchableOpacity
+                    style={styles.pickerRow}
+                    onPress={() => toggleSelected(item.id)}
+                  >
+                    <Feather
+                      name={isSelected ? "check-circle" : "circle"}
+                      size={20}
+                      color={isSelected ? theme.colors.primary : theme.colors.grey}
+                    />
+                    <View style={styles.pickerRowInfo}>
+                      <Text style={styles.pickerRowName} numberOfLines={1}>
+                        {item.full_name}
+                      </Text>
+                      {(item.phone || item.email) && (
+                        <Text style={styles.pickerRowDetail} numberOfLines={1}>
+                          {item.phone || item.email}
+                        </Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+            <TouchableOpacity
+              style={[styles.importButton, importing && styles.buttonDisabled]}
+              onPress={confirmImport}
+              disabled={importing}
+            >
+              <Text style={styles.importButtonText}>
+                {importing ? "Importing..." : `Import Selected (${selectedIds.size})`}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </DefaultBackground>
+      </Modal>
     </DefaultBackground>
   );
 };
@@ -418,6 +536,38 @@ const styles = StyleSheet.create({
     alignItems: "center",
     ...theme.elevationHeavy,
   },
+  pickerContainer: { flex: 1, paddingHorizontal: 16 },
+  pickerHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingBottom: 6,
+  },
+  iconButton: { width: 40, height: 40, justifyContent: "center", alignItems: "center" },
+  headerTitle: { fontSize: 18, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
+  selectAllText: { fontSize: 14, fontFamily: "Poppins-SemiBold", color: theme.colors.primary },
+  pickerSubtitle: { fontSize: 12, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginBottom: 8 },
+  pickerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  pickerRowInfo: { flex: 1 },
+  pickerRowName: { fontSize: 15, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
+  pickerRowDetail: { fontSize: 12, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginTop: 2 },
+  importButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 10,
+    paddingVertical: 15,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  importButtonText: { fontSize: 16, fontFamily: "Poppins-SemiBold", color: theme.colors.white },
+  buttonDisabled: { opacity: 0.6 },
 });
 
 export default DirectoryScreen;

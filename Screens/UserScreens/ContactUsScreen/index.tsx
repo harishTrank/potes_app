@@ -58,8 +58,14 @@ const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
         Toast.show({ type: "success", text1: res?.msg });
         navigation.goBack();
       })
-      ?.catch(() => {
-        Toast.show({ type: "error", text1: "Something went wrong." });
+      ?.catch((err: any) => {
+        const status = err?.status;
+        const detail = err?.data?.detail || err?.data?.msg;
+        const message =
+          status === 401
+            ? "You need to be logged in to reach our support team this way. Please log in and try again, or email us directly."
+            : detail || "Something went wrong. Please try again.";
+        Toast.show({ type: "error", text1: message });
         setLoading(false);
       });
   };

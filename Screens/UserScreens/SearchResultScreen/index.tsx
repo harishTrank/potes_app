@@ -294,7 +294,9 @@ const SearchResultScreen = ({ route }: any) => {
             <Feather name="arrow-left" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
           <View style={styles.searchBar}>
-            <Feather name="search" size={16} color={theme.colors.grey} style={{ marginRight: 8 }} />
+            <TouchableOpacity onPress={handleSearchSubmit} style={{ marginRight: 8 }}>
+              <Feather name="search" size={16} color={theme.colors.grey} />
+            </TouchableOpacity>
             <TextInput
               style={styles.searchInput}
               value={query}

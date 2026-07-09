@@ -89,7 +89,9 @@ const Header: any = ({ menu = true, directory = false, showSearch = false }: any
 
       {showSearch && (
         <View style={styles.searchRow}>
-          <Feather name="search" size={18} color={theme.colors.searchPlaceholder} style={styles.searchIcon} />
+          <TouchableOpacity onPress={onPressSearch} style={styles.searchIcon}>
+            <Feather name="search" size={18} color={theme.colors.searchPlaceholder} />
+          </TouchableOpacity>
           <TextInput
             style={styles.searchInput}
             placeholder="Search contacts, notes..."

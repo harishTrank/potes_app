@@ -187,7 +187,7 @@ const AllNotesScreen: any = ({ route }: any) => {
                   <Text style={styles.noteContent}>{note.note}</Text>
                   <Text style={styles.noteDate}>
                     Note created at <Feather name="clock" size={13} />{" "}
-                    {dayjs(note?.created_date).format("MM-DD-YYYY")}
+                    {dayjs(note?.created_date).format("MMM D, YYYY")}
                   </Text>
                 </View>
               ))

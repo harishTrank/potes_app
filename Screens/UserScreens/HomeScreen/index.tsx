@@ -160,7 +160,9 @@ const HomeScreen = ({ navigation }: any) => {
       >
         {/* Search */}
         <View style={styles.searchRow}>
-          <Feather name="search" size={16} color={theme.colors.searchPlaceholder} style={{ marginRight: 8 }} />
+          <TouchableOpacity onPress={onPressSearch} style={{ marginRight: 8 }}>
+            <Feather name="search" size={16} color={theme.colors.searchPlaceholder} />
+          </TouchableOpacity>
           <TextInput
             style={styles.searchInput}
             placeholder="Search contacts or notes..."
