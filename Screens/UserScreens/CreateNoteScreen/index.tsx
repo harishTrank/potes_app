@@ -238,7 +238,11 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
           Toast.show({ type: "error", text1: "AI could not process this note. Please try again." });
           return;
         }
-        setFieldValue("noteText", String(result));
+        if (action === "commitments") {
+          setFieldValue("noteText", `${noteText}\n\nCommitments:\n${String(result)}`);
+        } else {
+          setFieldValue("noteText", String(result));
+        }
       })
       .catch(() => Toast.show({ type: "error", text1: "AI assist failed. Please try again." }))
       .finally(() => setAiLoading(null));
@@ -277,9 +281,9 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
             {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting, setFieldValue, submitCount }: any) => (
               <View style={{ paddingHorizontal: 16 }}>
 
-                {/* ASSOCIATE CONTACT */}
+                {/* CONTACT */}
                 <View style={[styles.card, values.contactId && styles.cardHighlighted]}>
-                  <Text style={styles.cardLabel}>ASSOCIATE CONTACT</Text>
+                  <Text style={styles.cardLabel}>CONTACT</Text>
                   <TouchableOpacity
                     style={[styles.contactSelector, values.contactId && styles.contactSelectorFilled]}
                     onPress={() => setContactDropdownOpen(!isContactDropdownOpen)}

@@ -11,6 +11,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import Feather from "@expo/vector-icons/Feather";
@@ -82,6 +83,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   const handleForgotPassword = () => {
     navigation.navigate("ForgotPasswordScreen");
+  };
+
+  const handleForgotUsername = () => {
+    Alert.alert(
+      "Forgot Username?",
+      "We don't display usernames automatically for security reasons. Reach out to us via Contact Us and our support team will help you recover access.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Contact Us", onPress: () => navigation.navigate("ContactUsScreenLogin") },
+      ],
+    );
   };
 
   const handleRegister = () => {
@@ -217,13 +229,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                     )}
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.forgotPasswordButton}
-                    onPress={handleForgotPassword}
-                    disabled={isSubmitting}
-                  >
-                    <Text style={styles.linkText}>Forgot Password?</Text>
-                  </TouchableOpacity>
+                  <View style={styles.forgotLinksRow}>
+                    <TouchableOpacity onPress={handleForgotUsername} disabled={isSubmitting}>
+                      <Text style={styles.linkText}>Forgot Username?</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleForgotPassword} disabled={isSubmitting}>
+                      <Text style={styles.linkText}>Forgot Password?</Text>
+                    </TouchableOpacity>
+                  </View>
 
                   <View style={styles.registerContainer}>
                     <Text style={styles.registerText}>
@@ -347,9 +360,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.grey,
     opacity: 0.7,
   },
-  forgotPasswordButton: {
+  forgotLinksRow: {
     marginTop: height * 0.025,
-    alignItems: "flex-end",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   linkText: {
     fontSize: 14,

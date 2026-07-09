@@ -311,18 +311,13 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
           )}
         </View>
 
-        {/* Sticky Bottom Bar */}
-        <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 6 }]}>
-          <TouchableOpacity style={styles.syncBtn} onPress={importContacts}>
-            <View style={styles.syncIconWrap}>
-              <Feather name="user-plus" size={18} color={theme.colors.white} />
-            </View>
-            <Text style={styles.syncText}>SYNC LOCAL{"\n"}STORAGE</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.importBtn} onPress={importContacts}>
-            <Text style={styles.importBtnText}>Import{"\n"}contacts</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Sync local storage - small floating action button */}
+        <TouchableOpacity
+          style={[styles.syncFab, { bottom: insets.bottom + 16 }]}
+          onPress={importContacts}
+        >
+          <Feather name="user-plus" size={20} color={theme.colors.white} />
+        </TouchableOpacity>
       </View>
     </DefaultBackground>
   );
@@ -342,8 +337,8 @@ const styles = StyleSheet.create({
   },
   menuBtn: { width: 36, height: 36, justifyContent: "center", alignItems: "center" },
   headerCenter: { alignItems: "center" },
-  logoText: { fontSize: 18, fontFamily: "Poppins-Bold", color: theme.colors.primary, letterSpacing: 1 },
-  logoSub: { fontSize: 9, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginTop: -4 },
+  logoText: { fontSize: 18, fontFamily: "Poppins-Bold", color: theme.colors.primary, letterSpacing: 2.5 },
+  logoSub: { fontSize: 11, fontFamily: "PlayfairDisplay-Italic", color: theme.colors.greyText, marginTop: -2 },
   avatarBtn: {},
   headerAvatarCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.avatarBg, justifyContent: "center", alignItems: "center" },
   headerAvatarInitials: { fontSize: 13, fontFamily: "Poppins-Bold", color: theme.colors.white },
@@ -412,49 +407,16 @@ const styles = StyleSheet.create({
   alphaBtn: { height: alphabetItemHeight, justifyContent: "center" },
   alphaText: { fontSize: 9, fontFamily: "Poppins-SemiBold", color: theme.colors.primary },
   noResultsText: { flex: 1, textAlign: "center", color: theme.colors.greyText, fontSize: 14, marginTop: 40, paddingHorizontal: 30 },
-  bottomBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    backgroundColor: theme.colors.white,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    gap: 12,
-  },
-  syncBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  syncIconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+  syncFab: {
+    position: "absolute",
+    right: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: theme.colors.primary,
     justifyContent: "center",
     alignItems: "center",
-  },
-  syncText: {
-    fontSize: 11,
-    fontFamily: "Poppins-SemiBold",
-    color: theme.colors.greyText,
-    lineHeight: 16,
-  },
-  importBtn: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  importBtnText: {
-    fontSize: 13,
-    fontFamily: "Poppins-Bold",
-    color: theme.colors.white,
-    textAlign: "center",
-    lineHeight: 18,
+    ...theme.elevationHeavy,
   },
 });
 

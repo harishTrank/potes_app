@@ -9,8 +9,6 @@ import {
   ActivityIndicator,
   Platform,
   KeyboardAvoidingView,
-  Linking,
-  Alert,
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import DefaultBackground from "../../Components/DefaultBackground";
@@ -22,8 +20,6 @@ import * as Yup from "yup";
 import { contactUsApi } from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
 import Toast from "react-native-toast-message";
-import { getImage, getfileobj, takePicture } from "../../../utils/ImagePicker";
-import FastImage from "react-native-fast-image";
 
 interface ContactFormValues {
   fullName: string;
@@ -44,23 +40,6 @@ const contactValidationSchema = Yup.object().shape({
 const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
-  const [selectedPhotoUri, setSelectedPhotoUri] = useState<string | null>(null);
-
-  const handleChangePhoto = () => {
-    Alert.alert("Pick Image", "Choose from camera or gallery", [
-      {
-        text: "Gallery",
-        onPress: () => getImage(setSelectedPhotoUri),
-        style: "default",
-      },
-      {
-        text: "Camera",
-        onPress: async () => await takePicture(setSelectedPhotoUri),
-        style: "default",
-      },
-      { text: "Cancel", style: "cancel" },
-    ]);
-  };
 
   const handleFormSubmit = (
     values: ContactFormValues,
@@ -71,28 +50,13 @@ const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
     formData.append("full_name", values.fullName);
     formData.append("email", values.email);
     formData.append("message", values.message);
-    if (selectedPhotoUri) {
-      formData.append("attachment", getfileobj(selectedPhotoUri));
-    }
     contactUsApi({
       body: formData,
     })
       ?.then((res: any) => {
         setLoading(false);
         Toast.show({ type: "success", text1: res?.msg });
-        // const subject = encodeURIComponent("Potes, I have a query");
-        // const body = encodeURIComponent(`I'm ${values.fullName},\n\n${values.message}`);
-        // const mailtoUrl = `mailto:admin@mypotes.com?subject=${subject}&body=${body}`;
-        // Linking.canOpenURL(mailtoUrl).then((supported) => {
-        //   if (supported) {
-        //     Linking.openURL(mailtoUrl);
-        //   } else {
-        //     Toast.show({ type: "error", text1: "No email app found." });
-        //   }
-        // });
-        // actions.resetForm();
         navigation.goBack();
-        setSelectedPhotoUri(null);
       })
       ?.catch(() => {
         Toast.show({ type: "error", text1: "Something went wrong." });
@@ -151,37 +115,6 @@ const ContactUsScreen: React.FC<any> = ({ navigation }: any) => {
                   isSubmitting,
                 }) => (
                   <>
-                    <TouchableOpacity
-                      style={styles.avatarSection}
-                      onPress={handleChangePhoto}
-                    >
-                      <View style={styles.avatarContainer}>
-                        {selectedPhotoUri ? (
-                          <FastImage
-                            source={{
-                              uri: selectedPhotoUri,
-                              priority: FastImage.priority.normal,
-                            }}
-                            style={styles.avatarImage}
-                          />
-                        ) : (
-                          <Feather
-                            name="image"
-                            size={32}
-                            color={theme.colors.greyText}
-                          />
-                        )}
-                        <View style={styles.cameraBtn}>
-                          <Feather
-                            name="camera"
-                            size={14}
-                            color={theme.colors.white}
-                          />
-                        </View>
-                      </View>
-                      <Text style={styles.addPhotoText}>ATTACH A PHOTO</Text>
-                    </TouchableOpacity>
-
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>Full Name</Text>
                       <TextInput
@@ -303,38 +236,6 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: theme.colors.border,
-  },
-  avatarSection: { alignItems: "center", marginBottom: 20 },
-  avatarContainer: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    borderStyle: "dashed",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.colors.lightCard,
-    position: "relative",
-  },
-  avatarImage: { width: "100%", height: "100%", borderRadius: 45 },
-  cameraBtn: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: theme.colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  addPhotoText: {
-    fontSize: 11,
-    fontFamily: "Poppins-SemiBold",
-    color: theme.colors.greyText,
-    marginTop: 8,
-    letterSpacing: 0.5,
   },
   inputGroup: {
     marginBottom: 16,

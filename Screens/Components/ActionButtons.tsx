@@ -19,10 +19,9 @@ const ActionButtons: any = () => {
         <Text style={styles.primaryBtnText}> Contact</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.outlineBtn} onPress={onCreateNotePress}>
-        <Feather name="plus" size={14} color={theme.colors.primary} />
-        <Feather name="file-text" size={16} color={theme.colors.primary} style={{ marginLeft: 2 }} />
-        <Text style={styles.outlineBtnText}> Note</Text>
+      <TouchableOpacity style={styles.primaryBtn} onPress={onCreateNotePress}>
+        <Feather name="file-text" size={16} color={theme.colors.white} />
+        <Text style={styles.primaryBtnText}> Note</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.aiBtn} onPress={onAiChatPress}>

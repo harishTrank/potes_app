@@ -296,13 +296,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: "Poppins-Bold",
     color: theme.colors.primary,
-    letterSpacing: 1,
+    letterSpacing: 2.5,
   },
   logoSub: {
-    fontSize: 10,
-    fontFamily: "Poppins-Regular",
+    fontSize: 12,
+    fontFamily: "PlayfairDisplay-Italic",
     color: theme.colors.greyText,
-    marginTop: -4,
+    marginTop: -2,
   },
   avatarCircle: {
     width: 36,

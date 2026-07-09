@@ -15,6 +15,7 @@ import DefaultBackground from "../../Components/DefaultBackground";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useFocusEffect } from "@react-navigation/native";
 import { postAiChat } from "../../../store/Services/Others";
 import Toast from "react-native-toast-message";
 import TypingIndicator from "./Components/TypingIndicator";
@@ -47,7 +48,7 @@ const renderMarkdown = (text: string, textStyle: any): React.ReactNode[] => {
 
     if (!trimmed) return <View key={index} style={{ height: 5 }} />;
 
-    const bulletMatch = trimmed.match(/^[*-]\s+(.*)$/);
+    const bulletMatch = trimmed.match(/^[*-]\s*(.*)$/);
     if (bulletMatch) {
       const indentPx = (line.length - line.trimStart().length) > 0 ? 14 : 0;
       return (
@@ -84,6 +85,20 @@ const ChatWithAI = ({ navigation, route }: any) => {
   const flatListRef = useRef<FlatList>(null);
   const [userProfile]: any = useAtom(userProfileGlobal);
   const [hasStartedChat, setHasStartedChat] = useState(false);
+  const sessionKeyRef = useRef<string | null>(null);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const sessionKey = contactId || "global";
+      if (sessionKeyRef.current !== sessionKey) {
+        sessionKeyRef.current = sessionKey;
+        setAiChats([]);
+        setHasStartedChat(false);
+        setConversationId(null);
+        setInput("");
+      }
+    }, [contactId])
+  );
 
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
@@ -170,20 +185,26 @@ const ChatWithAI = ({ navigation, route }: any) => {
         <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
           {/* Header */}
           <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuBtn}>
-              <Feather name="menu" size={22} color={theme.colors.primary} />
+            <TouchableOpacity
+              onPress={() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("HomeScreen"))}
+              style={styles.menuBtn}
+            >
+              <Feather name="arrow-left" size={22} color={theme.colors.primary} />
             </TouchableOpacity>
             <View style={styles.aiHeaderCenter}>
               <View style={styles.aiDot} />
               <Text style={styles.aiHeaderTitle}>AI Assistant</Text>
             </View>
-            {hasStartedChat ? (
-              <TouchableOpacity onPress={() => { setAiChats([]); setHasStartedChat(false); setConversationId(null); }} style={styles.menuBtn}>
-                <Feather name="refresh-ccw" size={18} color={theme.colors.greyText} />
+            <View style={{ flexDirection: "row" }}>
+              {hasStartedChat && (
+                <TouchableOpacity onPress={() => { setAiChats([]); setHasStartedChat(false); setConversationId(null); }} style={styles.menuBtn}>
+                  <Feather name="refresh-ccw" size={18} color={theme.colors.greyText} />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuBtn}>
+                <Feather name="menu" size={22} color={theme.colors.primary} />
               </TouchableOpacity>
-            ) : (
-              <View style={styles.menuBtn} />
-            )}
+            </View>
           </View>
 
           {!hasStartedChat && aiChats.length === 0 ? (
@@ -214,15 +235,16 @@ const ChatWithAI = ({ navigation, route }: any) => {
               keyExtractor={(item) => item?.id}
               contentContainerStyle={styles.chatArea}
               showsVerticalScrollIndicator={false}
+              keyboardDismissMode="on-drag"
             />
           )}
         </View>
 
         {/* Input Bar */}
-        <View style={[styles.inputBar, { paddingBottom: insets.bottom + 10 }]}>
+        <View style={[styles.inputBar, { paddingBottom: insets.bottom || 10 }]}>
           <TextInput
             style={styles.textInput}
-            placeholder='Ask me anything... (e.g., "Draft an'
+            placeholder='Ask me anything... (e.g., "Draft an email to John")'
             placeholderTextColor={theme.colors.searchPlaceholder}
             value={input}
             onChangeText={setInput}

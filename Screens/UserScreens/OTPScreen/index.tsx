@@ -165,9 +165,9 @@ const OTPScreen = ({ navigation, route }: any) => {
             />
 
             <View style={styles.contentContainer}>
-              <Text style={styles.screenTitle}>Enter the OTP</Text>
+              <Text style={styles.screenTitle}>Enter the One Time Password</Text>
               <Text style={styles.subtitle}>
-                Enter the otp you recieved on {" "}
+                Enter the one time password you received on {" "}
                 {emailFromPreviousScreen}
               </Text>
 
@@ -176,7 +176,7 @@ const OTPScreen = ({ navigation, route }: any) => {
               </Pressable>
 
               <View style={styles.resendContainer}>
-                <Text style={styles.resendText}>Didn't get the OTP? </Text>
+                <Text style={styles.resendText}>Didn't get the One Time Password? </Text>
                 <TouchableOpacity
                   onPress={handleResendCode}
                   disabled={resendDisabled}
@@ -271,7 +271,8 @@ const styles = StyleSheet.create({
     height: 50,
     borderWidth: 1,
     borderRadius: 8,
-    borderColor: theme.colors.lightBackground,
+    borderColor: theme.colors.grey,
+    backgroundColor: theme.colors.white,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -281,8 +282,8 @@ const styles = StyleSheet.create({
     ...theme.font.fontMedium,
   },
   otpInputBoxHighlighted: {
-    borderColor: theme.colors.white,
-    borderWidth: 1.5,
+    borderColor: theme.colors.primary,
+    borderWidth: 2,
   },
   resendContainer: {
     flexDirection: "row",

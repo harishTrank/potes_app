@@ -817,7 +817,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                   },
                                   "name",
                                   "Institution",
-                                  "University name",
+                                  "Institution Name",
                                 )}
                                 {renderTextInput(
                                   {
@@ -916,6 +916,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                         <View>
                           {values.customFields.map((cf: any, cfIndex: any) => (
                             <View key={cf.id} style={styles.arrayCard}>
+                              <Text style={styles.inputLabel}>Label *</Text>
                               <View style={styles.arrayCardHeader}>
                                 <TextInput
                                   style={[
@@ -927,7 +928,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                       height: 40,
                                     },
                                   ]}
-                                  placeholder="Field title"
+                                  placeholder="Label"
                                   value={cf.title}
                                   onChangeText={handleChange(
                                     `customFields[${cfIndex}].title`,
@@ -965,7 +966,7 @@ const CreateContactScreen: any = ({ navigation, route }: any) => {
                                               marginBottom: 0,
                                             },
                                           ]}
-                                          placeholder="Value"
+                                          placeholder="Details"
                                           value={val}
                                           onChangeText={handleChange(
                                             `customFields[${cfIndex}].values[${valIdx}]`,

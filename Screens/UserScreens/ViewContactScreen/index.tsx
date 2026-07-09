@@ -75,6 +75,20 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
     setSectionOpenState((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const areAllSectionsOpen = Object.values(sectionOpenState).every(Boolean);
+  const toggleAllSections = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    const next = !areAllSectionsOpen;
+    setSectionOpenState({
+      personal: next,
+      family: next,
+      employment: next,
+      education: next,
+      interests: next,
+      others: next,
+    });
+  };
+
   useEffect(() => {
     return navigation.addListener("focus", () => apiResponse?.refetch());
   }, [contactId, navigation]);
@@ -134,9 +148,9 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Feather name="arrow-left" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleDelete} style={styles.deleteBtn}>
-            <Feather name="trash-2" size={16} color={theme.colors.red} />
-            <Text style={styles.deleteBtnText}>Delete</Text>
+          <TouchableOpacity onPress={toggleAllSections} style={styles.expandBtn}>
+            <Feather name={areAllSectionsOpen ? "minimize-2" : "maximize-2"} size={16} color={theme.colors.primary} />
+            <Text style={styles.expandBtnText}>{areAllSectionsOpen ? "Collapse" : "Expand"}</Text>
           </TouchableOpacity>
         </View>
 
@@ -280,6 +294,11 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               <Text style={styles.noNotesText}>No notes yet for this contact.</Text>
             )}
           </View>
+
+          <TouchableOpacity onPress={handleDelete} style={styles.deleteBtn}>
+            <Feather name="trash-2" size={14} color={theme.colors.greyText} />
+            <Text style={styles.deleteBtnText}>Delete Contact</Text>
+          </TouchableOpacity>
         </ScrollView>
       </View>
     </DefaultBackground>
@@ -296,8 +315,18 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   backBtn: { width: 40, height: 40, justifyContent: "center" },
-  deleteBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
-  deleteBtnText: { fontSize: 14, fontFamily: "Poppins-Medium", color: theme.colors.red },
+  expandBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 8, paddingVertical: 6 },
+  expandBtnText: { fontSize: 13, fontFamily: "Poppins-Medium", color: theme.colors.primary },
+  deleteBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 20,
+    marginHorizontal: 16,
+    paddingVertical: 12,
+  },
+  deleteBtnText: { fontSize: 13, fontFamily: "Poppins-Regular", color: theme.colors.greyText },
   scroll: { flex: 1 },
   heroSection: {
     alignItems: "center",

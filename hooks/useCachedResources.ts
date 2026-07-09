@@ -22,6 +22,7 @@ export default function useCachedResources() {
                     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
                     "PlayfairDisplay-Black": require("../assets/fonts/PlayfairDisplay-Black.ttf"),
                     "PlayfairDisplay-Regular": require("../assets/fonts/PlayfairDisplay-Regular.ttf"),
+                    "PlayfairDisplay-Italic": require("../assets/fonts/PlayfairDisplay-Italic.ttf"),
                     "Cinzel-Black": require("../assets/fonts/Cinzel-Black.ttf"),
                 });
             } catch (e) {
