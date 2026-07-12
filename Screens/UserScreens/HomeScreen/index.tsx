@@ -13,7 +13,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ReminderCategory from "./Component/ReminderCategory";
 import ActionButtons from "../../Components/ActionButtons";
 import EventListItem from "./Component/EventListItem";
-import { showBirthdays, showReminders, yearsAgo } from "../../../store/Services/Others";
+import {
+  showBirthdays,
+  showReminders,
+  yearsAgo,
+} from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
 import notifee from "@notifee/react-native";
 import Feather from "@expo/vector-icons/Feather";
@@ -33,12 +37,18 @@ const UserAvatar = ({ userProfile }: any) => {
     return (
       <FastImage
         style={styles.avatarImage}
-        source={{ uri: userProfile.profile_pic, priority: FastImage.priority.normal }}
+        source={{
+          uri: userProfile.profile_pic,
+          priority: FastImage.priority.normal,
+        }}
       />
     );
   }
-  const initials = [userProfile?.first_name?.[0], userProfile?.last_name?.[0]]
-    .filter(Boolean).join("").toUpperCase() || "U";
+  const initials =
+    [userProfile?.first_name?.[0], userProfile?.last_name?.[0]]
+      .filter(Boolean)
+      .join("")
+      .toUpperCase() || "U";
   return (
     <View style={styles.avatarCircle}>
       <Text style={styles.avatarInitials}>{initials}</Text>
@@ -72,7 +82,8 @@ const HomeScreen = ({ navigation }: any) => {
         showBirthdays(),
         yearsAgo(),
       ]);
-      if (results[0].status === "fulfilled") setReminder(results[0].value?.reminders);
+      if (results[0].status === "fulfilled")
+        setReminder(results[0].value?.reminders);
       if (results[1].status === "fulfilled") setBirthday(results[1].value);
       if (results[2].status === "fulfilled") setMemories(results[2].value);
     } catch (error) {
@@ -115,10 +126,30 @@ const HomeScreen = ({ navigation }: any) => {
 
   const handleDismissEvent = (type: string, itemId: any) => {
     setBirthday((prev: any) => {
-      if (type === "Birthdays") return { ...prev, birthdays: prev.birthdays.filter((i: any) => i.id !== itemId) };
-      if (type === "Anniversary") return { ...prev, anniversary: prev.anniversary.filter((i: any) => i.id !== itemId) };
-      if (type === "spouse") return { ...prev, spouse_birthday: prev.spouse_birthday.filter((i: any) => i.id !== itemId) };
-      if (type === "child") return { ...prev, child_birthday: prev.child_birthday.filter((i: any) => i.id !== itemId) };
+      if (type === "Birthdays")
+        return {
+          ...prev,
+          birthdays: prev.birthdays.filter((i: any) => i.id !== itemId),
+        };
+      if (type === "Anniversary")
+        return {
+          ...prev,
+          anniversary: prev.anniversary.filter((i: any) => i.id !== itemId),
+        };
+      if (type === "spouse")
+        return {
+          ...prev,
+          spouse_birthday: prev.spouse_birthday.filter(
+            (i: any) => i.id !== itemId,
+          ),
+        };
+      if (type === "child")
+        return {
+          ...prev,
+          child_birthday: prev.child_birthday.filter(
+            (i: any) => i.id !== itemId,
+          ),
+        };
       return prev;
     });
   };
@@ -139,9 +170,15 @@ const HomeScreen = ({ navigation }: any) => {
   return (
     <DefaultBackground>
       {loading && <FullScreenLoader />}
-      <SideMenuModal visible={menuVisible} onClose={() => setMenuVisible(false)} />
+      <SideMenuModal
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+      />
       <View style={[styles.topBar, { paddingTop: insets.top + 6 }]}>
-        <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuBtn}>
+        <TouchableOpacity
+          onPress={() => setMenuVisible(true)}
+          style={styles.menuBtn}
+        >
           <Feather name="menu" size={22} color={theme.colors.primary} />
         </TouchableOpacity>
         <View style={styles.logoBlock}>
@@ -161,7 +198,11 @@ const HomeScreen = ({ navigation }: any) => {
         {/* Search */}
         <View style={styles.searchRow}>
           <TouchableOpacity onPress={onPressSearch} style={{ marginRight: 8 }}>
-            <Feather name="search" size={16} color={theme.colors.searchPlaceholder} />
+            <Feather
+              name="search"
+              size={16}
+              color={theme.colors.searchPlaceholder}
+            />
           </TouchableOpacity>
           <TextInput
             style={styles.searchInput}
@@ -188,18 +229,42 @@ const HomeScreen = ({ navigation }: any) => {
             )}
           </View>
           <ReminderCategory
-            category={{ items: reminder?.today, initiallyOpen: true, name: "Today", count: reminder?.today?.length, type: "Reminders" }}
+            category={{
+              items: reminder?.today,
+              initiallyOpen: true,
+              name: "Today",
+              count: reminder?.today?.length,
+              type: "Reminders",
+            }}
             setReminer={setReminder}
           />
           <ReminderCategory
-            category={{ items: reminder?.tomorrow, initiallyOpen: false, name: "Tomorrow", count: reminder?.tomorrow?.length, type: "Reminders" }}
+            category={{
+              items: reminder?.tomorrow,
+              initiallyOpen: false,
+              name: "Tomorrow",
+              count: reminder?.tomorrow?.length,
+              type: "Reminders",
+            }}
             setReminer={setReminder}
           />
           <ReminderCategory
-            category={{ items: reminder?.upcoming, initiallyOpen: false, name: "Upcoming", count: reminder?.upcoming?.length, type: "Reminders" }}
+            category={{
+              items: reminder?.upcoming,
+              initiallyOpen: false,
+              name: "Upcoming",
+              count: reminder?.upcoming?.length,
+              type: "Reminders",
+            }}
           />
           <ReminderCategory
-            category={{ items: reminder?.missed, initiallyOpen: false, name: "Missed", count: reminder?.missed?.length, type: "Reminders" }}
+            category={{
+              items: reminder?.missed,
+              initiallyOpen: false,
+              name: "Missed",
+              count: reminder?.missed?.length,
+              type: "Reminders",
+            }}
             setReminer={setReminder}
           />
         </View>
@@ -207,7 +272,9 @@ const HomeScreen = ({ navigation }: any) => {
         {/* Memories Section */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
-            <View style={[styles.sectionAccent, { backgroundColor: "#9a6eb0" }]} />
+            <View
+              style={[styles.sectionAccent, { backgroundColor: "#9a6eb0" }]}
+            />
             <Text style={styles.sectionTitle}>Memories</Text>
           </View>
           {!hasMemories ? (
@@ -216,17 +283,35 @@ const HomeScreen = ({ navigation }: any) => {
             <>
               {memories?.year?.length > 0 && (
                 <ReminderCategory
-                  category={{ items: memories.year, initiallyOpen: true, name: "One Year Ago", count: memories.year.length, type: "memories" }}
+                  category={{
+                    items: memories.year,
+                    initiallyOpen: true,
+                    name: "One Year Ago",
+                    count: memories.year.length,
+                    type: "memories",
+                  }}
                 />
               )}
               {memories?.six_month?.length > 0 && (
                 <ReminderCategory
-                  category={{ items: memories.six_month, initiallyOpen: false, name: "Six Months Ago", count: memories.six_month.length, type: "memories" }}
+                  category={{
+                    items: memories.six_month,
+                    initiallyOpen: false,
+                    name: "Six Months Ago",
+                    count: memories.six_month.length,
+                    type: "memories",
+                  }}
                 />
               )}
               {memories?.one_month?.length > 0 && (
                 <ReminderCategory
-                  category={{ items: memories.one_month, initiallyOpen: false, name: "One Month Ago", count: memories.one_month.length, type: "memories" }}
+                  category={{
+                    items: memories.one_month,
+                    initiallyOpen: false,
+                    name: "One Month Ago",
+                    count: memories.one_month.length,
+                    type: "memories",
+                  }}
                 />
               )}
             </>
@@ -236,7 +321,9 @@ const HomeScreen = ({ navigation }: any) => {
         {/* Events Section */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
-            <View style={[styles.sectionAccent, { backgroundColor: "#c0623a" }]} />
+            <View
+              style={[styles.sectionAccent, { backgroundColor: "#c0623a" }]}
+            />
             <Text style={styles.sectionTitle}>Events</Text>
           </View>
           {!hasEvents ? (
@@ -245,33 +332,66 @@ const HomeScreen = ({ navigation }: any) => {
             <View style={{ padding: 12 }}>
               {birthday?.birthdays?.length > 0 && (
                 <View style={styles.eventGroup}>
-                  <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>Birthday</Text>
+                  <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>
+                    Birthday
+                  </Text>
                   {birthday.birthdays.map((item: any) => (
-                    <EventListItem item={item} key={item?.id} type={"Birthdays"} onDismiss={handleDismissEvent} />
+                    <EventListItem
+                      item={item}
+                      key={item?.id}
+                      type={"Birthdays"}
+                      onDismiss={handleDismissEvent}
+                    />
                   ))}
                 </View>
               )}
               {birthday?.anniversary?.length > 0 && (
                 <View style={styles.eventGroup}>
-                  <Text style={[styles.eventGroupLabel, { color: "#9a6eb0" }]}>Anniversary</Text>
+                  <Text style={[styles.eventGroupLabel, { color: "#9a6eb0" }]}>
+                    Anniversary
+                  </Text>
                   {birthday.anniversary.map((item: any) => (
-                    <EventListItem item={item} key={item?.id} type={"Anniversary"} onDismiss={handleDismissEvent} />
+                    <EventListItem
+                      item={item}
+                      key={item?.id}
+                      type={"Anniversary"}
+                      onDismiss={handleDismissEvent}
+                    />
                   ))}
                 </View>
               )}
               {birthday?.spouse_birthday?.length > 0 && (
                 <View style={styles.eventGroup}>
-                  <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>Spouse Birthday</Text>
+                  <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>
+                    Spouse Birthday
+                  </Text>
                   {birthday.spouse_birthday.map((item: any) => (
-                    <EventListItem item={item} key={item?.id} type={"spouse"} onDismiss={handleDismissEvent} />
+                    <EventListItem
+                      item={item}
+                      key={item?.id}
+                      type={"spouse"}
+                      onDismiss={handleDismissEvent}
+                    />
                   ))}
                 </View>
               )}
               {birthday?.child_birthday?.length > 0 && (
                 <View style={styles.eventGroup}>
-                  <Text style={[styles.eventGroupLabel, { color: theme.colors.primary }]}>Family Birthday</Text>
+                  <Text
+                    style={[
+                      styles.eventGroupLabel,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
+                    Family Birthday
+                  </Text>
                   {birthday.child_birthday.map((item: any) => (
-                    <EventListItem item={item} key={item?.id} type={"child"} onDismiss={handleDismissEvent} />
+                    <EventListItem
+                      item={item}
+                      key={item?.id}
+                      type={"child"}
+                      onDismiss={handleDismissEvent}
+                    />
                   ))}
                 </View>
               )}
@@ -292,7 +412,12 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
     backgroundColor: theme.colors.lightBackground,
   },
-  menuBtn: { width: 36, height: 36, justifyContent: "center", alignItems: "center" },
+  menuBtn: {
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   logoBlock: { alignItems: "center" },
   logoText: {
     fontSize: 20,
@@ -301,10 +426,10 @@ const styles = StyleSheet.create({
     letterSpacing: 2.5,
   },
   logoSub: {
-    fontSize: 12,
-    fontFamily: "PlayfairDisplay-Italic",
+    fontSize: 11,
+    fontFamily: "Poppins-Regular",
     color: theme.colors.greyText,
-    marginTop: -2,
+    marginTop: -4,
   },
   avatarCircle: {
     width: 36,

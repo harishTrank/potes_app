@@ -48,7 +48,9 @@ interface DeviceContact {
   birthday: string | null;
 }
 
-const processContactsForSectionList = (contacts: ApiContact[]): SectionData[] => {
+const processContactsForSectionList = (
+  contacts: ApiContact[],
+): SectionData[] => {
   if (!contacts || !Array.isArray(contacts) || contacts.length === 0) return [];
   const grouped: { [key: string]: ApiContact[] } = {};
   contacts.forEach((contact) => {
@@ -68,7 +70,9 @@ const processContactsForSectionList = (contacts: ApiContact[]): SectionData[] =>
   });
   return sortedLetters.map((letter) => ({
     title: letter,
-    data: grouped[letter].sort((a, b) => a.full_name.localeCompare(b.full_name)),
+    data: grouped[letter].sort((a, b) =>
+      a.full_name.localeCompare(b.full_name),
+    ),
   }));
 };
 
@@ -78,7 +82,12 @@ const SECTION_HEADER_HEIGHT = 32;
 
 const getInitials = (name: string) => {
   if (!name) return "?";
-  return name.split(" ").slice(0, 2).map((p) => p[0]).join("").toUpperCase();
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase();
 };
 
 const UserAvatar = ({ userProfile }: any) => {
@@ -86,12 +95,18 @@ const UserAvatar = ({ userProfile }: any) => {
     return (
       <FastImage
         style={styles.headerAvatar}
-        source={{ uri: userProfile.profile_pic, priority: FastImage.priority.normal }}
+        source={{
+          uri: userProfile.profile_pic,
+          priority: FastImage.priority.normal,
+        }}
       />
     );
   }
-  const initials = [userProfile?.first_name?.[0], userProfile?.last_name?.[0]]
-    .filter(Boolean).join("").toUpperCase() || "U";
+  const initials =
+    [userProfile?.first_name?.[0], userProfile?.last_name?.[0]]
+      .filter(Boolean)
+      .join("")
+      .toUpperCase() || "U";
   return (
     <View style={styles.headerAvatarCircle}>
       <Text style={styles.headerAvatarInitials}>{initials}</Text>
@@ -105,7 +120,11 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [menuVisible, setMenuVisible] = useState(false);
   const sectionListRef = useRef<SectionList<ApiContact, SectionData>>(null);
-  const { data: apiResponse, isLoading: apiIsLoading, refetch: apiRefetch }: any = allContactApiHook();
+  const {
+    data: apiResponse,
+    isLoading: apiIsLoading,
+    refetch: apiRefetch,
+  }: any = allContactApiHook();
   const [userProfile, setUserProfile]: any = useAtom(userProfileGlobal);
   const [globalCall]: any = useAtom(apiCallBackGlobal);
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -114,7 +133,9 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
   const [importing, setImporting] = useState(false);
 
   useEffect(() => {
-    viewProfileApi().then((res: any) => setUserProfile(res)).catch(() => {});
+    viewProfileApi()
+      .then((res: any) => setUserProfile(res))
+      .catch(() => {});
   }, [globalCall]);
 
   useEffect(() => {
@@ -124,7 +145,9 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
       if (searchQuery) {
         const lq = searchQuery.toLowerCase();
         filteredContacts = contactsFromApi.filter(
-          (c) => c.full_name.toLowerCase().includes(lq) || c.email?.toLowerCase().includes(lq)
+          (c) =>
+            c.full_name.toLowerCase().includes(lq) ||
+            c.email?.toLowerCase().includes(lq),
         );
       }
       setSections(processContactsForSectionList(filteredContacts));
@@ -148,7 +171,11 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
       offset += SECTION_HEADER_HEIGHT;
       i++;
       if (index < i + section.data.length) {
-        return { length: ITEM_ESTIMATED_HEIGHT, offset: offset + (index - i) * ITEM_ESTIMATED_HEIGHT, index };
+        return {
+          length: ITEM_ESTIMATED_HEIGHT,
+          offset: offset + (index - i) * ITEM_ESTIMATED_HEIGHT,
+          index,
+        };
       }
       offset += section.data.length * ITEM_ESTIMATED_HEIGHT;
       i += section.data.length;
@@ -159,7 +186,12 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
   const handleAlphabetPress = (letter: string) => {
     const sectionIndex = sections.findIndex((s) => s.title === letter);
     if (sectionIndex === -1) return;
-    sectionListRef.current?.scrollToLocation({ sectionIndex, itemIndex: 0, viewPosition: 0, animated: true });
+    sectionListRef.current?.scrollToLocation({
+      sectionIndex,
+      itemIndex: 0,
+      viewPosition: 0,
+      animated: true,
+    });
   };
 
   const importContacts = async () => {
@@ -177,7 +209,11 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
             }
             if (permission.status === "granted") {
               const { data } = await Contacts.getContactsAsync({
-                fields: [Contacts.Fields.PhoneNumbers, Contacts.Fields.Emails, Contacts.Fields.Birthday],
+                fields: [
+                  Contacts.Fields.PhoneNumbers,
+                  Contacts.Fields.Emails,
+                  Contacts.Fields.Birthday,
+                ],
               });
               if (data.length > 0) {
                 const formattedContacts: DeviceContact[] = data
@@ -186,7 +222,10 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
                     let birthday = null;
                     if (c.birthday) {
                       const { day, month, year } = c.birthday;
-                      if (day && month && year) birthday = dayjs(`${year}-${month}-${day}`).format("YYYY-MM-DD");
+                      if (day && month && year)
+                        birthday = dayjs(`${year}-${month}-${day}`).format(
+                          "YYYY-MM-DD",
+                        );
                       else if (day && month) birthday = `1999-${month}-${day}`;
                     }
                     return {
@@ -208,7 +247,7 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -223,7 +262,9 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
 
   const toggleSelectAll = () => {
     setSelectedIds((prev) =>
-      prev.size === deviceContacts.length ? new Set() : new Set(deviceContacts.map((c) => c.id))
+      prev.size === deviceContacts.length
+        ? new Set()
+        : new Set(deviceContacts.map((c) => c.id)),
     );
   };
 
@@ -232,7 +273,10 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
       .filter((c) => selectedIds.has(c.id))
       .map(({ id, ...rest }) => rest);
     if (contactsToImport.length === 0) {
-      Alert.alert("No contacts selected", "Select at least one contact to import.");
+      Alert.alert(
+        "No contacts selected",
+        "Select at least one contact to import.",
+      );
       return;
     }
     setImporting(true);
@@ -251,14 +295,24 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
   const renderContactItem = ({ item }: { item: ApiContact }) => (
     <TouchableOpacity
       style={styles.contactItem}
-      onPress={() => navigation.navigate("ViewContactScreen", { contactId: item.id, contactName: item.full_name })}
+      onPress={() =>
+        navigation.navigate("ViewContactScreen", {
+          contactId: item.id,
+          contactName: item.full_name,
+        })
+      }
     >
       <View style={styles.contactAvatarWrap}>
         {item.photo ? (
-          <FastImage style={styles.contactAvatarImg} source={{ uri: item.photo, priority: FastImage.priority.normal }} />
+          <FastImage
+            style={styles.contactAvatarImg}
+            source={{ uri: item.photo, priority: FastImage.priority.normal }}
+          />
         ) : (
           <View style={styles.contactAvatarCircle}>
-            <Text style={styles.contactAvatarInitials}>{getInitials(item.full_name)}</Text>
+            <Text style={styles.contactAvatarInitials}>
+              {getInitials(item.full_name)}
+            </Text>
           </View>
         )}
       </View>
@@ -271,7 +325,10 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
         {item.birthday && (
           <View style={styles.birthdayRow}>
             <Feather name="gift" size={11} color={theme.colors.greyText} />
-            <Text style={styles.contactBirthday}> {dayjs(item.birthday).format("MMMM DD")}</Text>
+            <Text style={styles.contactBirthday}>
+              {" "}
+              {dayjs(item.birthday).format("MMMM DD")}
+            </Text>
           </View>
         )}
       </View>
@@ -279,7 +336,11 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
     </TouchableOpacity>
   );
 
-  const renderSectionHeader = ({ section: { title } }: { section: SectionData }) => (
+  const renderSectionHeader = ({
+    section: { title },
+  }: {
+    section: SectionData;
+  }) => (
     <View style={styles.sectionHeaderWrap}>
       <Text style={styles.sectionHeaderText}>{title}</Text>
       <View style={styles.sectionDivider} />
@@ -290,19 +351,31 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
     <DefaultBackground>
       <StatusBar style="dark" />
       {apiIsLoading && <FullScreenLoader />}
-      <SideMenuModal visible={menuVisible} onClose={() => setMenuVisible(false)} />
+      <SideMenuModal
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+      />
 
       <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
         {/* Header */}
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuBtn}>
+          <TouchableOpacity
+            onPress={() => setMenuVisible(true)}
+            style={styles.menuBtn}
+          >
             <Feather name="menu" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("HomeScreen")} style={styles.headerCenter}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("HomeScreen")}
+            style={styles.headerCenter}
+          >
             <Text style={styles.logoText}>POTES</Text>
             <Text style={styles.logoSub}>people notes</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("UserProfileScreen")} style={styles.avatarBtn}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("UserProfileScreen")}
+            style={styles.avatarBtn}
+          >
             <UserAvatar userProfile={userProfile} />
           </TouchableOpacity>
         </View>
@@ -311,13 +384,20 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
         <View style={styles.titleRow}>
           <View>
             <Text style={styles.pageTitle}>Your Contacts</Text>
-            <Text style={styles.pageSubtitle}>Managing {totalContacts} total contacts</Text>
+            <Text style={styles.pageSubtitle}>
+              Managing {totalContacts} total contacts
+            </Text>
           </View>
         </View>
 
         {/* Search */}
         <View style={styles.searchRow}>
-          <Feather name="search" size={16} color={theme.colors.searchPlaceholder} style={{ marginRight: 8 }} />
+          <Feather
+            name="search"
+            size={16}
+            color={theme.colors.searchPlaceholder}
+            style={{ marginRight: 8 }}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Search directory..."
@@ -336,7 +416,9 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
         <View style={styles.listWrapper}>
           {!apiIsLoading && sections.length === 0 ? (
             <Text style={styles.noResultsText}>
-              {searchQuery ? `No contacts found for "${searchQuery}"` : "No contacts yet. Import or add one!"}
+              {searchQuery
+                ? `No contacts found for "${searchQuery}"`
+                : "No contacts yet. Import or add one!"}
             </Text>
           ) : (
             <SectionList
@@ -357,7 +439,11 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
           {!apiIsLoading && sections.length > 0 && (
             <View style={styles.alphabetSidebar}>
               {ALPHABET.map((letter) => (
-                <TouchableOpacity key={letter} onPress={() => handleAlphabetPress(letter)} style={styles.alphaBtn}>
+                <TouchableOpacity
+                  key={letter}
+                  onPress={() => handleAlphabetPress(letter)}
+                  style={styles.alphaBtn}
+                >
                   <Text style={styles.alphaText}>{letter}</Text>
                 </TouchableOpacity>
               ))}
@@ -380,13 +466,24 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
         onRequestClose={() => setPickerVisible(false)}
       >
         <DefaultBackground>
-          <View style={[styles.pickerContainer, { paddingTop: insets.top + 6, paddingBottom: insets.bottom + 12 }]}>
+          <View
+            style={[
+              styles.pickerContainer,
+              { paddingTop: insets.top + 6, paddingBottom: insets.bottom + 12 },
+            ]}
+          >
             <View style={styles.pickerHeaderRow}>
-              <TouchableOpacity onPress={() => setPickerVisible(false)} style={styles.iconButton}>
+              <TouchableOpacity
+                onPress={() => setPickerVisible(false)}
+                style={styles.iconButton}
+              >
                 <Feather name="x" size={22} color={theme.colors.primary} />
               </TouchableOpacity>
               <Text style={styles.headerTitle}>Select Contacts</Text>
-              <TouchableOpacity onPress={toggleSelectAll} style={styles.iconButton}>
+              <TouchableOpacity
+                onPress={toggleSelectAll}
+                style={styles.iconButton}
+              >
                 <Text style={styles.selectAllText}>
                   {selectedIds.size === deviceContacts.length ? "None" : "All"}
                 </Text>
@@ -409,7 +506,9 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
                     <Feather
                       name={isSelected ? "check-circle" : "circle"}
                       size={20}
-                      color={isSelected ? theme.colors.primary : theme.colors.grey}
+                      color={
+                        isSelected ? theme.colors.primary : theme.colors.grey
+                      }
                     />
                     <View style={styles.pickerRowInfo}>
                       <Text style={styles.pickerRowName} numberOfLines={1}>
@@ -431,7 +530,9 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
               disabled={importing}
             >
               <Text style={styles.importButtonText}>
-                {importing ? "Importing..." : `Import Selected (${selectedIds.size})`}
+                {importing
+                  ? "Importing..."
+                  : `Import Selected (${selectedIds.size})`}
               </Text>
             </TouchableOpacity>
           </View>
@@ -453,13 +554,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 6,
   },
-  menuBtn: { width: 36, height: 36, justifyContent: "center", alignItems: "center" },
+  menuBtn: {
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   headerCenter: { alignItems: "center" },
-  logoText: { fontSize: 18, fontFamily: "Poppins-Bold", color: theme.colors.primary, letterSpacing: 2.5 },
-  logoSub: { fontSize: 11, fontFamily: "PlayfairDisplay-Italic", color: theme.colors.greyText, marginTop: -2 },
+  logoText: {
+    fontSize: 18,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.primary,
+    letterSpacing: 2.5,
+  },
+  logoSub: {
+    fontSize: 11,
+    fontFamily: "PlayfairDisplay-Italic",
+    color: theme.colors.greyText,
+    marginTop: -2,
+  },
   avatarBtn: {},
-  headerAvatarCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.avatarBg, justifyContent: "center", alignItems: "center" },
-  headerAvatarInitials: { fontSize: 13, fontFamily: "Poppins-Bold", color: theme.colors.white },
+  headerAvatarCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.colors.avatarBg,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerAvatarInitials: {
+    fontSize: 13,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.white,
+  },
   headerAvatar: { width: 36, height: 36, borderRadius: 18 },
   searchRow: {
     flexDirection: "row",
@@ -473,13 +600,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
-  searchInput: { flex: 1, fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.searchText },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.searchText,
+  },
   titleRow: {
     paddingHorizontal: 16,
     paddingBottom: 4,
   },
-  pageTitle: { fontSize: 18, fontFamily: "Poppins-Bold", color: theme.colors.text },
-  pageSubtitle: { fontSize: 12, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginTop: 1 },
+  pageTitle: {
+    fontSize: 18,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.text,
+  },
+  pageSubtitle: {
+    fontSize: 12,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.greyText,
+    marginTop: 1,
+  },
   listWrapper: { flex: 1, flexDirection: "row" },
   sectionHeaderWrap: {
     backgroundColor: theme.colors.lightBackground,
@@ -490,7 +631,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
-  sectionHeaderText: { fontSize: 13, fontFamily: "Poppins-Bold", color: theme.colors.primary, width: 16 },
+  sectionHeaderText: {
+    fontSize: 13,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.primary,
+    width: 16,
+  },
   sectionDivider: { flex: 1, height: 1, backgroundColor: theme.colors.border },
   contactItem: {
     flexDirection: "row",
@@ -511,11 +657,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   contactAvatarImg: { width: 44, height: 44, borderRadius: 22 },
-  contactAvatarInitials: { fontSize: 16, fontFamily: "Poppins-Bold", color: theme.colors.white },
+  contactAvatarInitials: {
+    fontSize: 16,
+    fontFamily: "Poppins-Bold",
+    color: theme.colors.white,
+  },
   contactInfo: { flex: 1 },
-  contactName: { fontSize: 15, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
+  contactName: {
+    fontSize: 15,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.text,
+  },
   birthdayRow: { flexDirection: "row", alignItems: "center", marginTop: 3 },
-  contactBirthday: { fontSize: 12, fontFamily: "Poppins-Regular", color: theme.colors.greyText },
+  contactBirthday: {
+    fontSize: 12,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.greyText,
+  },
   alphabetSidebar: {
     width: 20,
     paddingVertical: 6,
@@ -523,8 +681,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   alphaBtn: { height: alphabetItemHeight, justifyContent: "center" },
-  alphaText: { fontSize: 9, fontFamily: "Poppins-SemiBold", color: theme.colors.primary },
-  noResultsText: { flex: 1, textAlign: "center", color: theme.colors.greyText, fontSize: 14, marginTop: 40, paddingHorizontal: 30 },
+  alphaText: {
+    fontSize: 9,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.primary,
+  },
+  noResultsText: {
+    flex: 1,
+    textAlign: "center",
+    color: theme.colors.greyText,
+    fontSize: 14,
+    marginTop: 40,
+    paddingHorizontal: 30,
+  },
   syncFab: {
     position: "absolute",
     right: 16,
@@ -543,10 +712,28 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingBottom: 6,
   },
-  iconButton: { width: 40, height: 40, justifyContent: "center", alignItems: "center" },
-  headerTitle: { fontSize: 18, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
-  selectAllText: { fontSize: 14, fontFamily: "Poppins-SemiBold", color: theme.colors.primary },
-  pickerSubtitle: { fontSize: 12, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginBottom: 8 },
+  iconButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.text,
+  },
+  selectAllText: {
+    fontSize: 14,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.primary,
+  },
+  pickerSubtitle: {
+    fontSize: 12,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.greyText,
+    marginBottom: 8,
+  },
   pickerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -557,8 +744,17 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   pickerRowInfo: { flex: 1 },
-  pickerRowName: { fontSize: 15, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
-  pickerRowDetail: { fontSize: 12, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginTop: 2 },
+  pickerRowName: {
+    fontSize: 15,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.text,
+  },
+  pickerRowDetail: {
+    fontSize: 12,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.greyText,
+    marginTop: 2,
+  },
   importButton: {
     backgroundColor: theme.colors.primary,
     borderRadius: 10,
@@ -566,7 +762,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
-  importButtonText: { fontSize: 16, fontFamily: "Poppins-SemiBold", color: theme.colors.white },
+  importButtonText: {
+    fontSize: 16,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.white,
+  },
   buttonDisabled: { opacity: 0.6 },
 });
 

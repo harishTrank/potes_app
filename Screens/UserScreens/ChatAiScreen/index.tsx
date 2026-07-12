@@ -38,7 +38,7 @@ const renderInlineSegments = (text: string, textStyle: any) => {
           </Text>
         ) : (
           <Text key={i}>{part}</Text>
-        )
+        ),
       )}
     </Text>
   );
@@ -52,9 +52,17 @@ const renderMarkdown = (text: string, textStyle: any): React.ReactNode[] => {
 
     const bulletMatch = trimmed.match(/^[*•-]\s*(.*)$/);
     if (bulletMatch) {
-      const indentPx = (line.length - line.trimStart().length) > 0 ? 14 : 0;
+      const indentPx = line.length - line.trimStart().length > 0 ? 14 : 0;
       return (
-        <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 3, paddingLeft: indentPx }}>
+        <View
+          key={index}
+          style={{
+            flexDirection: "row",
+            alignItems: "flex-start",
+            marginBottom: 3,
+            paddingLeft: indentPx,
+          }}
+        >
           <View style={styles.bulletDot} />
           {renderInlineSegments(bulletMatch[1], textStyle)}
         </View>
@@ -69,11 +77,20 @@ const renderMarkdown = (text: string, textStyle: any): React.ReactNode[] => {
   });
 };
 
-const QUICK_ACTIONS = [
+const GLOBAL_QUICK_ACTIONS = [
   { label: "Who to follow up?", icon: "people-outline" },
   { label: "Birthdays this week", icon: "gift-outline" },
   { label: "Summarize notes", icon: "document-text-outline" },
-  { label: "Neglected contacts", icon: "person-remove-outline" },
+  { label: "Neglected contacts", icon: "person-outline" },
+];
+
+// Suggestions shown when the AI is opened from a single contact's profile,
+// scoped to that contact rather than the whole directory.
+const CONTACT_QUICK_ACTIONS = [
+  { label: "Suggest a follow-up", icon: "chatbubble-ellipses-outline" },
+  { label: "Summarize notes", icon: "document-text-outline" },
+  { label: "Draft a message", icon: "mail-outline" },
+  { label: "Relationship summary", icon: "person-outline" },
 ];
 
 const ChatWithAI = ({ navigation, route }: any) => {
@@ -91,10 +108,16 @@ const ChatWithAI = ({ navigation, route }: any) => {
   const sessionKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
-    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, () =>
+      setKeyboardVisible(true),
+    );
+    const hideSub = Keyboard.addListener(hideEvent, () =>
+      setKeyboardVisible(false),
+    );
     return () => {
       showSub.remove();
       hideSub.remove();
@@ -111,7 +134,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
         setConversationId(null);
         setInput("");
       }
-    }, [contactId])
+    }, [contactId]),
   );
 
   useEffect(() => {
@@ -128,7 +151,10 @@ const ChatWithAI = ({ navigation, route }: any) => {
     setHasStartedChat(true);
 
     const tempId = Date.now().toString();
-    setAiChats((prev: any) => [...prev, { id: tempId, message: userMessage, reply: null }]);
+    setAiChats((prev: any) => [
+      ...prev,
+      { id: tempId, message: userMessage, reply: null },
+    ]);
     setLoading(true);
 
     postAiChat({
@@ -155,7 +181,10 @@ const ChatWithAI = ({ navigation, route }: any) => {
       })
       .catch(() => {
         setAiChats((prev: any) => prev.filter((c: any) => c.id !== tempId));
-        Toast.show({ type: "error", text1: "Something went wrong. Please try again." });
+        Toast.show({
+          type: "error",
+          text1: "Something went wrong. Please try again.",
+        });
       })
       .finally(() => setLoading(false));
   };
@@ -174,7 +203,11 @@ const ChatWithAI = ({ navigation, route }: any) => {
         {item?.reply && (
           <View style={[styles.messageRow, styles.aiRow]}>
             <View style={styles.aiAvatarDot}>
-              <MaterialCommunityIcons name="star-four-points" size={12} color={theme.colors.primary} />
+              <MaterialCommunityIcons
+                name="star-four-points"
+                size={12}
+                color={theme.colors.primary}
+              />
             </View>
             <View style={[styles.bubble, styles.aiBubble]}>
               {renderMarkdown(item.reply, styles.aiBubbleText)}
@@ -190,23 +223,36 @@ const ChatWithAI = ({ navigation, route }: any) => {
     : aiChats;
 
   const firstName = userProfile?.first_name || "there";
+  const quickActions = contactId ? CONTACT_QUICK_ACTIONS : GLOBAL_QUICK_ACTIONS;
 
   return (
     <DefaultBackground>
-      <SideMenuModal visible={menuVisible} onClose={() => setMenuVisible(false)} />
+      <SideMenuModal
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+      />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
           {/* Header */}
           <View style={styles.headerRow}>
             <TouchableOpacity
-              onPress={() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("HomeScreen"))}
+              onPress={() =>
+                navigation.canGoBack()
+                  ? navigation.goBack()
+                  : navigation.navigate("HomeScreen")
+              }
               style={styles.menuBtn}
             >
-              <Feather name="arrow-left" size={22} color={theme.colors.primary} />
+              <Feather
+                name="arrow-left"
+                size={22}
+                color={theme.colors.primary}
+              />
             </TouchableOpacity>
             <View style={styles.aiHeaderCenter}>
               <View style={styles.aiDot} />
@@ -214,16 +260,37 @@ const ChatWithAI = ({ navigation, route }: any) => {
             </View>
             <View style={{ flexDirection: "row" }}>
               {keyboardVisible && (
-                <TouchableOpacity onPress={() => Keyboard.dismiss()} style={styles.menuBtn}>
-                  <Feather name="chevron-down" size={20} color={theme.colors.greyText} />
+                <TouchableOpacity
+                  onPress={() => Keyboard.dismiss()}
+                  style={styles.menuBtn}
+                >
+                  <Feather
+                    name="chevron-down"
+                    size={20}
+                    color={theme.colors.greyText}
+                  />
                 </TouchableOpacity>
               )}
               {hasStartedChat && (
-                <TouchableOpacity onPress={() => { setAiChats([]); setHasStartedChat(false); setConversationId(null); }} style={styles.menuBtn}>
-                  <Feather name="refresh-ccw" size={18} color={theme.colors.greyText} />
+                <TouchableOpacity
+                  onPress={() => {
+                    setAiChats([]);
+                    setHasStartedChat(false);
+                    setConversationId(null);
+                  }}
+                  style={styles.menuBtn}
+                >
+                  <Feather
+                    name="refresh-ccw"
+                    size={18}
+                    color={theme.colors.greyText}
+                  />
                 </TouchableOpacity>
               )}
-              <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuBtn}>
+              <TouchableOpacity
+                onPress={() => setMenuVisible(true)}
+                style={styles.menuBtn}
+              >
                 <Feather name="menu" size={22} color={theme.colors.primary} />
               </TouchableOpacity>
             </View>
@@ -231,25 +298,29 @@ const ChatWithAI = ({ navigation, route }: any) => {
 
           {!hasStartedChat && aiChats.length === 0 ? (
             // Greeting Screen
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.greetingSection}>
               <Text style={styles.greetingTitle}>Hello, {firstName}.</Text>
-              <Text style={styles.greetingSubtitle}>How can I help you manage your connections today?</Text>
+              <Text style={styles.greetingSubtitle}>
+                How can I help you manage your connections today?
+              </Text>
 
               <View style={styles.quickActionsGrid}>
-                {QUICK_ACTIONS.map((action) => (
+                {quickActions.map((action) => (
                   <TouchableOpacity
                     key={action.label}
                     style={styles.quickActionCard}
                     onPress={() => handleSend(action.label)}
                   >
-                    <Ionicons name={action.icon as any} size={18} color={theme.colors.primary} />
+                    <Ionicons
+                      name={action.icon as any}
+                      size={18}
+                      color={theme.colors.primary}
+                    />
                     <Text style={styles.quickActionText}>{action.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
-            </TouchableWithoutFeedback>
           ) : (
             // Chat View
             <FlatList
@@ -260,9 +331,11 @@ const ChatWithAI = ({ navigation, route }: any) => {
               contentContainerStyle={styles.chatArea}
               showsVerticalScrollIndicator={false}
               keyboardDismissMode="on-drag"
+              keyboardShouldPersistTaps="handled"
             />
           )}
         </View>
+        </TouchableWithoutFeedback>
 
         {/* Input Bar */}
         {/* This screen lives inside the bottom tab navigator, whose tab bar
@@ -272,7 +345,7 @@ const ChatWithAI = ({ navigation, route }: any) => {
         <View style={styles.inputBar}>
           <TextInput
             style={styles.textInput}
-            placeholder='Ask me anything... (e.g., "Draft an email to John")'
+            placeholder="Ask me about your contacts or notes…"
             placeholderTextColor={theme.colors.searchPlaceholder}
             value={input}
             onChangeText={setInput}
@@ -303,7 +376,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  menuBtn: { width: 36, height: 36, justifyContent: "center", alignItems: "center" },
+  menuBtn: {
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   aiHeaderCenter: { flexDirection: "row", alignItems: "center", gap: 8 },
   aiDot: {
     width: 10,
@@ -311,7 +389,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: theme.colors.primary,
   },
-  aiHeaderTitle: { fontSize: 16, fontFamily: "Poppins-SemiBold", color: theme.colors.text },
+  aiHeaderTitle: {
+    fontSize: 16,
+    fontFamily: "Poppins-SemiBold",
+    color: theme.colors.text,
+  },
   greetingSection: {
     flex: 1,
     paddingHorizontal: 20,
@@ -387,8 +469,18 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     borderBottomRightRadius: 4,
   },
-  aiBubbleText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.text, lineHeight: 20 },
-  userBubbleText: { fontSize: 14, fontFamily: "Poppins-Regular", color: theme.colors.white, lineHeight: 20 },
+  aiBubbleText: {
+    fontSize: 14,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.text,
+    lineHeight: 20,
+  },
+  userBubbleText: {
+    fontSize: 14,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.white,
+    lineHeight: 20,
+  },
   bulletDot: {
     width: 5,
     height: 5,
