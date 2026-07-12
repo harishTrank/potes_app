@@ -3,6 +3,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import LoginScreen from "./LoginScreen";
 import RegisterScreen from "./RegisterScreen";
 import ForgotPasswordScreen from "./ForgotPasswordScreen";
+import ForgotUsernameScreen from "./ForgotUsernameScreen";
 import OTPScreen from "./OTPScreen";
 import ResetPasswordScreen from "./ResetPasswordScreen";
 import BottomTabNavigation from "../../navigation/BottomTabNavigation";
@@ -34,6 +35,7 @@ const UserScreens = () => {
       <Stack.Screen name="TermAndCondition" component={TermAndCondition} />
       <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
       <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
+      <Stack.Screen name="ForgotUsernameScreen" component={ForgotUsernameScreen} />
       <Stack.Screen name="OTPScreen" component={OTPScreen} />
       <Stack.Screen name="OTPScreenResgister" component={OTPScreenResgister} />
       <Stack.Screen name="ResetPasswordScreen" component={ResetPasswordScreen} />

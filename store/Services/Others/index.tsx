@@ -80,6 +80,11 @@ export const forgotPasswordChange = ({ body }: any) =>
     uriEndPoint: allApi.forgotPasswordChange.v1,
     body,
   });
+export const forgotUsername = ({ body }: any) =>
+  callApi({
+    uriEndPoint: allApi.forgotUsername.v1,
+    body,
+  });
 export const changeProfileName = ({ body }: any) =>
   callApi({
     uriEndPoint: allApi.changeProfileName.v1,

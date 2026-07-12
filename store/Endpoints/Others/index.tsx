@@ -113,6 +113,13 @@ export const allApi = {
       uri: "/reset-password/",
     },
   },
+  forgotUsername: {
+    v1: {
+      ...defaults.methods.POST,
+      ...defaults.versions.v1,
+      uri: "/forgot-username/",
+    },
+  },
   changeProfileName: {
     v1: {
       ...defaults.methods.PUT,

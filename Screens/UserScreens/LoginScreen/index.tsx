@@ -11,7 +11,6 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import Feather from "@expo/vector-icons/Feather";
@@ -55,7 +54,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   const handleLoginSubmit = (
     values: LoginFormValues,
-    { setSubmitting }: FormikHelpers<LoginFormValues>
+    { setSubmitting }: FormikHelpers<LoginFormValues>,
   ) => {
     loginApiCall({
       body: values,
@@ -86,14 +85,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   const handleForgotUsername = () => {
-    Alert.alert(
-      "Forgot Username?",
-      "We don't display usernames automatically for security reasons. Reach out to us via Contact Us and our support team will help you recover access.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Contact Us", onPress: () => navigation.navigate("ContactUsScreenLogin") },
-      ],
-    );
+    navigation.navigate("ForgotUsernameScreen");
   };
 
   const handleRegister = () => {
@@ -202,7 +194,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                     >
                       About Us
                     </Text>{" "}
-                    and{" "}
+                    {/* and{" "}
                     <Text
                       style={styles.linkTextBlue}
                       onPress={() =>
@@ -210,8 +202,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                       }
                     >
                       Contact Us
-                    </Text>{" "}
-                    pages.
+                    </Text>{" "} */}
+                    page.
                   </Text>
 
                   <TouchableOpacity
@@ -230,10 +222,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                   </TouchableOpacity>
 
                   <View style={styles.forgotLinksRow}>
-                    <TouchableOpacity onPress={handleForgotUsername} disabled={isSubmitting}>
+                    <TouchableOpacity
+                      onPress={handleForgotUsername}
+                      disabled={isSubmitting}
+                    >
                       <Text style={styles.linkText}>Forgot Username?</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleForgotPassword} disabled={isSubmitting}>
+                    <TouchableOpacity
+                      onPress={handleForgotPassword}
+                      disabled={isSubmitting}
+                    >
                       <Text style={styles.linkText}>Forgot Password?</Text>
                     </TouchableOpacity>
                   </View>
@@ -386,12 +384,12 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   infoText: {
-    textAlign: "center",
+    textAlign: "left",
     color: theme.colors.secondary,
-    fontSize: 14,
-    marginTop: 25,
+    fontSize: 13.5,
+    marginTop: 20,
     lineHeight: 18,
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
     ...theme.font.fontRegular,
   },
 
