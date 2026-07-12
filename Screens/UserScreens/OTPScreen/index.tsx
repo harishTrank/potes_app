@@ -129,7 +129,7 @@ const OTPScreen = ({ navigation, route }: any) => {
           ]}
         >
           <Text style={styles.otpDigit}>{digit}</Text>
-        </View>
+        </View>,
       );
     }
     return boxes;
@@ -165,9 +165,11 @@ const OTPScreen = ({ navigation, route }: any) => {
             />
 
             <View style={styles.contentContainer}>
-              <Text style={styles.screenTitle}>Enter the One Time Password</Text>
+              <Text style={styles.screenTitle}>
+                Enter the One Time Password
+              </Text>
               <Text style={styles.subtitle}>
-                Enter the one time password you received on {" "}
+                Enter the one time password you received on{" "}
                 {emailFromPreviousScreen}
               </Text>
 
@@ -176,7 +178,9 @@ const OTPScreen = ({ navigation, route }: any) => {
               </Pressable>
 
               <View style={styles.resendContainer}>
-                <Text style={styles.resendText}>Didn't get the One Time Password? </Text>
+                <Text style={styles.resendText}>
+                  Didn't get the One Time Password?{" "}
+                </Text>
                 <TouchableOpacity
                   onPress={handleResendCode}
                   disabled={resendDisabled}
@@ -305,7 +309,7 @@ const styles = StyleSheet.create({
     color: theme.colors.lightBackground,
   },
   continueButton: {
-    backgroundColor: theme.colors.lightBackground,
+    backgroundColor: theme.colors.secondary,
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: "center",

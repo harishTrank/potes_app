@@ -194,7 +194,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                     >
                       About Us
                     </Text>{" "}
-                    {/* and{" "}
+                    and{" "}
                     <Text
                       style={styles.linkTextBlue}
                       onPress={() =>
@@ -202,8 +202,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                       }
                     >
                       Contact Us
-                    </Text>{" "} */}
-                    page.
+                    </Text>{" "}
+                    pages.
                   </Text>
 
                   <TouchableOpacity
