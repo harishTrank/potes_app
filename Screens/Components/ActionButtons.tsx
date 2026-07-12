@@ -4,13 +4,16 @@ import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import theme from "../../utils/theme";
 import { useNavigation } from "@react-navigation/native";
+import { useSetAtom } from "jotai";
+import { aiAssistantOverlayGlobal } from "../../jotaiStore";
 
 const ActionButtons: any = () => {
   const navigation: any = useNavigation();
+  const setAiOverlay = useSetAtom(aiAssistantOverlayGlobal);
 
   const onCreateContactPress = () => navigation.navigate("CreateContantScreen");
   const onCreateNotePress = () => navigation.navigate("CreateNoteScreen");
-  const onAiChatPress = () => navigation.navigate("ChatAiScreen");
+  const onAiChatPress = () => setAiOverlay({ visible: true, contactId: null });
 
   return (
     <View style={styles.container}>

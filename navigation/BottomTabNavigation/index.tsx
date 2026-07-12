@@ -2,6 +2,7 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSetAtom } from "jotai";
 import theme from "../../utils/theme";
 import HomeScreen from "../../Screens/UserScreens/HomeScreen";
 import DirectoryScreen from "../../Screens/UserScreens/DirectoryScreen";
@@ -10,6 +11,7 @@ import UserProfileScreen from "../../Screens/UserScreens/UserProfileScreen";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { aiAssistantOverlayGlobal } from "../../jotaiStore";
 
 const Tab = createBottomTabNavigator();
 
@@ -25,6 +27,7 @@ const AITabIcon = ({ focused }: { focused: boolean }) => (
 
 export default function BottomTabNavigation() {
   const insets = useSafeAreaInsets();
+  const setAiOverlay = useSetAtom(aiAssistantOverlayGlobal);
   return (
     <Tab.Navigator
       screenOptions={{
@@ -62,6 +65,14 @@ export default function BottomTabNavigation() {
         options={{
           tabBarLabel: "AI",
           tabBarIcon: ({ focused }) => <AITabIcon focused={focused} />,
+        }}
+        listeners={{
+          // Open the AI assistant as an overlay on top of the current tab
+          // instead of navigating to it as a full screen.
+          tabPress: (e) => {
+            e.preventDefault();
+            setAiOverlay({ visible: true, contactId: null });
+          },
         }}
       />
       <Tab.Screen

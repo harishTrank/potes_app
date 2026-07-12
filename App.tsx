@@ -8,6 +8,7 @@ import theme from "./utils/theme";
 import { Toast } from "react-native-toast-message/lib/src/Toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import notifee, { AuthorizationStatus } from "@notifee/react-native";
+import { AIAssistantSheet } from "./Screens/Components/AIAssistantSheet";
 
 registerTranslation("en", en);
 LogBox.ignoreAllLogs();
@@ -64,6 +65,7 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <PaperProvider theme={customTheme}>
           <Navigation />
+          <AIAssistantSheet />
           <Toast position="top" />
         </PaperProvider>
       </QueryClientProvider>

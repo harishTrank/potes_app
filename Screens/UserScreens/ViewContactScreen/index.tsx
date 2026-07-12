@@ -23,6 +23,8 @@ import Toast from "react-native-toast-message";
 import { useProfileContactApi } from "../../../hooks/Others/query";
 import FastImage from "react-native-fast-image";
 import { formatPhoneNumber } from "../../../utils/ImagePicker";
+import { useSetAtom } from "jotai";
+import { aiAssistantOverlayGlobal } from "../../../jotaiStore";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -60,6 +62,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
   const [loading, setLoading] = useState(false);
   const apiResponse: any = useProfileContactApi({ query: { id: contactId } });
   const scrollViewRef: any = useRef(null);
+  const setAiOverlay = useSetAtom(aiAssistantOverlayGlobal);
 
   const [sectionOpenState, setSectionOpenState] = useState({
     personal: true,
@@ -189,7 +192,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionBtn, styles.actionBtnActive]}
-                onPress={() => navigation.navigate("DrawerNavigation", { screen: "ChatAiScreen", params: { contactId } })}
+                onPress={() => setAiOverlay({ visible: true, contactId })}
               >
                 <MaterialCommunityIcons name="star-four-points" size={16} color={theme.colors.white} />
                 <Text style={[styles.actionBtnText, { color: theme.colors.white }]}>AI</Text>
