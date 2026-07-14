@@ -250,94 +250,98 @@ const ChatBody = ({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={[styles.container, { paddingTop: topInset }]}>
           {/* Header */}
-          <View style={styles.headerRow}>
-            <TouchableOpacity onPress={onClose} style={styles.menuBtn}>
-              <Feather
-                name={closeIconName as any}
-                size={22}
-                color={theme.colors.primary}
-              />
-            </TouchableOpacity>
-            <View style={styles.aiHeaderCenter}>
-              <View style={styles.aiDot} />
-              <Text style={styles.aiHeaderTitle}>AI Assistant</Text>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.headerRow}>
+              <TouchableOpacity onPress={onClose} style={styles.menuBtn}>
+                <Feather
+                  name={closeIconName as any}
+                  size={22}
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+              <View style={styles.aiHeaderCenter}>
+                <View style={styles.aiDot} />
+                <Text style={styles.aiHeaderTitle}>AI Assistant</Text>
+              </View>
+              <View style={{ flexDirection: "row" }}>
+                {keyboardVisible && (
+                  <TouchableOpacity
+                    onPress={() => Keyboard.dismiss()}
+                    style={styles.menuBtn}
+                  >
+                    <Feather
+                      name="chevron-down"
+                      size={20}
+                      color={theme.colors.greyText}
+                    />
+                  </TouchableOpacity>
+                )}
+                {hasStartedChat && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setAiChats([]);
+                      setHasStartedChat(false);
+                      setConversationId(null);
+                    }}
+                    style={styles.menuBtn}
+                  >
+                    <Feather
+                      name="refresh-ccw"
+                      size={18}
+                      color={theme.colors.greyText}
+                    />
+                  </TouchableOpacity>
+                )}
+                {!embedded && (
+                  <TouchableOpacity
+                    onPress={() => setMenuVisible(true)}
+                    style={styles.menuBtn}
+                  >
+                    <Feather
+                      name="menu"
+                      size={22}
+                      color={theme.colors.primary}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
-            <View style={{ flexDirection: "row" }}>
-              {keyboardVisible && (
-                <TouchableOpacity
-                  onPress={() => Keyboard.dismiss()}
-                  style={styles.menuBtn}
-                >
-                  <Feather
-                    name="chevron-down"
-                    size={20}
-                    color={theme.colors.greyText}
-                  />
-                </TouchableOpacity>
-              )}
-              {hasStartedChat && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setAiChats([]);
-                    setHasStartedChat(false);
-                    setConversationId(null);
-                  }}
-                  style={styles.menuBtn}
-                >
-                  <Feather
-                    name="refresh-ccw"
-                    size={18}
-                    color={theme.colors.greyText}
-                  />
-                </TouchableOpacity>
-              )}
-              {!embedded && (
-                <TouchableOpacity
-                  onPress={() => setMenuVisible(true)}
-                  style={styles.menuBtn}
-                >
-                  <Feather
-                    name="menu"
-                    size={22}
-                    color={theme.colors.primary}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
+          </TouchableWithoutFeedback>
 
           {!hasStartedChat && aiChats.length === 0 ? (
             // Greeting Screen
-            <View style={styles.greetingSection}>
-              <Text style={styles.greetingTitle}>Hello, {firstName}.</Text>
-              <Text style={styles.greetingSubtitle}>
-                How can I help you manage your connections today?
-              </Text>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.greetingSection}>
+                <Text style={styles.greetingTitle}>Hello, {firstName}.</Text>
+                <Text style={styles.greetingSubtitle}>
+                  How can I help you manage your connections today?
+                </Text>
 
-              <View style={styles.quickActionsGrid}>
-                {quickActions.map((action) => (
-                  <TouchableOpacity
-                    key={action.label}
-                    style={styles.quickActionCard}
-                    onPress={() => handleSend(action.label)}
-                  >
-                    <Ionicons
-                      name={action.icon as any}
-                      size={18}
-                      color={theme.colors.primary}
-                    />
-                    <Text style={styles.quickActionText}>{action.label}</Text>
-                  </TouchableOpacity>
-                ))}
+                <View style={styles.quickActionsGrid}>
+                  {quickActions.map((action) => (
+                    <TouchableOpacity
+                      key={action.label}
+                      style={styles.quickActionCard}
+                      onPress={() => handleSend(action.label)}
+                    >
+                      <Ionicons
+                        name={action.icon as any}
+                        size={18}
+                        color={theme.colors.primary}
+                      />
+                      <Text style={styles.quickActionText}>{action.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
-            </View>
+            </TouchableWithoutFeedback>
           ) : (
             // Chat View
             <FlatList
               ref={flatListRef}
+              style={styles.flatList}
               data={chatData}
               renderItem={renderItem}
               keyExtractor={(item) => item?.id}
@@ -348,7 +352,6 @@ const ChatBody = ({
             />
           )}
         </View>
-        </TouchableWithoutFeedback>
 
         {/* Input Bar */}
         <View style={[styles.inputBar, { paddingBottom: 10 + bottomInset }]}>
@@ -376,6 +379,7 @@ const ChatBody = ({
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  flatList: { flex: 1 },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
