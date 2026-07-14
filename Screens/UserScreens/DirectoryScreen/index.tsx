@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   StyleSheet,
   SectionList,
@@ -369,8 +370,11 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
             onPress={() => navigation.navigate("HomeScreen")}
             style={styles.headerCenter}
           >
-            <Text style={styles.logoText}>POTES</Text>
-            <Text style={styles.logoSub}>people notes</Text>
+            <Image
+              source={require("../../../assets/Images/potes_new.png")}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.navigate("UserProfileScreen")}
@@ -561,17 +565,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerCenter: { alignItems: "center" },
-  logoText: {
-    fontSize: 18,
-    fontFamily: "Poppins-Bold",
-    color: theme.colors.primary,
-    letterSpacing: 2.5,
-  },
-  logoSub: {
-    fontSize: 11,
-    fontFamily: "PlayfairDisplay-Italic",
-    color: theme.colors.greyText,
-    marginTop: -2,
+  logoImage: {
+    width: 100,
+    height: 32,
   },
   avatarBtn: {},
   headerAvatarCircle: {

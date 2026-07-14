@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import {
   View,
   Text,
+  Image,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -11,7 +12,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import theme from "../../utils/theme";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useAtom } from "jotai";
-import { apiCallBackGlobal, searchValueGlobal, userProfileGlobal } from "../../jotaiStore";
+import {
+  apiCallBackGlobal,
+  searchValueGlobal,
+  userProfileGlobal,
+} from "../../jotaiStore";
 import { viewProfileApi } from "../../store/Services/Others";
 import FastImage from "react-native-fast-image";
 
@@ -20,14 +25,18 @@ const UserAvatar = ({ userProfile }: any) => {
     return (
       <FastImage
         style={styles.avatarImage}
-        source={{ uri: userProfile.profile_pic, priority: FastImage.priority.normal }}
+        source={{
+          uri: userProfile.profile_pic,
+          priority: FastImage.priority.normal,
+        }}
       />
     );
   }
-  const initials = [userProfile?.first_name?.[0], userProfile?.last_name?.[0]]
-    .filter(Boolean)
-    .join("")
-    .toUpperCase() || "U";
+  const initials =
+    [userProfile?.first_name?.[0], userProfile?.last_name?.[0]]
+      .filter(Boolean)
+      .join("")
+      .toUpperCase() || "U";
   return (
     <View style={styles.avatarCircle}>
       <Text style={styles.avatarInitials}>{initials}</Text>
@@ -35,7 +44,11 @@ const UserAvatar = ({ userProfile }: any) => {
   );
 };
 
-const Header: any = ({ menu = true, directory = false, showSearch = false }: any) => {
+const Header: any = ({
+  menu = true,
+  directory = false,
+  showSearch = false,
+}: any) => {
   const insets = useSafeAreaInsets();
   const navigation: any = useNavigation();
   const route: any = useRoute();
@@ -67,7 +80,9 @@ const Header: any = ({ menu = true, directory = false, showSearch = false }: any
     <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
       <View style={styles.topRow}>
         <TouchableOpacity
-          onPress={menu ? () => navigation.navigate("DrawerNavigation") : onBackPress}
+          onPress={
+            menu ? () => navigation.navigate("DrawerNavigation") : onBackPress
+          }
           style={styles.sideButton}
         >
           <Feather
@@ -78,8 +93,11 @@ const Header: any = ({ menu = true, directory = false, showSearch = false }: any
         </TouchableOpacity>
 
         <View style={styles.logoBlock}>
-          <Text style={styles.logoText}>POTES</Text>
-          <Text style={styles.logoSub}>people notes</Text>
+          <Image
+            source={require("../../assets/Images/potes_new.png")}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
 
         <TouchableOpacity onPress={onProfilePress} style={styles.sideButton}>
@@ -90,7 +108,11 @@ const Header: any = ({ menu = true, directory = false, showSearch = false }: any
       {showSearch && (
         <View style={styles.searchRow}>
           <TouchableOpacity onPress={onPressSearch} style={styles.searchIcon}>
-            <Feather name="search" size={18} color={theme.colors.searchPlaceholder} />
+            <Feather
+              name="search"
+              size={18}
+              color={theme.colors.searchPlaceholder}
+            />
           </TouchableOpacity>
           <TextInput
             style={styles.searchInput}
@@ -127,17 +149,9 @@ const styles = StyleSheet.create({
   logoBlock: {
     alignItems: "center",
   },
-  logoText: {
-    fontSize: 20,
-    fontFamily: "Poppins-Bold",
-    color: theme.colors.primary,
-    letterSpacing: 2.5,
-  },
-  logoSub: {
-    fontSize: 12,
-    fontFamily: "PlayfairDisplay-Italic",
-    color: theme.colors.greyText,
-    marginTop: -2,
+  logoImage: {
+    width: 112,
+    height: 36,
   },
   avatarCircle: {
     width: 36,

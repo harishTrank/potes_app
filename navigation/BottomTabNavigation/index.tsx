@@ -6,7 +6,6 @@ import { useSetAtom } from "jotai";
 import theme from "../../utils/theme";
 import HomeScreen from "../../Screens/UserScreens/HomeScreen";
 import DirectoryScreen from "../../Screens/UserScreens/DirectoryScreen";
-import ChatAiScreen from "../../Screens/UserScreens/ChatAiScreen";
 import UserProfileScreen from "../../Screens/UserScreens/UserProfileScreen";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -14,6 +13,12 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { aiAssistantOverlayGlobal } from "../../jotaiStore";
 
 const Tab = createBottomTabNavigator();
+
+// The AI tab always opens the AIAssistantSheet overlay via tabPress below,
+// so this route is never actually navigated to or rendered — it only needs
+// to satisfy react-navigation's requirement that every Tab.Screen have a
+// component.
+const AITabPlaceholder = () => null;
 
 const AITabIcon = ({ focused }: { focused: boolean }) => (
   <View style={[styles.aiTabIcon, focused && styles.aiTabIconActive]}>
@@ -61,7 +66,7 @@ export default function BottomTabNavigation() {
       />
       <Tab.Screen
         name="ChatAiScreen"
-        component={ChatAiScreen}
+        component={AITabPlaceholder}
         options={{
           tabBarLabel: "AI",
           tabBarIcon: ({ focused }) => <AITabIcon focused={focused} />,

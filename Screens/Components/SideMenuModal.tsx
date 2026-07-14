@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   StyleSheet,
   Modal,
@@ -40,13 +41,30 @@ export const SideMenuModal = ({ visible, onClose }: SideMenuModalProps) => {
   useEffect(() => {
     if (visible) {
       Animated.parallel([
-        Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 80, friction: 12 }),
-        Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 80,
+          friction: 12,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
       ]).start();
     } else {
       Animated.parallel([
-        Animated.timing(slideAnim, { toValue: -MENU_WIDTH, duration: 200, useNativeDriver: true }),
-        Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+        Animated.timing(slideAnim, {
+          toValue: -MENU_WIDTH,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
       ]).start();
     }
   }, [visible]);
@@ -74,7 +92,12 @@ export const SideMenuModal = ({ visible, onClose }: SideMenuModalProps) => {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+    >
       <View style={styles.root}>
         <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
           <TouchableWithoutFeedback onPress={onClose}>
@@ -85,15 +108,19 @@ export const SideMenuModal = ({ visible, onClose }: SideMenuModalProps) => {
         <Animated.View
           style={[
             styles.drawer,
-            { paddingTop: insets.top + 10, transform: [{ translateX: slideAnim }] },
+            {
+              paddingTop: insets.top + 10,
+              transform: [{ translateX: slideAnim }],
+            },
           ]}
         >
           {/* Header */}
           <View style={styles.drawerHeader}>
-            <View>
-              <Text style={styles.drawerLogo}>POTES</Text>
-              <Text style={styles.drawerSub}>people notes</Text>
-            </View>
+            <Image
+              source={require("../../assets/Images/potes_new.png")}
+              style={styles.drawerLogoImage}
+              resizeMode="contain"
+            />
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Feather name="x" size={22} color={theme.colors.primary} />
             </TouchableOpacity>
@@ -110,10 +137,18 @@ export const SideMenuModal = ({ visible, onClose }: SideMenuModalProps) => {
                 onPress={() => handleNav(item)}
               >
                 <View style={styles.menuIconWrap}>
-                  <Feather name={item.icon as any} size={19} color={theme.colors.primary} />
+                  <Feather
+                    name={item.icon as any}
+                    size={19}
+                    color={theme.colors.primary}
+                  />
                 </View>
                 <Text style={styles.menuLabel}>{item.label}</Text>
-                <Feather name="chevron-right" size={16} color={theme.colors.grey} />
+                <Feather
+                  name="chevron-right"
+                  size={16}
+                  color={theme.colors.grey}
+                />
               </TouchableOpacity>
             ))}
           </View>
@@ -156,17 +191,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
-  drawerLogo: {
-    fontSize: 22,
-    fontFamily: "Poppins-Bold",
-    color: theme.colors.primary,
-    letterSpacing: 1,
-  },
-  drawerSub: {
-    fontSize: 11,
-    fontFamily: "Poppins-Regular",
-    color: theme.colors.greyText,
-    marginTop: -4,
+  drawerLogoImage: {
+    width: 124,
+    height: 40,
   },
   closeBtn: {
     width: 36,

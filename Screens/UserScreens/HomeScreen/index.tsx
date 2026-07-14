@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -182,8 +183,11 @@ const HomeScreen = ({ navigation }: any) => {
           <Feather name="menu" size={22} color={theme.colors.primary} />
         </TouchableOpacity>
         <View style={styles.logoBlock}>
-          <Text style={styles.logoText}>POTES</Text>
-          <Text style={styles.logoSub}>people notes</Text>
+          <Image
+            source={require("../../../assets/Images/potes_new.png")}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
         <TouchableOpacity onPress={() => nav.navigate("UserProfileScreen")}>
           <UserAvatar userProfile={userProfile} />
@@ -419,17 +423,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logoBlock: { alignItems: "center" },
-  logoText: {
-    fontSize: 20,
-    fontFamily: "Poppins-Bold",
-    color: theme.colors.primary,
-    letterSpacing: 2.5,
-  },
-  logoSub: {
-    fontSize: 11,
-    fontFamily: "Poppins-Regular",
-    color: theme.colors.greyText,
-    marginTop: -4,
+  logoImage: {
+    width: 112,
+    height: 36,
   },
   avatarCircle: {
     width: 36,
