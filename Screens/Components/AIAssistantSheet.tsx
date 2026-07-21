@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.45)",
   },
   sheet: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.lightBackground,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     overflow: "hidden",
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   handleArea: {
     alignItems: "center",
     paddingVertical: 8,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.lightBackground,
   },
   handleBar: {
     width: 40,

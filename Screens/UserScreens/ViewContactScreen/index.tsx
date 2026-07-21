@@ -151,10 +151,6 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Feather name="arrow-left" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={toggleAllSections} style={styles.expandBtn}>
-            <Feather name={areAllSectionsOpen ? "minimize-2" : "maximize-2"} size={16} color={theme.colors.primary} />
-            <Text style={styles.expandBtnText}>{areAllSectionsOpen ? "Collapse" : "Expand"}</Text>
-          </TouchableOpacity>
         </View>
 
         <ScrollView
@@ -187,19 +183,28 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
             {/* Action Buttons */}
             <View style={styles.actionBtnsRow}>
               <TouchableOpacity style={styles.actionBtn} onPress={handleEdit}>
-                <Feather name="edit-2" size={16} color={theme.colors.primary} />
+                <Feather name="edit-2" size={14} color={theme.colors.primary} />
                 <Text style={styles.actionBtnText}>Edit</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionBtn, styles.actionBtnActive]}
                 onPress={() => setAiOverlay({ visible: true, contactId })}
               >
-                <MaterialCommunityIcons name="star-four-points" size={16} color={theme.colors.white} />
+                <MaterialCommunityIcons name="star-four-points" size={14} color={theme.colors.white} />
                 <Text style={[styles.actionBtnText, { color: theme.colors.white }]}>AI</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionBtn} onPress={handleAddNote}>
-                <Feather name="file-plus" size={16} color={theme.colors.primary} />
+                <Feather name="file-plus" size={14} color={theme.colors.primary} />
                 <Text style={styles.actionBtnText}>Note</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionBtn} onPress={toggleAllSections}>
+                <Feather
+                  name={areAllSectionsOpen ? "minimize-2" : "maximize-2"}
+                  size={14}
+                  color={theme.colors.primary}
+                  style={styles.actionBtnIcon}
+                />
+                <Text style={styles.actionBtnText}>{areAllSectionsOpen ? "Collapse" : "Expand"}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -318,8 +323,6 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   backBtn: { width: 40, height: 40, justifyContent: "center" },
-  expandBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 8, paddingVertical: 6 },
-  expandBtnText: { fontSize: 13, fontFamily: "Poppins-Medium", color: theme.colors.primary },
   deleteBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -355,19 +358,20 @@ const styles = StyleSheet.create({
   heroName: { fontSize: 22, fontFamily: "Poppins-Bold", color: theme.colors.text },
   heroSubtitle: { fontSize: 13, fontFamily: "Poppins-Regular", color: theme.colors.greyText, marginTop: 2 },
   heroEmployer: { fontSize: 13, fontFamily: "Poppins-Medium", color: theme.colors.primary, marginTop: 2 },
-  actionBtnsRow: { flexDirection: "row", gap: 10, marginTop: 16 },
+  actionBtnsRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8, marginTop: 16 },
   actionBtn: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 18,
-    paddingVertical: 9,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: 10,
     borderWidth: 1.5,
     borderColor: theme.colors.primary,
-    gap: 6,
+    gap: 5,
   },
   actionBtnActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  actionBtnText: { fontSize: 14, fontFamily: "Poppins-SemiBold", color: theme.colors.primary },
+  actionBtnText: { fontSize: 13, fontFamily: "Poppins-SemiBold", color: theme.colors.primary, lineHeight: 14 },
+  actionBtnIcon: { marginTop: -1 },
   infoCard: {
     backgroundColor: theme.colors.white,
     borderRadius: 16,

@@ -24,8 +24,8 @@ const EventListItem: any = ({ item, type, onDismiss }: any) => {
     type === "Birthdays" || type === "Anniversary"
       ? item?.full_name
       : type === "spouse"
-      ? `${item?.spouse_name} (${item?.full_name}'s Spouse)`
-      : `${item?.name || ""} (${item?.contact__full_name}'s Family)`;
+      ? `${item?.spouse_name} • Spouse of ${item?.full_name}`
+      : `${item?.name || ""} • Family of ${item?.contact__full_name}`;
 
   const date = dayjs(
     type === "Birthdays"

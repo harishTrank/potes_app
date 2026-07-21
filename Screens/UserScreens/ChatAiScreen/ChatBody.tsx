@@ -357,7 +357,7 @@ const ChatBody = ({
         <View style={[styles.inputBar, { paddingBottom: 10 + bottomInset }]}>
           <TextInput
             style={styles.textInput}
-            placeholder="Ask me about your contacts or notes…"
+            placeholder="Ask about contacts or notes."
             placeholderTextColor={theme.colors.searchPlaceholder}
             value={input}
             onChangeText={setInput}

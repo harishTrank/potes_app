@@ -132,6 +132,11 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
   const [deviceContacts, setDeviceContacts] = useState<DeviceContact[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
+  const [showImportFab, setShowImportFab] = useState(false);
+  const listWrapperHeightRef = useRef(0);
+  const listScrollYRef = useRef(0);
+  const listContentHeightRef = useRef(0);
+  const FAB_END_THRESHOLD = 40;
 
   useEffect(() => {
     viewProfileApi()
@@ -293,6 +298,27 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
 
   const totalContacts = apiResponse?.results?.length || 0;
 
+  const evaluateFabVisibility = (contentHeight: number, scrollY: number, viewHeight: number) => {
+    if (viewHeight <= 0 || contentHeight <= 0) return;
+    setShowImportFab(scrollY + viewHeight >= contentHeight - FAB_END_THRESHOLD);
+  };
+
+  const handleListScroll = (e: any) => {
+    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+    listScrollYRef.current = contentOffset.y;
+    evaluateFabVisibility(contentSize.height, contentOffset.y, layoutMeasurement.height);
+  };
+
+  const handleListWrapperLayout = (e: any) => {
+    listWrapperHeightRef.current = e.nativeEvent.layout.height;
+    evaluateFabVisibility(listContentHeightRef.current, listScrollYRef.current, listWrapperHeightRef.current);
+  };
+
+  const handleListContentSizeChange = (_: number, contentHeight: number) => {
+    listContentHeightRef.current = contentHeight;
+    evaluateFabVisibility(contentHeight, listScrollYRef.current, listWrapperHeightRef.current);
+  };
+
   const renderContactItem = ({ item }: { item: ApiContact }) => (
     <TouchableOpacity
       style={styles.contactItem}
@@ -417,7 +443,7 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
         </View>
 
         {/* Contact List */}
-        <View style={styles.listWrapper}>
+        <View style={styles.listWrapper} onLayout={handleListWrapperLayout}>
           {!apiIsLoading && sections.length === 0 ? (
             <Text style={styles.noResultsText}>
               {searchQuery
@@ -438,6 +464,9 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
               windowSize={10}
               maxToRenderPerBatch={40}
               contentContainerStyle={{ paddingBottom: 10 }}
+              onScroll={handleListScroll}
+              onContentSizeChange={handleListContentSizeChange}
+              scrollEventThrottle={16}
             />
           )}
           {!apiIsLoading && sections.length > 0 && (
@@ -455,13 +484,15 @@ const DirectoryScreen: React.FC<any> = ({ navigation }: any) => {
           )}
         </View>
 
-        {/* Sync local storage - small floating action button */}
-        <TouchableOpacity
-          style={[styles.syncFab, { bottom: insets.bottom + 16 }]}
-          onPress={importContacts}
-        >
-          <Feather name="user-plus" size={20} color={theme.colors.white} />
-        </TouchableOpacity>
+        {/* Sync local storage - small floating action button, shown only once the list is fully scrolled to the end */}
+        {showImportFab && (
+          <TouchableOpacity
+            style={[styles.syncFab, { bottom: insets.bottom + 16 }]}
+            onPress={importContacts}
+          >
+            <Feather name="user-plus" size={20} color={theme.colors.white} />
+          </TouchableOpacity>
+        )}
       </View>
 
       <Modal
