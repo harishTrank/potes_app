@@ -24,16 +24,23 @@ import { SideMenuModal } from "../../Components/SideMenuModal";
 
 const renderInlineSegments = (text: string, textStyle: any) => {
   const parts = text.split(/(\*\*.*?\*\*)/g);
-  if (parts.length === 1) return <Text style={textStyle}>{text}</Text>;
+  if (parts.length === 1)
+    return (
+      <Text selectable style={textStyle}>
+        {text}
+      </Text>
+    );
   return (
-    <Text style={textStyle}>
+    <Text selectable style={textStyle}>
       {parts.map((part, i) =>
         part.startsWith("**") && part.endsWith("**") && part.length > 4 ? (
-          <Text key={i} style={[textStyle, { fontFamily: "Poppins-SemiBold" }]}>
+          <Text key={i} selectable style={[textStyle, { fontFamily: "Poppins-SemiBold" }]}>
             {part.slice(2, -2)}
           </Text>
         ) : (
-          <Text key={i}>{part}</Text>
+          <Text key={i} selectable>
+            {part}
+          </Text>
         ),
       )}
     </Text>
@@ -71,6 +78,36 @@ const renderMarkdown = (text: string, textStyle: any): React.ReactNode[] => {
       </View>
     );
   });
+};
+
+const formatNoteDate = (dateStr?: string): string | null => {
+  if (!dateStr) return null;
+  const [year, month, day] = dateStr.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+// The backend's `ui.message` is only a one-line summary (e.g. "The last note
+// for X was added on Aug 31"). When the response also carries the actual
+// note records in `payload.notes`, append their content so the chat shows
+// the real notes instead of just the summary line.
+const buildChatReply = (res: any): string => {
+  const intro = res?.ui?.message || res?.response || "";
+  const notes = res?.payload?.notes;
+  if (!Array.isArray(notes) || notes.length === 0) return intro;
+
+  const noteBlocks = notes.map((note: any) => {
+    const header = [note?.contact_name, formatNoteDate(note?.created_date)]
+      .filter(Boolean)
+      .join(" — ");
+    return header ? `* **${header}**\n${note?.note || ""}` : note?.note || "";
+  });
+
+  return [intro, ...noteBlocks].filter(Boolean).join("\n\n");
 };
 
 const GLOBAL_QUICK_ACTIONS = [
@@ -186,7 +223,7 @@ const ChatBody = ({
           {
             id: res?.id || Date.now().toString(),
             message: null,
-            reply: res?.ui?.message || res?.response,
+            reply: buildChatReply(res),
           },
         ]);
         setConversationId(res?.meta?.conversation_id);
@@ -208,7 +245,9 @@ const ChatBody = ({
         {item?.message && (
           <View style={[styles.messageRow, styles.userRow]}>
             <View style={[styles.bubble, styles.userBubble]}>
-              <Text style={styles.userBubbleText}>{item.message}</Text>
+              <Text selectable style={styles.userBubbleText}>
+                {item.message}
+              </Text>
             </View>
           </View>
         )}
