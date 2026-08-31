@@ -16,6 +16,7 @@ import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { postAiChat } from "../../../store/Services/Others";
+import * as Clipboard from "expo-clipboard";
 import Toast from "react-native-toast-message";
 import TypingIndicator from "./Components/TypingIndicator";
 import { useAtom } from "jotai";
@@ -238,6 +239,11 @@ const ChatBody = ({
       .finally(() => setLoading(false));
   };
 
+  const copyReplyToClipboard = async (reply: string) => {
+    await Clipboard.setStringAsync(reply);
+    Toast.show({ type: "success", text1: "Copied to clipboard" });
+  };
+
   const renderItem = ({ item }: any) => {
     if (item.typing) return <TypingIndicator />;
     return (
@@ -260,9 +266,21 @@ const ChatBody = ({
                 color={theme.colors.primary}
               />
             </View>
-            <View style={[styles.bubble, styles.aiBubble]}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={[styles.bubble, styles.aiBubble]}
+              onLongPress={() => copyReplyToClipboard(item.reply)}
+            >
               {renderMarkdown(item.reply, styles.aiBubbleText)}
-            </View>
+              <TouchableOpacity
+                style={styles.copyButton}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                onPress={() => copyReplyToClipboard(item.reply)}
+              >
+                <Feather name="copy" size={12} color={theme.colors.greyText} />
+                <Text style={styles.copyButtonText}>Copy</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
           </View>
         )}
       </>
@@ -526,6 +544,21 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins-Regular",
     color: theme.colors.text,
     lineHeight: 20,
+  },
+  copyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-end",
+    gap: 4,
+    marginTop: 6,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  copyButtonText: {
+    fontSize: 11,
+    fontFamily: "Poppins-Regular",
+    color: theme.colors.greyText,
   },
   userBubbleText: {
     fontSize: 14,
