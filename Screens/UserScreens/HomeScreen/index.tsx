@@ -105,14 +105,18 @@ const HomeScreen = ({ navigation }: any) => {
     return curr.completed ? acc : acc + 1;
   }, 0);
   const globalCount =
-    todayCount +
-    tomorrowCount +
-    reminder?.missed?.length +
-    birthday?.birthdays?.length +
-    birthday?.anniversary?.length +
-    birthday?.spouse_birthday?.length +
-    birthday?.child_birthday?.length;
+    (todayCount || 0) +
+    (tomorrowCount || 0) +
+    (reminder?.missed?.length || 0) +
+    (birthday?.birthdays?.length || 0) +
+    (birthday?.anniversary?.length || 0) +
+    (birthday?.spouse_birthday?.length || 0) +
+    (birthday?.child_birthday?.length || 0);
   const safeCount = Math.max(0, Number(globalCount) || 0);
+  const activeRemindersCount = Math.max(
+    0,
+    (todayCount || 0) + (tomorrowCount || 0) + (reminder?.missed?.length || 0),
+  );
 
   useEffect(() => {
     notifee.setBadgeCount(safeCount);
@@ -226,9 +230,11 @@ const HomeScreen = ({ navigation }: any) => {
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionAccent} />
             <Text style={styles.sectionTitle}>Reminders</Text>
-            {safeCount > 0 && (
+            {activeRemindersCount > 0 && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{safeCount} active</Text>
+                <Text style={styles.badgeText}>
+                  {activeRemindersCount} active
+                </Text>
               </View>
             )}
           </View>

@@ -211,12 +211,14 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
 
           {/* Info Card */}
           <View style={styles.infoCard}>
-            <CollapsibleSection title="PERSONAL INFO" color="#3d8b6e" isOpen={sectionOpenState.personal} onPress={() => toggleSection("personal")}>
-              <InfoRow label="Birthday" value={contact.birthday ? dayjs(contact.birthday, "YYYY-MM-DD").format("D MMMM") : null} icon={<MaterialCommunityIcons name="cake-variant-outline" size={14} color={theme.colors.primary} />} />
-              <InfoRow label="Anniversary" value={contact.anniversary ? dayjs(contact.anniversary, "YYYY-MM-DD").format("D MMMM") : null} icon={<Feather name="heart" size={14} color="#9a6eb0" />} />
-              <InfoRow label="Email" value={contact.email} />
-              <InfoRow label="Phone" value={formatPhoneNumber(contact.phone)} />
-            </CollapsibleSection>
+            {(contact.birthday || contact.anniversary || contact.email || contact.phone) && (
+              <CollapsibleSection title="PERSONAL INFO" color="#3d8b6e" isOpen={sectionOpenState.personal} onPress={() => toggleSection("personal")}>
+                <InfoRow label="Birthday" value={contact.birthday ? dayjs(contact.birthday, "YYYY-MM-DD").format("D MMMM") : null} icon={<MaterialCommunityIcons name="cake-variant-outline" size={14} color={theme.colors.primary} />} />
+                <InfoRow label="Anniversary" value={contact.anniversary ? dayjs(contact.anniversary, "YYYY-MM-DD").format("D MMMM") : null} icon={<Feather name="heart" size={14} color="#9a6eb0" />} />
+                <InfoRow label="Email" value={contact.email} />
+                <InfoRow label="Phone" value={formatPhoneNumber(contact.phone)} />
+              </CollapsibleSection>
+            )}
 
             {(contact.spouse_name || contact.spouse_birthday || contact.children?.length > 0) && (
               <CollapsibleSection title="FAMILY DETAILS" color="#e07b39" isOpen={sectionOpenState.family} onPress={() => toggleSection("family")}>

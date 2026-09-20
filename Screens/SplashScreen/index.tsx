@@ -10,15 +10,17 @@ const SplashScreen = ({ navigation }: any) => {
     const token: any = await AsyncStorage.getItem("accessToken");
     if (token) {
       navigation.navigate("DrawerNavigation");
-    } else {
+      return;
+    }
+    const hasSeenOnboarding: any = await AsyncStorage.getItem(
+      "hasSeenOnboarding",
+    );
+    if (hasSeenOnboarding) {
       navigation.navigate("LoginScreen");
+    } else {
+      navigation.navigate("OnboardingScreen");
     }
   };
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     loginChecker();
-  //   }, 500);
-  // }, []);
 
   useFocusEffect(
     useCallback(() => {

@@ -23,63 +23,25 @@ import { useAtom } from "jotai";
 import { userProfileGlobal } from "../../../jotaiStore";
 import { SideMenuModal } from "../../Components/SideMenuModal";
 
-const renderInlineSegments = (text: string, textStyle: any) => {
-  const parts = text.split(/(\*\*.*?\*\*)/g);
-  if (parts.length === 1)
-    return (
-      <Text selectable style={textStyle}>
-        {text}
-      </Text>
-    );
-  return (
-    <Text selectable style={textStyle}>
-      {parts.map((part, i) =>
-        part.startsWith("**") && part.endsWith("**") && part.length > 4 ? (
-          <Text key={i} selectable style={[textStyle, { fontFamily: "Poppins-SemiBold" }]}>
-            {part.slice(2, -2)}
-          </Text>
-        ) : (
-          <Text key={i} selectable>
-            {part}
-          </Text>
-        ),
-      )}
-    </Text>
-  );
-};
-
-const renderMarkdown = (text: string, textStyle: any): React.ReactNode[] => {
-  return text.split("\n").map((line, index) => {
-    const trimmed = line.trim();
-
-    if (!trimmed) return <View key={index} style={{ height: 5 }} />;
-
-    const bulletMatch = trimmed.match(/^[*•-]\s*(.*)$/);
-    if (bulletMatch) {
-      const indentPx = line.length - line.trimStart().length > 0 ? 14 : 0;
-      return (
-        <View
-          key={index}
-          style={{
-            flexDirection: "row",
-            alignItems: "flex-start",
-            marginBottom: 3,
-            paddingLeft: indentPx,
-          }}
-        >
-          <View style={styles.bulletDot} />
-          {renderInlineSegments(bulletMatch[1], textStyle)}
-        </View>
-      );
-    }
-
-    return (
-      <View key={index} style={{ marginBottom: 2 }}>
-        {renderInlineSegments(line, textStyle)}
-      </View>
-    );
-  });
-};
+// React Native's `<Text selectable>` never supports drag-handle partial
+// selection on iOS (UILabel has no highlight-selection support — long press
+// only ever offers "Copy" of the whole node) and can silently lose selection
+// under Fabric on Android too. A non-editable multiline TextInput is backed
+// by a real native text-selection control (UITextView / EditText) on both
+// platforms, so it's the only reliable way to let users drag-select part of
+// a message. That means the reply is flattened to plain text — bullets
+// become "• " prefixes and **bold** markers are stripped — since TextInput
+// can't render rich inline formatting.
+const flattenReplyForDisplay = (text: string): string =>
+  text
+    .split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      const bulletMatch = trimmed.match(/^[*•-]\s*(.*)$/);
+      const content = bulletMatch ? `•  ${bulletMatch[1]}` : line;
+      return content.replace(/\*\*(.*?)\*\*/g, "$1");
+    })
+    .join("\n");
 
 const formatNoteDate = (dateStr?: string): string | null => {
   if (!dateStr) return null;
@@ -266,12 +228,21 @@ const ChatBody = ({
                 color={theme.colors.primary}
               />
             </View>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[styles.bubble, styles.aiBubble]}
-              onLongPress={() => copyReplyToClipboard(item.reply)}
-            >
-              {renderMarkdown(item.reply, styles.aiBubbleText)}
+            <View style={[styles.bubble, styles.aiBubble]}>
+              <TextInput
+                style={styles.aiBubbleText}
+                value={flattenReplyForDisplay(item.reply)}
+                editable
+                multiline
+                scrollEnabled={false}
+                showSoftInputOnFocus={false}
+                caretHidden
+                contextMenuHidden={false}
+                autoCorrect={false}
+                spellCheck={false}
+                underlineColorAndroid="transparent"
+                onChangeText={() => {}}
+              />
               <TouchableOpacity
                 style={styles.copyButton}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -280,7 +251,7 @@ const ChatBody = ({
                 <Feather name="copy" size={12} color={theme.colors.greyText} />
                 <Text style={styles.copyButtonText}>Copy</Text>
               </TouchableOpacity>
-            </TouchableOpacity>
+            </View>
           </View>
         )}
       </>
@@ -544,6 +515,9 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins-Regular",
     color: theme.colors.text,
     lineHeight: 20,
+    padding: 0,
+    margin: 0,
+    textAlignVertical: "top",
   },
   copyButton: {
     flexDirection: "row",
@@ -565,14 +539,6 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins-Regular",
     color: theme.colors.white,
     lineHeight: 20,
-  },
-  bulletDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: theme.colors.greyText,
-    marginRight: 8,
-    marginTop: 7,
   },
   inputBar: {
     flexDirection: "row",

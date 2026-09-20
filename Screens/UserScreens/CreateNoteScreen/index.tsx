@@ -205,6 +205,22 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
     "contact not found",
   ];
 
+  // The AI sometimes answers a note with no commitments in a chatty,
+  // conversational way (e.g. "I don't have that information yet. Would you
+  // like to add it now?") instead of stating that none exist. Detect that
+  // and show "None" instead of inserting the chatty response into the note.
+  const AI_NO_COMMITMENTS_PATTERNS = [
+    "don't have that information",
+    "do not have that information",
+    "would you like to add it",
+    "no commitments",
+    "no action items",
+    "don't see any commitments",
+    "do not see any commitments",
+    "could not find any commitments",
+    "couldn't find any commitments",
+  ];
+
   const handleAiAssist = (action: string, noteText: string, setFieldValue: Function, contactId?: any, contactName?: string) => {
     if (!noteText.trim()) {
       Toast.show({ type: "error", text1: "Please enter a note first." });
@@ -239,7 +255,9 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
           return;
         }
         if (action === "commitments") {
-          setFieldValue("noteText", `${noteText}\n\nCommitments:\n${String(result)}`);
+          const isNoCommitments = AI_NO_COMMITMENTS_PATTERNS.some((p) => lower.includes(p));
+          const commitmentsText = isNoCommitments ? "None" : String(result);
+          setFieldValue("noteText", `${noteText}\n\nCommitments:\n${commitmentsText}`);
         } else {
           setFieldValue("noteText", String(result));
         }

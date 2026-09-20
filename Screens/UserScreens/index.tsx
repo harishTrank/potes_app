@@ -13,6 +13,7 @@ import ViewContactScreen from "./ViewContactScreen";
 import AllNotesScreen from "./AllNotesScreen";
 import SearchResultScreen from "./SearchResultScreen";
 import SplashScreen from "../SplashScreen";
+import OnboardingScreen from "./OnboardingScreen";
 import OTPScreenResgister from "./OTPScreenResgister";
 import ChangePasswordScreen from "./ChangePasswordScreen";
 import AboutUsScreen from "./AboutUsScreen";
@@ -29,6 +30,7 @@ const UserScreens = () => {
       initialRouteName={"SplashScreen"}
     >
       <Stack.Screen name="SplashScreen" component={SplashScreen} />
+      <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
       <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="AboutUsScreenLogin" component={AboutUsScreen} />
       <Stack.Screen name="ContactUsScreenLogin" component={ContactUsScreen} />

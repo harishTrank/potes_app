@@ -18,11 +18,35 @@ import { staticDataApi } from "../../../store/Services/Others";
 
 type TermAndConditionNavigationProp = {
   goBack: () => void;
+  navigate: (screen: string) => void;
 };
 
 interface TermAndConditionProps {
   navigation: TermAndConditionNavigationProp;
 }
+
+// The Terms content is served from the backend and currently references
+// "[Privacy Policy] (coming soon)" as plain text, plus an "Address: (coming
+// soon)" line with no real address. Detect the bracketed marker and render
+// it as a tappable link to the in-app PrivacyPolicyScreen (which already
+// exists), drop the "Address: (coming soon)" line entirely, and drop the
+// now-inaccurate "(coming soon)" qualifier elsewhere — all regardless of
+// when/whether the backend copy is updated.
+const renderTermsContent = (content: string, onPressPrivacyPolicy: () => void) => {
+  const cleanedContent = content
+    .replace(/^[ \t]*Address:\s*\(coming soon\)\s*\n?/gim, "")
+    .replace(/\s*\(coming soon\)/gi, "");
+  const parts = cleanedContent.split(/(\[privacy policy\])/gi);
+  return parts.map((part, i) =>
+    /^\[privacy policy\]$/i.test(part) ? (
+      <Text key={i} style={styles.linkText} onPress={onPressPrivacyPolicy}>
+        Privacy Policy
+      </Text>
+    ) : (
+      <Text key={i}>{part}</Text>
+    ),
+  );
+};
 
 const TermAndCondition: React.FC<TermAndConditionProps> = ({
   navigation,
@@ -82,7 +106,13 @@ const TermAndCondition: React.FC<TermAndConditionProps> = ({
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.contentText}>{apiResponse?.content}</Text>
+          <Text style={styles.contentText}>
+            {apiResponse?.content
+              ? renderTermsContent(apiResponse.content, () =>
+                  navigation.navigate("PrivacyPolicyScreen"),
+                )
+              : null}
+          </Text>
         </ScrollView>
       </View>
     </DefaultBackground>
@@ -144,6 +174,11 @@ const styles = StyleSheet.create({
     textAlign: "left",
     lineHeight: 24,
     paddingHorizontal: 5,
+  },
+  linkText: {
+    ...theme.font.fontSemiBold,
+    color: theme.colors.primaryLight,
+    textDecorationLine: "underline",
   },
   logoImg: {
     resizeMode: "contain",

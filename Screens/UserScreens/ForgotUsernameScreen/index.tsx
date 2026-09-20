@@ -22,12 +22,10 @@ import FullScreenLoader from "../../Components/FullScreenLoader";
 import Toast from "react-native-toast-message";
 
 interface ForgotUsernameFormValues {
-  fullName: string;
   email: string;
 }
 
 const forgotUsernameValidationSchema = Yup.object().shape({
-  fullName: Yup.string(),
   email: Yup.string()
     .email("Invalid email format")
     .required("Email is required"),
@@ -45,7 +43,6 @@ const ForgotUsernameScreen: React.FC<any> = ({ navigation }: any) => {
     forgotUsername({
       body: {
         email: values.email,
-        full_name: values.fullName,
       },
     })
       ?.then((res: any) => {
@@ -102,7 +99,7 @@ const ForgotUsernameScreen: React.FC<any> = ({ navigation }: any) => {
               </Text>
 
               <Formik
-                initialValues={{ fullName: "", email: "" }}
+                initialValues={{ email: "" }}
                 validationSchema={forgotUsernameValidationSchema}
                 onSubmit={(values, actions) =>
                   handleFormSubmit(values, actions)
@@ -118,27 +115,6 @@ const ForgotUsernameScreen: React.FC<any> = ({ navigation }: any) => {
                   isSubmitting,
                 }) => (
                   <>
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.label}>Full Name</Text>
-                      <TextInput
-                        style={[
-                          styles.input,
-                          touched.fullName &&
-                            errors.fullName &&
-                            styles.inputError,
-                        ]}
-                        placeholder="Enter your full name (optional)"
-                        placeholderTextColor={theme.colors.searchPlaceholder}
-                        value={values.fullName}
-                        onChangeText={handleChange("fullName")}
-                        onBlur={handleBlur("fullName")}
-                        autoCapitalize="words"
-                      />
-                      {touched.fullName && errors.fullName && (
-                        <Text style={styles.errorText}>{errors.fullName}</Text>
-                      )}
-                    </View>
-
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>Email</Text>
                       <TextInput
