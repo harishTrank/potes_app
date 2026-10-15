@@ -51,7 +51,7 @@ const InfoRow = ({ label, value, icon }: { label: string; value?: string | null;
         {icon && <View style={styles.infoLabelIcon}>{icon}</View>}
         <Text style={styles.infoLabel}>{label}</Text>
       </View>
-      <Text style={styles.infoValue}>{value}</Text>
+      <Text selectable style={styles.infoValue}>{value}</Text>
     </View>
   );
 };
@@ -168,7 +168,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                 <Text style={styles.heroAvatarInitials}>{initials}</Text>
               </View>
             )}
-            <Text style={styles.heroName}>{contact.full_name}</Text>
+            <Text selectable style={styles.heroName}>{contact.full_name}</Text>
             {lastNoteDate && (
               <Text style={styles.heroSubtitle}>
                 Last note {dayjs().diff(dayjs(lastNoteDate), "month") > 0
@@ -177,7 +177,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
               </Text>
             )}
             {employer && (
-              <Text style={styles.heroEmployer}>{employer.name}{employer.details ? ` · ${employer.details}` : ""}</Text>
+              <Text selectable style={styles.heroEmployer}>{employer.name}{employer.details ? ` · ${employer.details}` : ""}</Text>
             )}
 
             {/* Action Buttons */}
@@ -257,7 +257,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                 <View style={styles.interestPillsRow}>
                   {contact.interests.map((interest: any) => (
                     <View key={interest.id} style={styles.interestPill}>
-                      <Text style={styles.interestPillText}>{interest.name}</Text>
+                      <Text selectable style={styles.interestPillText}>{interest.name}</Text>
                     </View>
                   ))}
                 </View>
@@ -270,7 +270,7 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                   <View key={field.id || field.title} style={styles.subCard}>
                     <Text style={styles.infoLabel}>{field.title}</Text>
                     {field.values?.map((val: any, idx: number) => (
-                      <Text key={idx} style={styles.infoValue}>• {val}</Text>
+                      <Text selectable key={idx} style={styles.infoValue}>• {val}</Text>
                     ))}
                   </View>
                 ))}
@@ -293,10 +293,10 @@ const ViewContactScreen: any = ({ navigation, route }: any) => {
                 <View key={note.id} style={styles.noteItem}>
                   <View style={styles.noteAccent} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.noteDate}>
+                    <Text selectable style={styles.noteDate}>
                       {dayjs(note?.created_date).format("MMM D, YYYY").toUpperCase()}
                     </Text>
-                    <Text style={styles.noteContent} numberOfLines={3}>{note.note}</Text>
+                    <Text selectable style={styles.noteContent} numberOfLines={3}>{note.note}</Text>
                   </View>
                 </View>
               ))

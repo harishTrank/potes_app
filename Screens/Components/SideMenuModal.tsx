@@ -15,6 +15,7 @@ import Feather from "@expo/vector-icons/Feather";
 import theme from "../../utils/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { clearAppBadge } from "../../utils/appBadge";
 import { useNavigation } from "@react-navigation/native";
 
 const MENU_WIDTH = Dimensions.get("window").width * 0.75;
@@ -84,6 +85,7 @@ export const SideMenuModal = ({ visible, onClose }: SideMenuModalProps) => {
           style: "destructive",
           onPress: async () => {
             await AsyncStorage.clear();
+            clearAppBadge();
             navigation.reset({ index: 0, routes: [{ name: "LoginScreen" }] });
           },
         },

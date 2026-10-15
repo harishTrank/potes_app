@@ -15,12 +15,16 @@ import ReminderCategory from "./Component/ReminderCategory";
 import ActionButtons from "../../Components/ActionButtons";
 import EventListItem from "./Component/EventListItem";
 import {
+  clearEventApi,
   showBirthdays,
   showReminders,
   yearsAgo,
 } from "../../../store/Services/Others";
 import FullScreenLoader from "../../Components/FullScreenLoader";
-import notifee from "@notifee/react-native";
+import {
+  countActiveReminders,
+  updateAppBadge,
+} from "../../../utils/appBadge";
 import Feather from "@expo/vector-icons/Feather";
 import { useAtom } from "jotai";
 import {
@@ -55,6 +59,19 @@ const UserAvatar = ({ userProfile }: any) => {
       <Text style={styles.avatarInitials}>{initials}</Text>
     </View>
   );
+};
+
+const EVENT_GROUPS: Record<string, string> = {
+  Birthdays: "birthdays",
+  Anniversary: "anniversary",
+  spouse: "spouse_birthday",
+  child: "child_birthday",
+};
+const EVENT_TYPES: Record<string, string> = {
+  Birthdays: "birthday",
+  Anniversary: "anniversary",
+  spouse: "spouse_birthday",
+  child: "child_birthday",
 };
 
 const HomeScreen = ({ navigation }: any) => {
@@ -98,29 +115,13 @@ const HomeScreen = ({ navigation }: any) => {
     return navigation.addListener("focus", () => homeScreenDataManager());
   }, [navigation]);
 
-  const todayCount = reminder?.today?.reduce((acc: number, curr: any) => {
-    return curr.completed ? acc : acc + 1;
-  }, 0);
-  const tomorrowCount = reminder?.tomorrow?.reduce((acc: number, curr: any) => {
-    return curr.completed ? acc : acc + 1;
-  }, 0);
-  const globalCount =
-    (todayCount || 0) +
-    (tomorrowCount || 0) +
-    (reminder?.missed?.length || 0) +
-    (birthday?.birthdays?.length || 0) +
-    (birthday?.anniversary?.length || 0) +
-    (birthday?.spouse_birthday?.length || 0) +
-    (birthday?.child_birthday?.length || 0);
-  const safeCount = Math.max(0, Number(globalCount) || 0);
-  const activeRemindersCount = Math.max(
-    0,
-    (todayCount || 0) + (tomorrowCount || 0) + (reminder?.missed?.length || 0),
-  );
+  const activeRemindersCount = countActiveReminders(reminder);
 
+  // Keep the launcher icon badge in sync with the "N active" count.
   useEffect(() => {
-    notifee.setBadgeCount(safeCount);
-  }, [safeCount]);
+    if (reminder?.today || reminder?.tomorrow || reminder?.missed)
+      updateAppBadge(activeRemindersCount);
+  }, [activeRemindersCount, reminder]);
 
   const onPressSearch = () => {
     if (searchVal?.length > 0) {
@@ -129,34 +130,22 @@ const HomeScreen = ({ navigation }: any) => {
     }
   };
 
-  const handleDismissEvent = (type: string, itemId: any) => {
-    setBirthday((prev: any) => {
-      if (type === "Birthdays")
-        return {
-          ...prev,
-          birthdays: prev.birthdays.filter((i: any) => i.id !== itemId),
-        };
-      if (type === "Anniversary")
-        return {
-          ...prev,
-          anniversary: prev.anniversary.filter((i: any) => i.id !== itemId),
-        };
-      if (type === "spouse")
-        return {
-          ...prev,
-          spouse_birthday: prev.spouse_birthday.filter(
-            (i: any) => i.id !== itemId,
-          ),
-        };
-      if (type === "child")
-        return {
-          ...prev,
-          child_birthday: prev.child_birthday.filter(
-            (i: any) => i.id !== itemId,
-          ),
-        };
-      return prev;
-    });
+  // Clearing an event only dismisses its badge (like completing a reminder);
+  // the backend stores it per day, and the event stays in the list.
+  const setEventCleared = (type: string, id: number, cleared: boolean) => {
+    const group = EVENT_GROUPS[type];
+    setBirthday((prev: any) => ({
+      ...prev,
+      [group]: prev?.[group]?.map((e: any) =>
+        e?.id === id ? { ...e, cleared } : e,
+      ),
+    }));
+  };
+
+  const handleDismissEvent = (type: string, item: any) => {
+    setEventCleared(type, item?.id, true);
+    clearEventApi({ body: { event_type: EVENT_TYPES[type], id: item?.id } })
+      .catch(() => setEventCleared(type, item?.id, false));
   };
 
   const hasEvents =
@@ -230,13 +219,6 @@ const HomeScreen = ({ navigation }: any) => {
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionAccent} />
             <Text style={styles.sectionTitle}>Reminders</Text>
-            {activeRemindersCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {activeRemindersCount} active
-                </Text>
-              </View>
-            )}
           </View>
           <ReminderCategory
             category={{
@@ -277,6 +259,91 @@ const HomeScreen = ({ navigation }: any) => {
             }}
             setReminer={setReminder}
           />
+        </View>
+
+        {/* Events Section */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeaderRow}>
+            <View
+              style={[styles.sectionAccent, { backgroundColor: "#c0623a" }]}
+            />
+            <Text style={styles.sectionTitle}>Events</Text>
+          </View>
+          {!hasEvents ? (
+            <Text style={styles.nothingText}>NOTHING TODAY</Text>
+          ) : (
+            <View style={{ padding: 12 }}>
+              {birthday?.birthdays?.length > 0 && (
+                <View style={styles.eventGroup}>
+                  <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>
+                    Birthday
+                  </Text>
+                  {birthday.birthdays.map((item: any) => (
+                    <EventListItem
+                      item={item}
+                      key={item?.id}
+                      type={"Birthdays"}
+                      cleared={item?.cleared}
+                      onDismiss={handleDismissEvent}
+                    />
+                  ))}
+                </View>
+              )}
+              {birthday?.anniversary?.length > 0 && (
+                <View style={styles.eventGroup}>
+                  <Text style={[styles.eventGroupLabel, { color: "#9a6eb0" }]}>
+                    Anniversary
+                  </Text>
+                  {birthday.anniversary.map((item: any) => (
+                    <EventListItem
+                      item={item}
+                      key={item?.id}
+                      type={"Anniversary"}
+                      cleared={item?.cleared}
+                      onDismiss={handleDismissEvent}
+                    />
+                  ))}
+                </View>
+              )}
+              {birthday?.spouse_birthday?.length > 0 && (
+                <View style={styles.eventGroup}>
+                  <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>
+                    Spouse Birthday
+                  </Text>
+                  {birthday.spouse_birthday.map((item: any) => (
+                    <EventListItem
+                      item={item}
+                      key={item?.id}
+                      type={"spouse"}
+                      cleared={item?.cleared}
+                      onDismiss={handleDismissEvent}
+                    />
+                  ))}
+                </View>
+              )}
+              {birthday?.child_birthday?.length > 0 && (
+                <View style={styles.eventGroup}>
+                  <Text
+                    style={[
+                      styles.eventGroupLabel,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
+                    Family Birthday
+                  </Text>
+                  {birthday.child_birthday.map((item: any) => (
+                    <EventListItem
+                      item={item}
+                      key={item?.id}
+                      type={"child"}
+                      cleared={item?.cleared}
+                      onDismiss={handleDismissEvent}
+                    />
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Memories Section */}
@@ -325,87 +392,6 @@ const HomeScreen = ({ navigation }: any) => {
                 />
               )}
             </>
-          )}
-        </View>
-
-        {/* Events Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <View
-              style={[styles.sectionAccent, { backgroundColor: "#c0623a" }]}
-            />
-            <Text style={styles.sectionTitle}>Events</Text>
-          </View>
-          {!hasEvents ? (
-            <Text style={styles.nothingText}>NOTHING TODAY</Text>
-          ) : (
-            <View style={{ padding: 12 }}>
-              {birthday?.birthdays?.length > 0 && (
-                <View style={styles.eventGroup}>
-                  <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>
-                    Birthday
-                  </Text>
-                  {birthday.birthdays.map((item: any) => (
-                    <EventListItem
-                      item={item}
-                      key={item?.id}
-                      type={"Birthdays"}
-                      onDismiss={handleDismissEvent}
-                    />
-                  ))}
-                </View>
-              )}
-              {birthday?.anniversary?.length > 0 && (
-                <View style={styles.eventGroup}>
-                  <Text style={[styles.eventGroupLabel, { color: "#9a6eb0" }]}>
-                    Anniversary
-                  </Text>
-                  {birthday.anniversary.map((item: any) => (
-                    <EventListItem
-                      item={item}
-                      key={item?.id}
-                      type={"Anniversary"}
-                      onDismiss={handleDismissEvent}
-                    />
-                  ))}
-                </View>
-              )}
-              {birthday?.spouse_birthday?.length > 0 && (
-                <View style={styles.eventGroup}>
-                  <Text style={[styles.eventGroupLabel, { color: "#c0623a" }]}>
-                    Spouse Birthday
-                  </Text>
-                  {birthday.spouse_birthday.map((item: any) => (
-                    <EventListItem
-                      item={item}
-                      key={item?.id}
-                      type={"spouse"}
-                      onDismiss={handleDismissEvent}
-                    />
-                  ))}
-                </View>
-              )}
-              {birthday?.child_birthday?.length > 0 && (
-                <View style={styles.eventGroup}>
-                  <Text
-                    style={[
-                      styles.eventGroupLabel,
-                      { color: theme.colors.primary },
-                    ]}
-                  >
-                    Family Birthday
-                  </Text>
-                  {birthday.child_birthday.map((item: any) => (
-                    <EventListItem
-                      item={item}
-                      key={item?.id}
-                      type={"child"}
-                      onDismiss={handleDismissEvent}
-                    />
-                  ))}
-                </View>
-              )}
-            </View>
           )}
         </View>
       </ScrollView>
@@ -491,17 +477,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontFamily: "Poppins-Bold",
     color: theme.colors.text,
-  },
-  badge: {
-    backgroundColor: theme.colors.primaryLight,
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontFamily: "Poppins-SemiBold",
-    color: theme.colors.primary,
   },
   nothingText: {
     textAlign: "center",

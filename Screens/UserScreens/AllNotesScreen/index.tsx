@@ -43,6 +43,7 @@ const AllNotesScreen: any = ({ route }: any) => {
     navigation.navigate("CreateNoteScreen", {
       note,
       type: "edit",
+      fromHomeReminder: !!route?.params?.fromHomeReminder,
     });
   };
 
@@ -179,13 +180,13 @@ const AllNotesScreen: any = ({ route }: any) => {
                         size={14}
                         color={theme.colors.secondary}
                       />
-                      <Text style={styles.reminderDateText}>
+                      <Text selectable style={styles.reminderDateText}>
                         {dayjs(note.reminder).format("MM-DD-YYYY")}
                       </Text>
                     </View>
                   )}
-                  <Text style={styles.noteContent}>{note.note}</Text>
-                  <Text style={styles.noteDate}>
+                  <Text selectable style={styles.noteContent}>{note.note}</Text>
+                  <Text selectable style={styles.noteDate}>
                     Note created at <Feather name="clock" size={13} />{" "}
                     {dayjs(note?.created_date).format("MMM D, YYYY")}
                   </Text>

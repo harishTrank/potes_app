@@ -18,6 +18,7 @@ import {
 import Feather from "@expo/vector-icons/Feather";
 import theme from "../../utils/theme"; // Adjust path
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { clearAppBadge } from "../../utils/appBadge";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ImageModule from "../../ImageModule";
 
@@ -47,6 +48,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         text: "OK",
         onPress: async () => {
           await AsyncStorage.clear();
+          clearAppBadge();
           navigation.closeDrawer();
           navigation.reset({
             index: 0,

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -7,6 +7,10 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
   PanResponder,
+  Keyboard,
+  KeyboardEvent,
+  Platform,
+  LayoutAnimation,
 } from "react-native";
 import { useAtom } from "jotai";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,6 +32,54 @@ export const AIAssistantSheet = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const close = () => setOverlay({ visible: false, contactId: null });
+
+  // The sheet is a fixed-height panel anchored to the bottom of a transparent
+  // Modal, so a KeyboardAvoidingView inside it can't work out the real overlap
+  // (it measures its frame relative to the sheet, not the screen) and whether
+  // the Modal window itself resizes for the keyboard varies on Android. Track
+  // the keyboard here in screen coordinates instead and lift/shrink the whole
+  // sheet so the chat input always sits just above the keyboard.
+  const rootHeightRef = useRef(SCREEN_HEIGHT);
+  const keyboardTopRef = useRef<number | null>(null);
+  const [keyboardOverlap, setKeyboardOverlap] = useState(0);
+  const [rootHeight, setRootHeight] = useState(SCREEN_HEIGHT);
+
+  const updateOverlap = (animate = true) => {
+    const top = keyboardTopRef.current;
+    const overlap =
+      top == null ? 0 : Math.max(0, Math.round(rootHeightRef.current - top));
+    setKeyboardOverlap((prev) => {
+      if (prev !== overlap && animate && Platform.OS === "ios") {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      }
+      return overlap;
+    });
+  };
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillChangeFrame" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, (e: KeyboardEvent) => {
+      keyboardTopRef.current = e.endCoordinates.screenY;
+      updateOverlap();
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      keyboardTopRef.current = null;
+      updateOverlap();
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const keyboardOpen = keyboardOverlap > 0;
+  const sheetHeight = Math.min(
+    SHEET_HEIGHT,
+    rootHeight - keyboardOverlap - insets.top,
+  );
 
   useEffect(() => {
     if (overlay.visible) {
@@ -91,7 +143,16 @@ export const AIAssistantSheet = () => {
       statusBarTranslucent
       onRequestClose={close}
     >
-      <View style={styles.root}>
+      <View
+        style={[styles.root, { paddingBottom: keyboardOverlap }]}
+        onLayout={(e) => {
+          rootHeightRef.current = e.nativeEvent.layout.height;
+          setRootHeight(e.nativeEvent.layout.height);
+          // If the Modal window resized for the keyboard, the overlap shrinks
+          // accordingly, so recompute against the new height.
+          updateOverlap(false);
+        }}
+      >
         <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
           <TouchableWithoutFeedback onPress={close}>
             <View style={StyleSheet.absoluteFill} />
@@ -101,7 +162,7 @@ export const AIAssistantSheet = () => {
         <Animated.View
           style={[
             styles.sheet,
-            { height: SHEET_HEIGHT, transform: [{ translateY }] },
+            { height: sheetHeight, transform: [{ translateY }] },
           ]}
         >
           <View style={styles.handleArea} {...panResponder.panHandlers}>
@@ -110,7 +171,7 @@ export const AIAssistantSheet = () => {
           <DefaultBackground style={styles.body}>
             <ChatBody
               contactId={overlay.contactId}
-              bottomInset={insets.bottom}
+              bottomInset={keyboardOpen ? 0 : insets.bottom}
               closeIconName="x"
               onClose={close}
               embedded

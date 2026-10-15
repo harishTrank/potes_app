@@ -41,8 +41,6 @@ import { en, registerTranslation } from "react-native-paper-dates";
 import Toast from "react-native-toast-message";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { useAtom } from "jotai";
-import { homeNoteEditGlobal } from "../../../jotaiStore";
 
 dayjs.extend(utc);
 registerTranslation("en", en);
@@ -66,7 +64,6 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isContactDropdownOpen, setContactDropdownOpen] = useState(false);
-  const [globalNoteFlag, setGlobalNoteFlag]: any = useAtom(homeNoteEditGlobal);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(true);
@@ -168,8 +165,9 @@ const CreateNoteScreen: any = ({ navigation, route }: any) => {
       editNote({ query: { id: route?.params?.note?.id }, body: payload })
         ?.then(() => {
           Toast.show({ type: "success", text1: "Note edited successfully." });
-          if (globalNoteFlag) {
-            setGlobalNoteFlag(false);
+          // Only the Home reminder flow returns to Home; everywhere else
+          // (e.g. a contact's notes) goes back to where the edit started.
+          if (route?.params?.fromHomeReminder) {
             navigation.navigate("DrawerNavigation");
           } else {
             navigation.goBack();

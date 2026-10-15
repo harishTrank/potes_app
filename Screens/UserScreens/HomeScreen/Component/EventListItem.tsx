@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import theme from "../../../../utils/theme";
-import Feather from "@expo/vector-icons/Feather";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
 import FastImage from "react-native-fast-image";
@@ -11,7 +11,16 @@ const getInitials = (name: string) => {
   return name.split(" ").slice(0, 2).map((p) => p[0]).join("").toUpperCase();
 };
 
-const EventListItem: any = ({ item, type, onDismiss }: any) => {
+const getEventDate = (item: any, type: string) =>
+  type === "Birthdays"
+    ? item?.birthday
+    : type === "Anniversary"
+    ? item?.anniversary
+    : type === "spouse"
+    ? item?.spouse_birthday
+    : item?.birthday;
+
+const EventListItem: any = ({ item, type, cleared, onDismiss }: any) => {
   const navigation: any = useNavigation();
   const cardClickHandler = () => {
     navigation.navigate("ViewContactScreen", {
@@ -27,15 +36,7 @@ const EventListItem: any = ({ item, type, onDismiss }: any) => {
       ? `${item?.spouse_name} • Spouse of ${item?.full_name}`
       : `${item?.name || ""} • Family of ${item?.contact__full_name}`;
 
-  const date = dayjs(
-    type === "Birthdays"
-      ? item.birthday
-      : type === "Anniversary"
-      ? item?.anniversary
-      : type === "spouse"
-      ? item?.spouse_birthday
-      : item?.birthday
-  ).format("MMM D");
+  const date = dayjs(getEventDate(item, type)).format("MMM D");
 
   return (
     <TouchableOpacity style={styles.container} onPress={cardClickHandler}>
@@ -54,22 +55,40 @@ const EventListItem: any = ({ item, type, onDismiss }: any) => {
       </Text>
       <Text style={styles.eventDate}>{date}</Text>
       {onDismiss && (
-        <TouchableOpacity
-          onPress={(e) => { e.stopPropagation(); onDismiss(type, item?.id); }}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          style={styles.dismissBtn}
-        >
-          <Feather name="x" size={15} color={theme.colors.greyText} />
-        </TouchableOpacity>
+        // Same as reminders: clearing only marks the event as seen (checkmark)
+        // and keeps it in the list.
+        <View style={styles.indicatorContainer}>
+          {cleared ? (
+            <Ionicons name="checkmark-circle" size={22} color={theme.colors.primary} />
+          ) : (
+            <TouchableOpacity
+              onPress={(e) => { e.stopPropagation(); onDismiss(type, item); }}
+              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+            >
+              <View style={styles.dot} />
+            </TouchableOpacity>
+          )}
+        </View>
       )}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  dismissBtn: {
+  indicatorContainer: {
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 6,
-    padding: 2,
+  },
+  dot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    backgroundColor: "transparent",
   },
   container: {
     flexDirection: "row",

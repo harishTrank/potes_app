@@ -169,6 +169,13 @@ export const allApi = {
       uri: "/complete-reminder/",
     },
   },
+  clearEventApi: {
+    v1: {
+      ...defaults.methods.POST,
+      ...defaults.versions.v1,
+      uri: "/clear-event/",
+    },
+  },
   deleteAccountApi: {
     v1: {
       ...defaults.methods.DELETE,

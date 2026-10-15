@@ -30,6 +30,7 @@ import { useAtom } from "jotai";
 import { apiCallBackGlobal } from "../../../jotaiStore";
 import FastImage from "react-native-fast-image";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { clearAppBadge } from "../../../utils/appBadge";
 import { SideMenuModal } from "../../Components/SideMenuModal";
 
 const updateNameValidationSchema = Yup.object().shape({
@@ -176,6 +177,7 @@ const UserProfileScreen: React.FC<any> = ({ navigation }) => {
         setDeleteModalOpen(false);
         setModalPasswordOpen(false);
         AsyncStorage.clear();
+        clearAppBadge();
         navigation.navigate("LoginScreen");
       })
       .catch(() => {
